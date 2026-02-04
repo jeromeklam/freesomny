@@ -1,0 +1,34 @@
+{
+  "name": "@api-client/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@api-client/import-export": "workspace:*",
+    "@api-client/shared": "workspace:*",
+    "@fastify/cookie": "^10.0.0",
+    "@fastify/cors": "^10.0.0",
+    "@fastify/static": "^8.0.0",
+    "@prisma/client": "^5.22.0",
+    "fastify": "^5.1.0",
+    "hawk": "^9.0.1",
+    "isolated-vm": "^5.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "undici": "^7.1.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.10.0",
+    "prisma": "^5.22.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

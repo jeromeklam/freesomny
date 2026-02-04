@@ -1,0 +1,153 @@
+{
+  "app": {
+    "name": "FreeSomnia"
+  },
+  "header": {
+    "import": "Importer",
+    "history": "Historique",
+    "settings": "Paramètres"
+  },
+  "sidebar": {
+    "collections": "Collections",
+    "newFolder": "Nouveau dossier",
+    "newRequest": "Nouvelle requête"
+  },
+  "request": {
+    "selectRequest": "Sélectionnez une requête dans la barre latérale pour commencer",
+    "send": "Envoyer",
+    "sending": "Envoi...",
+    "urlPlaceholder": "Entrez une URL ou collez une commande curl",
+    "tabs": {
+      "params": "Params",
+      "headers": "En-têtes",
+      "auth": "Auth",
+      "body": "Corps",
+      "scripts": "Scripts",
+      "resolved": "Résolu"
+    }
+  },
+  "response": {
+    "sendRequest": "Envoyez une requête pour voir la réponse",
+    "sending": "Envoi de la requête...",
+    "tabs": {
+      "body": "Corps",
+      "headers": "En-têtes",
+      "tests": "Tests",
+      "console": "Console"
+    },
+    "copy": "Copier",
+    "copied": "Copié",
+    "download": "Télécharger"
+  },
+  "environment": {
+    "title": "Environnement",
+    "none": "Aucun",
+    "variables": "Variables",
+    "settings": "Paramètres",
+    "name": "Nom",
+    "description": "Description",
+    "key": "Clé",
+    "teamValue": "Valeur équipe",
+    "yourValue": "Votre valeur",
+    "status": "Statut",
+    "showSecrets": "Afficher les secrets",
+    "resetAllOverrides": "Réinitialiser tous les remplacements",
+    "resetToTeamValue": "Réinitialiser à la valeur équipe",
+    "deleteVariable": "Supprimer la variable",
+    "addVariable": "Ajouter",
+    "saveChanges": "Enregistrer",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "noVariables": "Aucune variable définie",
+    "team": "équipe",
+    "overridden": "remplacé",
+    "protected": "Variable protégée",
+    "makeVisible": "Rendre visible",
+    "markAsProtected": "Marquer comme protégé",
+    "protectedClickToMakeVisible": "Protégé (cliquer pour rendre visible)",
+    "visibleClickToProtect": "Visible (cliquer pour protéger)",
+    "manageVariables": "Gérer les variables et paramètres"
+  },
+  "import": {
+    "title": "Importer une collection",
+    "selectFormat": "Sélectionnez le format à importer",
+    "postman": "Postman",
+    "hoppscotch": "Hoppscotch",
+    "openapi": "OpenAPI",
+    "curl": "cURL",
+    "dropFile": "Déposez un fichier JSON ici ou cliquez pour parcourir",
+    "enterCurl": "Collez la commande cURL ici...",
+    "import": "Importer",
+    "cancel": "Annuler",
+    "importing": "Importation..."
+  },
+  "history": {
+    "title": "Historique",
+    "search": "Rechercher dans l'historique...",
+    "clearAll": "Tout effacer",
+    "noHistory": "Aucun historique",
+    "confirmClear": "Effacer tout l'historique ?"
+  },
+  "auth": {
+    "type": "Type",
+    "inheritFromParent": "Hériter du parent",
+    "none": "Aucun",
+    "bearer": "Token Bearer",
+    "basic": "Auth basique",
+    "apikey": "Clé API",
+    "jwt": "JWT",
+    "oauth2": "OAuth 2.0",
+    "openid": "OpenID Connect",
+    "hawk": "Hawk",
+    "token": "Token",
+    "username": "Nom d'utilisateur",
+    "password": "Mot de passe"
+  },
+  "body": {
+    "type": "Type de corps",
+    "none": "Aucun",
+    "json": "JSON",
+    "formData": "Form Data",
+    "urlencoded": "URL Encoded",
+    "raw": "Brut",
+    "binary": "Binaire"
+  },
+  "scripts": {
+    "preRequest": "Script pré-requête",
+    "postResponse": "Script post-réponse",
+    "preRequestHelp": "S'exécute avant l'envoi de la requête",
+    "postResponseHelp": "S'exécute après la réception de la réponse"
+  },
+  "tests": {
+    "noTests": "Aucun test exécuté. Ajoutez des tests dans l'onglet Scripts.",
+    "passed": "réussi",
+    "failed": "échoué"
+  },
+  "console": {
+    "noOutput": "Aucune sortie console. Utilisez console.log() dans les scripts."
+  },
+  "folder": {
+    "settings": "Paramètres du dossier",
+    "docs": "Docs",
+    "headers": "En-têtes",
+    "params": "Params",
+    "auth": "Auth",
+    "baseUrl": "URL de base",
+    "scripts": "Scripts",
+    "inherited": "Hérité",
+    "thisFolder": "Ce dossier"
+  },
+  "common": {
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "value": "Valeur",
+    "description": "Description",
+    "enabled": "Activé"
+  }
+}

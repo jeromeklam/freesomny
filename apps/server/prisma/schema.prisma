@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Folder {
+  id          String    @id @default(cuid())
+  name        String
+  description String    @default("")
+  parentId    String?
+  parent      Folder?   @relation("FolderChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Folder[]  @relation("FolderChildren")
+  requests    Request[]
+
+  // Inheritable settings
+  headers         String  @default("[]") // JSON array of KeyValueItem
+  queryParams     String  @default("[]") // JSON array of KeyValueItem
+  authType        String  @default("inherit")
+  authConfig      String  @default("{}") // JSON object
+  preScript       String?
+  postScript      String?
+  baseUrl         String?
+
+  // Network settings
+  timeout         Int?
+  followRedirects String  @default("inherit") // inherit | true | false
+  verifySsl       String  @default("inherit") // inherit | true | false
+  proxy           String?
+
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([parentId])
+}
+
+model Request {
+  id              String   @id @default(cuid())
+  name            String
+  description     String   @default("")
+  method          String   @default("GET")
+  url             String   @default("")
+  queryParams     String   @default("[]") // JSON array of KeyValueItem
+  headers         String   @default("[]") // JSON array of KeyValueItem
+  bodyType        String   @default("none")
+  body            String   @default("")
+  bodyDescription String   @default("")
+  authType        String   @default("inherit")
+  authConfig      String   @default("{}") // JSON object
+  preScript       String?
+  postScript      String?
+
+  // Network settings
+  timeout         Int?
+  followRedirects String   @default("inherit")
+  verifySsl       String   @default("inherit")
+  proxy           String?
+
+  folderId  String
+  folder    Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([folderId])
+}
+
+model Environment {
+  id          String                @id @default(cuid())
+  name        String
+  description String                @default("")
+  isActive    Boolean               @default(false)
+  variables   EnvironmentVariable[]
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+}
+
+model EnvironmentVariable {
+  id            String      @id @default(cuid())
+  key           String
+  value         String      @default("")
+  description   String      @default("")
+  type          String      @default("string") // string | secret | dynamic
+  scope         String      @default("global") // global | collection | request | local
+  isSecret      Boolean     @default(false)
+  environmentId String
+  environment   Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+
+  @@unique([environmentId, key, scope])
+  @@index([environmentId])
+}
+
+model LocalOverride {
+  id            String   @id @default(cuid())
+  key           String
+  value         String
+  description   String   @default("")
+  environmentId String
+  userId        String   @default("local")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([environmentId, key, userId])
+  @@index([environmentId])
+}
+
+model HistoryEntry {
+  id              String   @id @default(cuid())
+  method          String
+  url             String
+  requestHeaders  String   // JSON object
+  requestBody     String?
+  responseStatus  Int
+  responseHeaders String   // JSON object
+  responseBody    String?
+  responseTime    Int      // ms
+  responseSize    Int      // bytes
+  createdAt       DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model Settings {
+  id        String   @id @default("default")
+  data      String   @default("{}") // JSON object with AppSettings
+  updatedAt DateTime @updatedAt
+}

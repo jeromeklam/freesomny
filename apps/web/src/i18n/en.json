@@ -1,0 +1,153 @@
+{
+  "app": {
+    "name": "FreeSomnia"
+  },
+  "header": {
+    "import": "Import",
+    "history": "History",
+    "settings": "Settings"
+  },
+  "sidebar": {
+    "collections": "Collections",
+    "newFolder": "New folder",
+    "newRequest": "New request"
+  },
+  "request": {
+    "selectRequest": "Select a request from the sidebar to get started",
+    "send": "Send",
+    "sending": "Sending...",
+    "urlPlaceholder": "Enter URL or paste curl command",
+    "tabs": {
+      "params": "Params",
+      "headers": "Headers",
+      "auth": "Auth",
+      "body": "Body",
+      "scripts": "Scripts",
+      "resolved": "Resolved"
+    }
+  },
+  "response": {
+    "sendRequest": "Send a request to see the response",
+    "sending": "Sending request...",
+    "tabs": {
+      "body": "Body",
+      "headers": "Headers",
+      "tests": "Tests",
+      "console": "Console"
+    },
+    "copy": "Copy",
+    "copied": "Copied",
+    "download": "Download"
+  },
+  "environment": {
+    "title": "Environment",
+    "none": "None",
+    "variables": "Variables",
+    "settings": "Settings",
+    "name": "Name",
+    "description": "Description",
+    "key": "Key",
+    "teamValue": "Team Value",
+    "yourValue": "Your Value",
+    "status": "Status",
+    "showSecrets": "Show secrets",
+    "resetAllOverrides": "Reset all overrides",
+    "resetToTeamValue": "Reset to team value",
+    "deleteVariable": "Delete variable",
+    "addVariable": "Add",
+    "saveChanges": "Save Changes",
+    "cancel": "Cancel",
+    "close": "Close",
+    "noVariables": "No variables defined",
+    "team": "team",
+    "overridden": "overridden",
+    "protected": "Protected variable",
+    "makeVisible": "Make visible",
+    "markAsProtected": "Mark as protected",
+    "protectedClickToMakeVisible": "Protected (click to make visible)",
+    "visibleClickToProtect": "Visible (click to protect)",
+    "manageVariables": "Manage variables and settings"
+  },
+  "import": {
+    "title": "Import Collection",
+    "selectFormat": "Select format to import",
+    "postman": "Postman",
+    "hoppscotch": "Hoppscotch",
+    "openapi": "OpenAPI",
+    "curl": "cURL",
+    "dropFile": "Drop JSON file here or click to browse",
+    "enterCurl": "Paste cURL command here...",
+    "import": "Import",
+    "cancel": "Cancel",
+    "importing": "Importing..."
+  },
+  "history": {
+    "title": "History",
+    "search": "Search history...",
+    "clearAll": "Clear all",
+    "noHistory": "No history yet",
+    "confirmClear": "Clear all history entries?"
+  },
+  "auth": {
+    "type": "Type",
+    "inheritFromParent": "Inherit from parent",
+    "none": "None",
+    "bearer": "Bearer Token",
+    "basic": "Basic Auth",
+    "apikey": "API Key",
+    "jwt": "JWT",
+    "oauth2": "OAuth 2.0",
+    "openid": "OpenID Connect",
+    "hawk": "Hawk",
+    "token": "Token",
+    "username": "Username",
+    "password": "Password"
+  },
+  "body": {
+    "type": "Body type",
+    "none": "None",
+    "json": "JSON",
+    "formData": "Form Data",
+    "urlencoded": "URL Encoded",
+    "raw": "Raw",
+    "binary": "Binary"
+  },
+  "scripts": {
+    "preRequest": "Pre-request Script",
+    "postResponse": "Post-response Script",
+    "preRequestHelp": "Runs before the request is sent",
+    "postResponseHelp": "Runs after the response is received"
+  },
+  "tests": {
+    "noTests": "No tests run. Add tests in the Scripts tab.",
+    "passed": "passed",
+    "failed": "failed"
+  },
+  "console": {
+    "noOutput": "No console output. Use console.log() in scripts."
+  },
+  "folder": {
+    "settings": "Folder Settings",
+    "docs": "Docs",
+    "headers": "Headers",
+    "params": "Params",
+    "auth": "Auth",
+    "baseUrl": "Base URL",
+    "scripts": "Scripts",
+    "inherited": "Inherited",
+    "thisFolder": "This folder"
+  },
+  "common": {
+    "save": "Save",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "close": "Close",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "value": "Value",
+    "description": "Description",
+    "enabled": "Enabled"
+  }
+}
