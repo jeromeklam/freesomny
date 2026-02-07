@@ -1,0 +1,51 @@
+# FreeSomnia Systemd Service File
+# ================================
+# Installation:
+#   1. Copy this file to /etc/systemd/system/freesomnia.service
+#   2. Create user: sudo useradd -r -s /bin/false freesomnia
+#   3. Set ownership: sudo chown -R freesomnia:freesomnia /opt/freesomnia
+#   4. Reload systemd: sudo systemctl daemon-reload
+#   5. Enable service: sudo systemctl enable freesomnia
+#   6. Start service: sudo systemctl start freesomnia
+#   7. Check status: sudo systemctl status freesomnia
+
+[Unit]
+Description=FreeSomnia API Client
+Documentation=https://github.com/your-org/freesomnia
+After=network.target
+# Uncomment if using PostgreSQL:
+# After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=freesomnia
+Group=freesomnia
+WorkingDirectory=/opt/freesomnia
+
+# Node.js executable and application
+ExecStart=/usr/bin/node apps/server/dist/index.js
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Environment
+Environment=NODE_ENV=production
+
+# Load environment variables from file
+EnvironmentFile=/opt/freesomnia/.env
+
+# Security hardening (optional but recommended)
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/freesomnia/apps/server/prisma/data
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=freesomnia
+
+[Install]
+WantedBy=multi-user.target

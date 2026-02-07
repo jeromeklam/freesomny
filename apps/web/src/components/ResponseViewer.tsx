@@ -2,7 +2,7 @@ import { useState } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { json } from '@codemirror/lang-json'
 import { clsx } from 'clsx'
-import { Check, X, Copy, Download } from 'lucide-react'
+import { Check, X, Copy, Download, AlertCircle } from 'lucide-react'
 import { useAppStore } from '../stores/app'
 import { useTranslation } from '../hooks/useTranslation'
 import type { HttpResponse } from '@api-client/shared'
@@ -40,7 +40,7 @@ function StatusBadge({ response }: { response: HttpResponse }) {
   )
 }
 
-function BodyTab({ response }: { response: HttpResponse }) {
+function BodyTab({ response, t }: { response: HttpResponse; t: (key: string) => string }) {
   const [copied, setCopied] = useState(false)
 
   const isJson =
@@ -80,14 +80,14 @@ function BodyTab({ response }: { response: HttpResponse }) {
           className="flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-white"
         >
           {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-          {copied ? 'Copied' : 'Copy'}
+          {copied ? t('response.copied') : t('response.copy')}
         </button>
         <button
           onClick={handleDownload}
           className="flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-white"
         >
           <Download className="w-3 h-3" />
-          Download
+          {t('response.download')}
         </button>
       </div>
       <div className="flex-1 overflow-auto">
@@ -136,21 +136,21 @@ function HeadersTab({ response }: { response: HttpResponse }) {
   )
 }
 
-function TestsTab() {
+function TestsTab({ t }: { t: (key: string) => string }) {
   const scriptTests = useAppStore((s) => s.scriptTests)
 
-  const passed = scriptTests.filter((t) => t.passed).length
-  const failed = scriptTests.filter((t) => !t.passed).length
+  const passedCount = scriptTests.filter((test) => test.passed).length
+  const failedCount = scriptTests.filter((test) => !test.passed).length
 
   return (
     <div className="p-4">
       {scriptTests.length === 0 ? (
-        <p className="text-gray-500 text-sm">No tests run. Add tests in the Scripts tab.</p>
+        <p className="text-gray-500 text-sm">{t('tests.noTests')}</p>
       ) : (
         <>
           <div className="flex gap-4 mb-4 text-sm">
-            <span className="text-green-400">{passed} passed</span>
-            <span className={failed > 0 ? 'text-red-400' : 'text-gray-500'}>{failed} failed</span>
+            <span className="text-green-400">{passedCount} {t('tests.passed')}</span>
+            <span className={failedCount > 0 ? 'text-red-400' : 'text-gray-500'}>{failedCount} {t('tests.failed')}</span>
           </div>
           <div className="space-y-2">
             {scriptTests.map((test, i) => (
@@ -177,7 +177,7 @@ function TestsTab() {
   )
 }
 
-function ConsoleTab() {
+function ConsoleTab({ t }: { t: (key: string) => string }) {
   const scriptLogs = useAppStore((s) => s.scriptLogs)
   const scriptErrors = useAppStore((s) => s.scriptErrors)
 
@@ -189,7 +189,7 @@ function ConsoleTab() {
   return (
     <div className="p-4 font-mono text-sm">
       {allMessages.length === 0 ? (
-        <p className="text-gray-500">No console output. Use console.log() in scripts.</p>
+        <p className="text-gray-500">{t('console.noOutput')}</p>
       ) : (
         <div className="space-y-1">
           {allMessages.map((msg, i) => (
@@ -213,6 +213,7 @@ function ConsoleTab() {
 export function ResponseViewer() {
   const currentResponse = useAppStore((s) => s.currentResponse)
   const isLoading = useAppStore((s) => s.isLoading)
+  const requestError = useAppStore((s) => s.requestError)
   const responseTab = useAppStore((s) => s.responseTab)
   const setResponseTab = useAppStore((s) => s.setResponseTab)
   const { t } = useTranslation()
@@ -230,6 +231,24 @@ export function ResponseViewer() {
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
           <span>{t('response.sending')}</span>
+        </div>
+      </div>
+    )
+  }
+
+  if (requestError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-8">
+        <div className="flex flex-col items-center gap-4 max-w-md text-center">
+          <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+            <AlertCircle className="w-6 h-6 text-red-400" />
+          </div>
+          <h3 className="text-lg font-medium text-red-400">{t('response.error')}</h3>
+          <p className="text-sm text-gray-400">{requestError}</p>
+          <div className="mt-2 p-3 bg-gray-800 rounded-lg w-full">
+            <p className="text-xs text-gray-500 mb-1">{t('response.errorDetails')}</p>
+            <code className="text-xs text-gray-300 break-all">{requestError}</code>
+          </div>
         </div>
       </div>
     )
@@ -270,10 +289,10 @@ export function ResponseViewer() {
 
       {/* Tab content */}
       <div className="flex-1 overflow-auto">
-        {responseTab === 'body' && <BodyTab response={currentResponse} />}
+        {responseTab === 'body' && <BodyTab response={currentResponse} t={t} />}
         {responseTab === 'headers' && <HeadersTab response={currentResponse} />}
-        {responseTab === 'tests' && <TestsTab />}
-        {responseTab === 'console' && <ConsoleTab />}
+        {responseTab === 'tests' && <TestsTab t={t} />}
+        {responseTab === 'console' && <ConsoleTab t={t} />}
       </div>
     </div>
   )

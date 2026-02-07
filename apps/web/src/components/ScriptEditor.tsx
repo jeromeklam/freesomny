@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { clsx } from 'clsx'
+import { useTranslation } from '../hooks/useTranslation'
 
 interface ScriptEditorProps {
   preScript: string
@@ -11,10 +12,11 @@ interface ScriptEditorProps {
 
 export function ScriptEditor({ preScript, postScript, onChange, onBlur }: ScriptEditorProps) {
   const [activeScript, setActiveScript] = useState<'pre' | 'post'>('pre')
+  const { t } = useTranslation()
 
   const tabs = [
-    { id: 'pre', label: 'Pre-request', description: 'Runs before the request is sent' },
-    { id: 'post', label: 'Post-response', description: 'Runs after the response is received' },
+    { id: 'pre', label: t('scripts.preRequest'), description: t('scripts.preRequestHelp') },
+    { id: 'post', label: t('scripts.postResponse'), description: t('scripts.postResponseHelp') },
   ] as const
 
   const currentScript = activeScript === 'pre' ? preScript : postScript
@@ -51,17 +53,17 @@ export function ScriptEditor({ preScript, postScript, onChange, onBlur }: Script
         <p className="text-sm text-gray-400">{currentDescription}</p>
         <details className="mt-2">
           <summary className="text-xs text-blue-400 cursor-pointer hover:underline">
-            Available APIs
+            {t('scripts.availableApis')}
           </summary>
           <div className="mt-2 text-xs text-gray-400 font-mono space-y-1">
-            <p className="font-sans font-medium text-gray-300 mt-2">Environment:</p>
+            <p className="font-sans font-medium text-gray-300 mt-2">{t('scripts.environment')}</p>
             <p>env.get("key") - Read variable</p>
             <p>env.set("key", "value") - Set local override</p>
             <p>env.delete("key") - Delete local override</p>
 
             {activeScript === 'pre' ? (
               <>
-                <p className="font-sans font-medium text-gray-300 mt-2">Request (mutable):</p>
+                <p className="font-sans font-medium text-gray-300 mt-2">{t('scripts.requestMutable')}</p>
                 <p>request.url - Get/set URL</p>
                 <p>request.method - Get/set method</p>
                 <p>request.headers.get("key")</p>
@@ -72,7 +74,7 @@ export function ScriptEditor({ preScript, postScript, onChange, onBlur }: Script
               </>
             ) : (
               <>
-                <p className="font-sans font-medium text-gray-300 mt-2">Response (read-only):</p>
+                <p className="font-sans font-medium text-gray-300 mt-2">{t('scripts.responseReadOnly')}</p>
                 <p>response.status - HTTP status code</p>
                 <p>response.statusText</p>
                 <p>response.headers - Headers object</p>
@@ -80,12 +82,12 @@ export function ScriptEditor({ preScript, postScript, onChange, onBlur }: Script
                 <p>response.time - Response time (ms)</p>
                 <p>response.size - Response size (bytes)</p>
 
-                <p className="font-sans font-medium text-gray-300 mt-2">Testing:</p>
+                <p className="font-sans font-medium text-gray-300 mt-2">{t('scripts.testing')}</p>
                 <p>test("name", () ={'>'} condition)</p>
               </>
             )}
 
-            <p className="font-sans font-medium text-gray-300 mt-2">Console:</p>
+            <p className="font-sans font-medium text-gray-300 mt-2">{t('scripts.consoleApi')}</p>
             <p>console.log(...args)</p>
             <p>console.error(...args)</p>
           </div>

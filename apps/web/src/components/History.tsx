@@ -3,6 +3,7 @@ import { X, Trash2, Search, Clock } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useHistory, useClearHistory } from '../hooks/useApi'
 import { useAppStore } from '../stores/app'
+import { useTranslation } from '../hooks/useTranslation'
 
 interface HistoryEntry {
   id: string
@@ -41,31 +42,32 @@ function StatusBadge({ status }: { status: number }) {
   return <span className={clsx('text-xs font-mono', color)}>{status}</span>
 }
 
-function formatTime(dateStr: string): string {
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-
-  if (diff < 60000) return 'Just now'
-  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`
-  return date.toLocaleDateString()
-}
-
 export function History() {
   const [search, setSearch] = useState('')
   const showHistory = useAppStore((s) => s.showHistory)
   const setShowHistory = useAppStore((s) => s.setShowHistory)
+  const { t } = useTranslation()
 
   const { data, isLoading } = useHistory({ search: search || undefined, limit: 50 })
   const clearHistory = useClearHistory()
+
+  const formatTime = (dateStr: string): string => {
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diff = now.getTime() - date.getTime()
+
+    if (diff < 60000) return t('history.justNow')
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`
+    return date.toLocaleDateString()
+  }
 
   if (!showHistory) return null
 
   const entries = (data?.entries || []) as HistoryEntry[]
 
   const handleClear = () => {
-    if (confirm('Clear all history? This cannot be undone.')) {
+    if (confirm(t('history.confirmClear'))) {
       clearHistory.mutate()
     }
   }
@@ -77,7 +79,7 @@ export function History() {
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
           <div className="flex items-center gap-2">
             <Clock className="w-5 h-5 text-gray-400" />
-            <h2 className="text-lg font-semibold">Request History</h2>
+            <h2 className="text-lg font-semibold">{t('history.title')}</h2>
           </div>
           <button
             onClick={() => setShowHistory(false)}
@@ -95,7 +97,7 @@ export function History() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search history..."
+              placeholder={t('history.search')}
               className="w-full pl-10 pr-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
             />
           </div>
@@ -105,7 +107,7 @@ export function History() {
             className="flex items-center gap-1 px-3 py-2 text-sm text-red-400 hover:text-red-300 disabled:text-gray-600"
           >
             <Trash2 className="w-4 h-4" />
-            Clear all
+            {t('history.clearAll')}
           </button>
         </div>
 
@@ -113,13 +115,13 @@ export function History() {
         <div className="flex-1 overflow-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-12 text-gray-500">
-              <p>Loading history...</p>
+              <p>{t('history.loading')}</p>
             </div>
           ) : entries.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-gray-500">
               <Clock className="w-12 h-12 mb-2 opacity-50" />
-              <p>No history yet</p>
-              <p className="text-sm">Send some requests to see them here</p>
+              <p>{t('history.noHistory')}</p>
+              <p className="text-sm">{t('history.noHistoryDesc')}</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-700/50">
@@ -141,12 +143,12 @@ export function History() {
 
         {/* Footer */}
         <div className="flex justify-between items-center px-6 py-3 border-t border-gray-700 text-sm text-gray-500">
-          <span>{data?.total || 0} entries</span>
+          <span>{data?.total || 0} {t('history.entries')}</span>
           <button
             onClick={() => setShowHistory(false)}
             className="px-4 py-1.5 text-gray-400 hover:text-white"
           >
-            Close
+            {t('history.close')}
           </button>
         </div>
       </div>

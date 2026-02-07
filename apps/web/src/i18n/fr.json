@@ -8,9 +8,17 @@
     "settings": "Paramètres"
   },
   "sidebar": {
-    "collections": "Collections",
-    "newFolder": "Nouveau dossier",
-    "newRequest": "Nouvelle requête"
+    "collections": "COLLECTIONS",
+    "newCollection": "Nouvelle collection",
+    "noCollections": "Aucune collection.",
+    "createFirst": "Créer votre première collection",
+    "addFolder": "Ajouter un dossier",
+    "addRequest": "Ajouter une requête",
+    "editSettings": "Modifier les paramètres",
+    "duplicate": "Dupliquer",
+    "delete": "Supprimer",
+    "confirmDeleteFolder": "Supprimer le dossier « {name} » et tout son contenu ?",
+    "confirmDeleteRequest": "Supprimer la requête « {name} » ?"
   },
   "request": {
     "selectRequest": "Sélectionnez une requête dans la barre latérale pour commencer",
@@ -37,7 +45,9 @@
     },
     "copy": "Copier",
     "copied": "Copié",
-    "download": "Télécharger"
+    "download": "Télécharger",
+    "error": "Échec de la requête",
+    "errorDetails": "Détails de l'erreur"
   },
   "environment": {
     "title": "Environnement",
@@ -66,31 +76,64 @@
     "markAsProtected": "Marquer comme protégé",
     "protectedClickToMakeVisible": "Protégé (cliquer pour rendre visible)",
     "visibleClickToProtect": "Visible (cliquer pour protéger)",
-    "manageVariables": "Gérer les variables et paramètres"
+    "manageVariables": "Gérer les variables et paramètres",
+    "moveUp": "Monter",
+    "moveDown": "Descendre",
+    "category": "Type",
+    "input": "saisie",
+    "generated": "travail",
+    "inputVar": "Variable de saisie — valeur de configuration fournie par l'utilisateur",
+    "generatedVar": "Variable de travail — valeur générée ou calculée",
+    "clickToPromoteToTeam": "Cliquer pour définir votre valeur comme valeur d'équipe",
+    "clickToOverride": "Cliquer pour créer un remplacement local",
+    "confirmPromoteToTeam": "Définir votre valeur locale pour « {key} » comme nouvelle valeur d'équipe ? Cela mettra à jour la valeur pour tous les membres."
   },
   "import": {
     "title": "Importer une collection",
-    "selectFormat": "Sélectionnez le format à importer",
+    "format": "Format",
     "postman": "Postman",
     "hoppscotch": "Hoppscotch",
     "openapi": "OpenAPI",
     "curl": "cURL",
-    "dropFile": "Déposez un fichier JSON ici ou cliquez pour parcourir",
-    "enterCurl": "Collez la commande cURL ici...",
+    "curlCommand": "Commande cURL",
+    "postmanCollection": "Collection Postman (JSON)",
+    "hoppscotchCollection": "Collection Hoppscotch (JSON)",
+    "openapiSpec": "Spécification OpenAPI (JSON/YAML)",
+    "dropFile": "Déposez un fichier ici ou cliquez pour parcourir",
+    "supportsPostman": "Prend en charge les collections Postman v2.1",
+    "supportsHoppscotch": "Prend en charge les collections Hoppscotch",
+    "supportsOpenapi": "Prend en charge OpenAPI 3.x",
     "import": "Importer",
     "cancel": "Annuler",
-    "importing": "Importation..."
+    "importing": "Importation...",
+    "success": {
+      "curl": "Commande cURL importée avec succès",
+      "postman": "Collection Postman importée avec succès",
+      "hoppscotch": "Collection Hoppscotch importée avec succès",
+      "openapi": "Spécification OpenAPI importée avec succès"
+    },
+    "error": {
+      "noCurl": "Veuillez entrer une commande cURL",
+      "noFile": "Veuillez sélectionner un fichier à importer",
+      "invalidJson": "Fichier JSON invalide"
+    }
   },
   "history": {
-    "title": "Historique",
+    "title": "Historique des requêtes",
     "search": "Rechercher dans l'historique...",
     "clearAll": "Tout effacer",
     "noHistory": "Aucun historique",
-    "confirmClear": "Effacer tout l'historique ?"
+    "noHistoryDesc": "Envoyez des requêtes pour les voir ici",
+    "confirmClear": "Effacer tout l'historique ? Cette action est irréversible.",
+    "loading": "Chargement de l'historique...",
+    "entries": "entrées",
+    "close": "Fermer",
+    "justNow": "À l'instant"
   },
   "auth": {
-    "type": "Type",
-    "inheritFromParent": "Hériter du parent",
+    "type": "Type d'auth",
+    "inheritFromParent": "Utilise l'authentification du dossier parent",
+    "noAuth": "Aucune authentification ne sera appliquée",
     "none": "Aucun",
     "bearer": "Token Bearer",
     "basic": "Auth basique",
@@ -100,8 +143,27 @@
     "openid": "OpenID Connect",
     "hawk": "Hawk",
     "token": "Token",
+    "tokenHelp": "Envoyé comme : Authorization: Bearer <token>",
     "username": "Nom d'utilisateur",
-    "password": "Mot de passe"
+    "password": "Mot de passe",
+    "keyName": "Nom de la clé",
+    "addTo": "Ajouter à",
+    "header": "En-tête",
+    "queryParameter": "Paramètre de requête",
+    "cookie": "Cookie",
+    "algorithm": "Algorithme",
+    "secretKey": "Secret / Clé privée",
+    "payload": "Payload (JSON)",
+    "headerPrefix": "Préfixe d'en-tête",
+    "grantType": "Type de grant",
+    "tokenUrl": "URL du token",
+    "clientId": "Client ID",
+    "clientSecret": "Client Secret",
+    "scope": "Scope",
+    "enablePkce": "Activer PKCE",
+    "authId": "Auth ID",
+    "authKey": "Auth Key",
+    "includePayloadHash": "Inclure le hash du payload"
   },
   "body": {
     "type": "Type de corps",
@@ -110,13 +172,24 @@
     "formData": "Form Data",
     "urlencoded": "URL Encoded",
     "raw": "Brut",
-    "binary": "Binaire"
+    "binary": "Binaire",
+    "format": "Formater",
+    "noBody": "Cette requête n'a pas de corps",
+    "enterRaw": "Entrez le contenu brut...",
+    "enterUrlencoded": "clé1=valeur1&clé2=valeur2",
+    "enterContent": "Entrez le contenu..."
   },
   "scripts": {
-    "preRequest": "Script pré-requête",
-    "postResponse": "Script post-réponse",
+    "preRequest": "Pré-requête",
+    "postResponse": "Post-réponse",
     "preRequestHelp": "S'exécute avant l'envoi de la requête",
-    "postResponseHelp": "S'exécute après la réception de la réponse"
+    "postResponseHelp": "S'exécute après la réception de la réponse",
+    "availableApis": "APIs disponibles",
+    "environment": "Environnement :",
+    "requestMutable": "Requête (modifiable) :",
+    "responseReadOnly": "Réponse (lecture seule) :",
+    "testing": "Tests :",
+    "consoleApi": "Console :"
   },
   "tests": {
     "noTests": "Aucun test exécuté. Ajoutez des tests dans l'onglet Scripts.",
@@ -127,15 +200,82 @@
     "noOutput": "Aucune sortie console. Utilisez console.log() dans les scripts."
   },
   "folder": {
+    "title": "Dossier",
     "settings": "Paramètres du dossier",
-    "docs": "Docs",
-    "headers": "En-têtes",
-    "params": "Params",
-    "auth": "Auth",
+    "selectFolder": "Sélectionnez un dossier pour modifier ses paramètres",
+    "notFound": "Dossier introuvable",
+    "saving": "Enregistrement...",
+    "tabs": {
+      "general": "Général",
+      "headers": "En-têtes",
+      "params": "Params",
+      "auth": "Auth",
+      "scripts": "Scripts"
+    },
+    "name": "Nom",
+    "description": "Description",
+    "descriptionPlaceholder": "Décrivez l'objectif de ce dossier...",
     "baseUrl": "URL de base",
-    "scripts": "Scripts",
-    "inherited": "Hérité",
-    "thisFolder": "Ce dossier"
+    "baseUrlPlaceholder": "ex : {{host}}/api/v1 ou /users",
+    "baseUrlHelp": "Ajouté au début de toutes les URLs de requêtes dans ce dossier. Supporte les variables d'environnement.",
+    "authType": "Type d'auth",
+    "inheritAuth": "Hériter du parent",
+    "noAuth": "Aucun",
+    "bearerToken": "Token Bearer",
+    "basicAuth": "Auth basique",
+    "apiKey": "Clé API",
+    "inheritAuthHelp": "Ce dossier utilisera les paramètres d'auth de son dossier parent.",
+    "noAuthHelp": "Aucune authentification ne sera appliquée aux requêtes de ce dossier.",
+    "preScript": "Script pré-requête",
+    "preScriptPlaceholder": "// S'exécute avant toutes les requêtes de ce dossier\n// Disponible : env.get(), env.set(), request.headers.set()...",
+    "postScript": "Script post-réponse",
+    "postScriptPlaceholder": "// S'exécute après toutes les requêtes de ce dossier\n// Disponible : response.status, response.body.json(), test()..."
+  },
+  "keyValue": {
+    "key": "Clé",
+    "value": "Valeur",
+    "description": "Description",
+    "add": "Ajouter"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "tabs": {
+      "general": "Général",
+      "proxy": "Proxy",
+      "ssl": "SSL",
+      "data": "Données"
+    },
+    "general": {
+      "language": "Langue",
+      "languageHelp": "Sélectionnez la langue de l'interface",
+      "timeout": "Délai d'expiration par défaut",
+      "timeoutHelp": "Délai d'expiration des requêtes en millisecondes",
+      "ms": "ms"
+    },
+    "proxy": {
+      "enableProxy": "Activer le proxy",
+      "httpProxy": "Proxy HTTP",
+      "httpsProxy": "Proxy HTTPS",
+      "noProxy": "Pas de proxy",
+      "noProxyHelp": "Liste des hôtes séparés par des virgules qui contournent le proxy"
+    },
+    "ssl": {
+      "verifyCertificates": "Vérifier les certificats SSL",
+      "verifyCertificatesHelp": "Désactiver pour les certificats auto-signés",
+      "clientCert": "Certificat client",
+      "clientKey": "Clé client",
+      "caCert": "Certificat CA",
+      "browse": "Parcourir..."
+    },
+    "data": {
+      "clearHistory": "Effacer l'historique",
+      "clearHistoryHelp": "Supprimer toutes les entrées de l'historique",
+      "clearHistoryConfirm": "Cela supprimera définitivement tout l'historique. Continuer ?",
+      "exportData": "Exporter les données",
+      "exportDataHelp": "Exporter toutes les collections et environnements",
+      "importData": "Importer les données",
+      "importDataHelp": "Importer les collections et environnements depuis une sauvegarde"
+    }
   },
   "common": {
     "save": "Enregistrer",
@@ -149,5 +289,22 @@
     "value": "Valeur",
     "description": "Description",
     "enabled": "Activé"
+  },
+  "auth": {
+    "login": "Connexion",
+    "register": "Inscription",
+    "signIn": "Se connecter",
+    "createAccount": "Créer un compte",
+    "welcomeBack": "Bon retour",
+    "createFirstAccount": "Créez votre premier compte pour commencer",
+    "name": "Nom",
+    "namePlaceholder": "Votre nom",
+    "email": "Email",
+    "emailPlaceholder": "vous@exemple.com",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "Entrez votre mot de passe",
+    "passwordHint": "Minimum 6 caractères",
+    "logout": "Déconnexion",
+    "profile": "Profil"
   }
 }

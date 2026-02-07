@@ -137,7 +137,7 @@ export async function interpolateRecord(
 export async function getVariablesView(environmentId: string, userId = 'local') {
   const variables = await prisma.environmentVariable.findMany({
     where: { environmentId },
-    orderBy: { key: 'asc' },
+    orderBy: { sortOrder: 'asc' },
   })
 
   const overrides = await prisma.localOverride.findMany({
@@ -155,6 +155,8 @@ export async function getVariablesView(environmentId: string, userId = 'local') 
       description: v.description,
       type: v.type,
       isSecret: v.isSecret,
+      category: v.category,
+      sortOrder: v.sortOrder,
       status: override ? 'overridden' : 'team',
     }
   })

@@ -1,6 +1,7 @@
 import { clsx } from 'clsx'
 import type { AuthType, AuthConfig, AuthBearer, AuthBasic, AuthApiKey, AuthJwt, AuthOAuth2, AuthHawk } from '@api-client/shared'
 import { AUTH_TYPES, JWT_ALGORITHMS, OAUTH2_GRANT_TYPES } from '@api-client/shared'
+import { useTranslation } from '../hooks/useTranslation'
 
 interface AuthEditorProps {
   authType: AuthType
@@ -10,6 +11,8 @@ interface AuthEditorProps {
 }
 
 export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEditorProps) {
+  const { t } = useTranslation()
+
   const handleTypeChange = (type: AuthType) => {
     // Reset config when type changes
     let newConfig: AuthConfig = {}
@@ -72,7 +75,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
   return (
     <div className="p-4">
       <div className="mb-4">
-        <label className={labelClass}>Auth Type</label>
+        <label className={labelClass}>{t('auth.type')}</label>
         <select
           value={authType}
           onChange={(e) => handleTypeChange(e.target.value as AuthType)}
@@ -87,16 +90,16 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
       </div>
 
       {authType === 'inherit' && (
-        <p className="text-sm text-gray-500">Using authentication from parent folder</p>
+        <p className="text-sm text-gray-500">{t('auth.inheritFromParent')}</p>
       )}
 
       {authType === 'none' && (
-        <p className="text-sm text-gray-500">No authentication will be applied</p>
+        <p className="text-sm text-gray-500">{t('auth.noAuth')}</p>
       )}
 
       {authType === 'bearer' && (
         <div>
-          <label className={labelClass}>Token</label>
+          <label className={labelClass}>{t('auth.token')}</label>
           <input
             type="text"
             value={(authConfig as AuthBearer).token || ''}
@@ -105,14 +108,14 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
             placeholder="{{token}} or paste token"
             className={clsx(inputClass, 'font-mono')}
           />
-          <p className="mt-1 text-xs text-gray-500">Sent as: Authorization: Bearer {'<token>'}</p>
+          <p className="mt-1 text-xs text-gray-500">{t('auth.tokenHelp')}</p>
         </div>
       )}
 
       {authType === 'basic' && (
         <div className="space-y-4">
           <div>
-            <label className={labelClass}>Username</label>
+            <label className={labelClass}>{t('auth.username')}</label>
             <input
               type="text"
               value={(authConfig as AuthBasic).username || ''}
@@ -123,7 +126,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
             />
           </div>
           <div>
-            <label className={labelClass}>Password</label>
+            <label className={labelClass}>{t('auth.password')}</label>
             <input
               type="password"
               value={(authConfig as AuthBasic).password || ''}
@@ -139,7 +142,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
       {authType === 'apikey' && (
         <div className="space-y-4">
           <div>
-            <label className={labelClass}>Key Name</label>
+            <label className={labelClass}>{t('auth.keyName')}</label>
             <input
               type="text"
               value={(authConfig as AuthApiKey).key || ''}
@@ -150,7 +153,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
             />
           </div>
           <div>
-            <label className={labelClass}>Value</label>
+            <label className={labelClass}>{t('common.value')}</label>
             <input
               type="text"
               value={(authConfig as AuthApiKey).value || ''}
@@ -161,7 +164,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
             />
           </div>
           <div>
-            <label className={labelClass}>Add To</label>
+            <label className={labelClass}>{t('auth.addTo')}</label>
             <select
               value={(authConfig as AuthApiKey).addTo || 'header'}
               onChange={(e) => {
@@ -170,9 +173,9 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
               }}
               className={inputClass}
             >
-              <option value="header">Header</option>
-              <option value="query">Query Parameter</option>
-              <option value="cookie">Cookie</option>
+              <option value="header">{t('auth.header')}</option>
+              <option value="query">{t('auth.queryParameter')}</option>
+              <option value="cookie">{t('auth.cookie')}</option>
             </select>
           </div>
         </div>
@@ -181,7 +184,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
       {authType === 'jwt' && (
         <div className="space-y-4">
           <div>
-            <label className={labelClass}>Algorithm</label>
+            <label className={labelClass}>{t('auth.algorithm')}</label>
             <select
               value={(authConfig as AuthJwt).algorithm || 'HS256'}
               onChange={(e) => {
@@ -198,7 +201,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
             </select>
           </div>
           <div>
-            <label className={labelClass}>Secret / Private Key</label>
+            <label className={labelClass}>{t('auth.secretKey')}</label>
             <textarea
               value={(authConfig as AuthJwt).secret || ''}
               onChange={(e) => handleConfigChange('secret', e.target.value)}
@@ -209,7 +212,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
             />
           </div>
           <div>
-            <label className={labelClass}>Payload (JSON)</label>
+            <label className={labelClass}>{t('auth.payload')}</label>
             <textarea
               value={(authConfig as AuthJwt).payload || '{}'}
               onChange={(e) => handleConfigChange('payload', e.target.value)}
@@ -220,7 +223,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
             />
           </div>
           <div>
-            <label className={labelClass}>Header Prefix</label>
+            <label className={labelClass}>{t('auth.headerPrefix')}</label>
             <input
               type="text"
               value={(authConfig as AuthJwt).headerPrefix || 'Bearer'}
@@ -235,7 +238,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
       {authType === 'oauth2' && (
         <div className="space-y-4">
           <div>
-            <label className={labelClass}>Grant Type</label>
+            <label className={labelClass}>{t('auth.grantType')}</label>
             <select
               value={(authConfig as AuthOAuth2).grantType || 'client_credentials'}
               onChange={(e) => {
@@ -252,7 +255,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
             </select>
           </div>
           <div>
-            <label className={labelClass}>Token URL</label>
+            <label className={labelClass}>{t('auth.tokenUrl')}</label>
             <input
               type="text"
               value={(authConfig as AuthOAuth2).accessTokenUrl || ''}
@@ -263,7 +266,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
             />
           </div>
           <div>
-            <label className={labelClass}>Client ID</label>
+            <label className={labelClass}>{t('auth.clientId')}</label>
             <input
               type="text"
               value={(authConfig as AuthOAuth2).clientId || ''}
@@ -274,7 +277,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
             />
           </div>
           <div>
-            <label className={labelClass}>Client Secret</label>
+            <label className={labelClass}>{t('auth.clientSecret')}</label>
             <input
               type="password"
               value={(authConfig as AuthOAuth2).clientSecret || ''}
@@ -285,7 +288,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
             />
           </div>
           <div>
-            <label className={labelClass}>Scope</label>
+            <label className={labelClass}>{t('auth.scope')}</label>
             <input
               type="text"
               value={(authConfig as AuthOAuth2).scope || ''}
@@ -305,7 +308,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
               }}
               className="w-4 h-4 rounded bg-gray-700 border-gray-600"
             />
-            <label className="text-sm">Enable PKCE</label>
+            <label className="text-sm">{t('auth.enablePkce')}</label>
           </div>
         </div>
       )}
@@ -313,7 +316,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
       {authType === 'hawk' && (
         <div className="space-y-4">
           <div>
-            <label className={labelClass}>Auth ID</label>
+            <label className={labelClass}>{t('auth.authId')}</label>
             <input
               type="text"
               value={(authConfig as AuthHawk).authId || ''}
@@ -324,7 +327,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
             />
           </div>
           <div>
-            <label className={labelClass}>Auth Key</label>
+            <label className={labelClass}>{t('auth.authKey')}</label>
             <input
               type="password"
               value={(authConfig as AuthHawk).authKey || ''}
@@ -335,7 +338,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
             />
           </div>
           <div>
-            <label className={labelClass}>Algorithm</label>
+            <label className={labelClass}>{t('auth.algorithm')}</label>
             <select
               value={(authConfig as AuthHawk).algorithm || 'sha256'}
               onChange={(e) => {
@@ -358,7 +361,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
               }}
               className="w-4 h-4 rounded bg-gray-700 border-gray-600"
             />
-            <label className="text-sm">Include payload hash</label>
+            <label className="text-sm">{t('auth.includePayloadHash')}</label>
           </div>
         </div>
       )}

@@ -1,5 +1,21 @@
 const API_BASE = '/api'
 
+// Token storage
+let authToken: string | null = localStorage.getItem('auth_token')
+
+export function setAuthToken(token: string | null) {
+  authToken = token
+  if (token) {
+    localStorage.setItem('auth_token', token)
+  } else {
+    localStorage.removeItem('auth_token')
+  }
+}
+
+export function getAuthToken(): string | null {
+  return authToken
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const headers: Record<string, string> = {
     ...(options?.headers as Record<string, string>),
@@ -8,6 +24,11 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   // Only set Content-Type to application/json if there's a body
   if (options?.body) {
     headers['Content-Type'] = 'application/json'
+  }
+
+  // Add auth token if available
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`
   }
 
   const response = await fetch(`${API_BASE}${path}`, {
@@ -48,6 +69,8 @@ export const requestsApi = {
     request<unknown>(`/requests/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) =>
     request<{ success: boolean }>(`/requests/${id}`, { method: 'DELETE' }),
+  duplicate: (id: string) =>
+    request<unknown>(`/requests/${id}/duplicate`, { method: 'POST' }),
   reorder: (id: string, data: { parentId: string; sortOrder: number }) =>
     request<unknown>(`/requests/${id}/reorder`, { method: 'PATCH', body: JSON.stringify(data) }),
   getResolved: (id: string, environmentId?: string) =>
@@ -96,6 +119,11 @@ export const environmentsApi = {
     request<{ success: boolean }>(`/environments/${id}/overrides/${key}`, { method: 'DELETE' }),
   resetAllOverrides: (id: string) =>
     request<{ success: boolean; count: number }>(`/environments/${id}/overrides`, { method: 'DELETE' }),
+  reorderVariables: (id: string, keys: string[]) =>
+    request<{ success: boolean }>(`/environments/${id}/variables/reorder`, {
+      method: 'PUT',
+      body: JSON.stringify({ keys }),
+    }),
 }
 
 // History
@@ -148,4 +176,33 @@ export const importApi = {
 export const exportApi = {
   openapi: (folderId: string) => request<unknown>(`/export/openapi/${folderId}`),
   curl: (requestId: string) => request<{ curl: string }>(`/export/curl/${requestId}`),
+}
+
+// Auth
+export interface AuthUser {
+  id: string
+  email: string
+  name: string
+  role: string
+}
+
+export interface AuthResponse {
+  token: string
+  user: AuthUser
+}
+
+export interface AuthStatus {
+  authRequired: boolean
+  setupRequired: boolean
+}
+
+export const authApi = {
+  status: () => request<AuthStatus>('/auth/status'),
+  register: (data: { email: string; password: string; name: string }) =>
+    request<AuthResponse>('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+  login: (data: { email: string; password: string }) =>
+    request<AuthResponse>('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+  me: () => request<AuthUser>('/auth/me'),
+  updateProfile: (data: { name?: string; password?: string; currentPassword?: string }) =>
+    request<AuthUser>('/auth/profile', { method: 'PUT', body: JSON.stringify(data) }),
 }

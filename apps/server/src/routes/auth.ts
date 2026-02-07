@@ -1,0 +1,206 @@
+import type { FastifyInstance } from 'fastify'
+import { z } from 'zod'
+import { prisma } from '../lib/prisma.js'
+import { hashPassword, verifyPassword, requireAuth, getCurrentUser, type JwtPayload } from '../lib/auth.js'
+
+const registerSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  name: z.string().min(1),
+})
+
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string(),
+})
+
+const updateProfileSchema = z.object({
+  name: z.string().min(1).optional(),
+  password: z.string().min(6).optional(),
+  currentPassword: z.string().optional(),
+})
+
+export async function authRoutes(fastify: FastifyInstance) {
+  // Register new user
+  fastify.post<{ Body: unknown }>('/api/auth/register', async (request, reply) => {
+    const parsed = registerSchema.safeParse(request.body)
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Validation failed', details: parsed.error.errors })
+    }
+
+    const { email, password, name } = parsed.data
+
+    // Check if email already exists
+    const existingUser = await prisma.user.findUnique({ where: { email } })
+    if (existingUser) {
+      return reply.status(400).send({ error: 'Email already registered' })
+    }
+
+    // Hash password and create user
+    const hashedPassword = await hashPassword(password)
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name,
+      },
+    })
+
+    // Generate JWT
+    const token = fastify.jwt.sign({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    } as JwtPayload)
+
+    return {
+      data: {
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
+      },
+    }
+  })
+
+  // Login
+  fastify.post<{ Body: unknown }>('/api/auth/login', async (request, reply) => {
+    const parsed = loginSchema.safeParse(request.body)
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Validation failed', details: parsed.error.errors })
+    }
+
+    const { email, password } = parsed.data
+
+    // Find user
+    const user = await prisma.user.findUnique({ where: { email } })
+    if (!user || !user.isActive) {
+      return reply.status(401).send({ error: 'Invalid credentials' })
+    }
+
+    // Verify password
+    const isValid = await verifyPassword(password, user.password)
+    if (!isValid) {
+      return reply.status(401).send({ error: 'Invalid credentials' })
+    }
+
+    // Generate JWT
+    const token = fastify.jwt.sign({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    } as JwtPayload)
+
+    return {
+      data: {
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
+      },
+    }
+  })
+
+  // Get current user
+  fastify.get('/api/auth/me', { preHandler: [requireAuth] }, async (request) => {
+    const currentUser = getCurrentUser(request)
+    if (!currentUser) {
+      return { error: 'Not authenticated' }
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: currentUser.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+      },
+    })
+
+    if (!user) {
+      return { error: 'User not found' }
+    }
+
+    return { data: user }
+  })
+
+  // Update profile
+  fastify.put<{ Body: unknown }>('/api/auth/profile', { preHandler: [requireAuth] }, async (request, reply) => {
+    const currentUser = getCurrentUser(request)
+    if (!currentUser) {
+      return reply.status(401).send({ error: 'Not authenticated' })
+    }
+
+    const parsed = updateProfileSchema.safeParse(request.body)
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Validation failed', details: parsed.error.errors })
+    }
+
+    const { name, password, currentPassword } = parsed.data
+    const updateData: { name?: string; password?: string } = {}
+
+    if (name) {
+      updateData.name = name
+    }
+
+    // If changing password, verify current password first
+    if (password) {
+      if (!currentPassword) {
+        return reply.status(400).send({ error: 'Current password required to change password' })
+      }
+
+      const user = await prisma.user.findUnique({ where: { id: currentUser.id } })
+      if (!user) {
+        return reply.status(404).send({ error: 'User not found' })
+      }
+
+      const isValid = await verifyPassword(currentPassword, user.password)
+      if (!isValid) {
+        return reply.status(400).send({ error: 'Current password is incorrect' })
+      }
+
+      updateData.password = await hashPassword(password)
+    }
+
+    const user = await prisma.user.update({
+      where: { id: currentUser.id },
+      data: updateData,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+      },
+    })
+
+    return { data: user }
+  })
+
+  // Check if auth is required (used by frontend to determine if login is needed)
+  fastify.get('/api/auth/status', async () => {
+    // Check if any users exist
+    const userCount = await prisma.user.count()
+
+    // AUTH_REQUIRED env var forces authentication even with no users
+    // When true: always require auth (team/production mode)
+    // When false/unset: only require auth if users exist (single-user/dev mode)
+    const authEnvRequired = process.env.AUTH_REQUIRED === 'true'
+
+    return {
+      data: {
+        authRequired: authEnvRequired || userCount > 0,
+        setupRequired: userCount === 0,
+      },
+    }
+  })
+}

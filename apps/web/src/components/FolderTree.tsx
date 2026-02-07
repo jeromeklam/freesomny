@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react'
-import { ChevronRight, ChevronDown, Folder, FolderOpen, FileJson, Plus, MoreVertical, Trash2, Edit2, GripVertical } from 'lucide-react'
+import { ChevronRight, ChevronDown, Folder, FolderOpen, FileJson, Plus, MoreVertical, Trash2, Edit2, GripVertical, Copy } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
-import { useCreateFolder, useCreateRequest, useDeleteFolder, useDeleteRequest, useReorderFolder, useReorderRequest } from '../hooks/useApi'
+import { useCreateFolder, useCreateRequest, useDeleteFolder, useDeleteRequest, useDuplicateRequest, useReorderFolder, useReorderRequest } from '../hooks/useApi'
+import { useTranslation } from '../hooks/useTranslation'
 
 interface FolderNode {
   id: string
@@ -69,6 +70,7 @@ function FolderItem({ folder, level = 0, parentId, onDragStart, onDragEnd, dragI
   const deleteFolderReq = useDeleteRequest()
   const reorderFolder = useReorderFolder()
   const reorderRequest = useReorderRequest()
+  const { t } = useTranslation()
 
   const isExpanded = expandedFolders.has(folder.id)
   const isSelected = selectedFolderId === folder.id
@@ -108,7 +110,7 @@ function FolderItem({ folder, level = 0, parentId, onDragStart, onDragEnd, dragI
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation()
     setShowMenu(false)
-    if (confirm(`Delete folder "${folder.name}" and all its contents?`)) {
+    if (confirm(t('sidebar.confirmDeleteFolder').replace('{name}', folder.name))) {
       deleteFolder.mutate(folder.id)
     }
   }
@@ -283,13 +285,13 @@ function FolderItem({ folder, level = 0, parentId, onDragStart, onDragEnd, dragI
                 onClick={handleAddFolder}
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
               >
-                <Plus className="w-4 h-4" /> Add Folder
+                <Plus className="w-4 h-4" /> {t('sidebar.addFolder')}
               </button>
               <button
                 onClick={handleAddRequest}
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
               >
-                <FileJson className="w-4 h-4" /> Add Request
+                <FileJson className="w-4 h-4" /> {t('sidebar.addRequest')}
               </button>
               <hr className="border-gray-700" />
               <button
@@ -302,13 +304,13 @@ function FolderItem({ folder, level = 0, parentId, onDragStart, onDragEnd, dragI
                 }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
               >
-                <Edit2 className="w-4 h-4" /> Edit Settings
+                <Edit2 className="w-4 h-4" /> {t('sidebar.editSettings')}
               </button>
               <button
                 onClick={handleDelete}
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-gray-700"
               >
-                <Trash2 className="w-4 h-4" /> Delete
+                <Trash2 className="w-4 h-4" /> {t('sidebar.delete')}
               </button>
             </div>
           )}
@@ -364,21 +366,24 @@ interface RequestItemProps {
 }
 
 function RequestItem({ request, folderId, level, onDragStart, onDragEnd, dragItem }: RequestItemProps) {
+  const [showMenu, setShowMenu] = useState(false)
   const [dropTarget, setDropTarget] = useState<'above' | 'below' | null>(null)
   const requestRef = useRef<HTMLDivElement>(null)
 
   const selectedRequestId = useAppStore((s) => s.selectedRequestId)
-  const setSelectedRequestId = useAppStore((s) => s.setSelectedRequestId)
   const setSelectedFolderId = useAppStore((s) => s.setSelectedFolderId)
   const setCurrentRequest = useAppStore((s) => s.setCurrentRequest)
+  const openRequestTab = useAppStore((s) => s.openRequestTab)
 
   const deleteRequest = useDeleteRequest()
+  const duplicateRequest = useDuplicateRequest()
   const reorderRequest = useReorderRequest()
+  const { t } = useTranslation()
 
   const isDragging = dragItem?.type === 'request' && dragItem.id === request.id
 
   const handleSelect = () => {
-    setSelectedRequestId(request.id)
+    openRequestTab(request.id, request.name, request.method)
     setSelectedFolderId(null)
     setCurrentRequest(request as unknown as ReturnType<typeof useAppStore.getState>['currentRequest'])
   }
@@ -477,17 +482,45 @@ function RequestItem({ request, folderId, level, onDragStart, onDragEnd, dragIte
         <MethodBadge method={request.method} />
         <span className="flex-1 truncate text-sm">{request.name}</span>
 
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            if (confirm(`Delete request "${request.name}"?`)) {
-              deleteRequest.mutate(request.id)
-            }
-          }}
-          className="p-1 hover:bg-gray-700 rounded opacity-0 group-hover:opacity-100"
-        >
-          <Trash2 className="w-3 h-3 text-gray-400" />
-        </button>
+        <div className="relative opacity-0 group-hover:opacity-100">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowMenu(!showMenu)
+            }}
+            className="p-1 hover:bg-gray-700 rounded"
+          >
+            <MoreVertical className="w-4 h-4 text-gray-400" />
+          </button>
+
+          {showMenu && (
+            <div className="absolute right-0 top-full z-50 mt-1 w-36 bg-gray-800 border border-gray-700 rounded shadow-lg">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowMenu(false)
+                  duplicateRequest.mutate(request.id)
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
+              >
+                <Copy className="w-4 h-4" /> {t('sidebar.duplicate')}
+              </button>
+              <hr className="border-gray-700" />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowMenu(false)
+                  if (confirm(t('sidebar.confirmDeleteRequest').replace('{name}', request.name))) {
+                    deleteRequest.mutate(request.id)
+                  }
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-gray-700"
+              >
+                <Trash2 className="w-4 h-4" /> {t('sidebar.delete')}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Drop indicator below */}
@@ -505,6 +538,7 @@ export function FolderTree() {
   const folders = useAppStore((s) => s.folders)
   const createFolder = useCreateFolder()
   const [dragItem, setDragItem] = useState<DragItem | null>(null)
+  const { t } = useTranslation()
 
   const handleDragStart = (item: DragItem) => {
     setDragItem(item)
@@ -517,11 +551,11 @@ export function FolderTree() {
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-3 py-2 border-b border-gray-700">
-        <span className="text-sm font-medium text-gray-400">COLLECTIONS</span>
+        <span className="text-sm font-medium text-gray-400">{t('sidebar.collections')}</span>
         <button
           onClick={() => createFolder.mutate({ name: 'New Collection', parentId: null })}
           className="p-1 hover:bg-gray-700 rounded"
-          title="New Collection"
+          title={t('sidebar.newCollection')}
         >
           <Plus className="w-4 h-4 text-gray-400" />
         </button>
@@ -530,12 +564,12 @@ export function FolderTree() {
       <div className="flex-1 overflow-auto py-2">
         {folders.length === 0 ? (
           <div className="px-4 py-8 text-center text-gray-500 text-sm">
-            <p>No collections yet.</p>
+            <p>{t('sidebar.noCollections')}</p>
             <button
               onClick={() => createFolder.mutate({ name: 'My Collection', parentId: null })}
               className="mt-2 text-blue-400 hover:underline"
             >
-              Create your first collection
+              {t('sidebar.createFirst')}
             </button>
           </div>
         ) : (

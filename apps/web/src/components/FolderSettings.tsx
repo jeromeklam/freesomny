@@ -2,23 +2,17 @@ import { useState, useEffect } from 'react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
 import { useFolder, useUpdateFolder } from '../hooks/useApi'
+import { useTranslation } from '../hooks/useTranslation'
 import { KeyValueEditor } from './KeyValueEditor'
 import type { Folder, KeyValueItem, AuthType } from '@api-client/shared'
 
 type FolderTab = 'general' | 'headers' | 'params' | 'auth' | 'scripts'
 
-const AUTH_TYPES: { value: AuthType; label: string }[] = [
-  { value: 'inherit', label: 'Inherit from parent' },
-  { value: 'none', label: 'None' },
-  { value: 'bearer', label: 'Bearer Token' },
-  { value: 'basic', label: 'Basic Auth' },
-  { value: 'apikey', label: 'API Key' },
-]
-
 export function FolderSettings() {
   const selectedFolderId = useAppStore((s) => s.selectedFolderId)
   const { data: folderData, isLoading } = useFolder(selectedFolderId)
   const updateFolder = useUpdateFolder()
+  const { t } = useTranslation()
 
   const [activeTab, setActiveTab] = useState<FolderTab>('general')
   const [name, setName] = useState('')
@@ -32,6 +26,14 @@ export function FolderSettings() {
   const [postScript, setPostScript] = useState('')
 
   const folder = folderData as Folder | null
+
+  const AUTH_TYPES: { value: AuthType; label: string }[] = [
+    { value: 'inherit', label: t('folder.inheritAuth') },
+    { value: 'none', label: t('folder.noAuth') },
+    { value: 'bearer', label: t('folder.bearerToken') },
+    { value: 'basic', label: t('folder.basicAuth') },
+    { value: 'apikey', label: t('folder.apiKey') },
+  ]
 
   // Sync state when folder data changes
   useEffect(() => {
@@ -120,7 +122,7 @@ export function FolderSettings() {
   if (!selectedFolderId) {
     return (
       <div className="flex items-center justify-center h-full text-gray-500">
-        Select a folder to edit its settings
+        {t('folder.selectFolder')}
       </div>
     )
   }
@@ -128,7 +130,7 @@ export function FolderSettings() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full text-gray-500">
-        Loading...
+        {t('common.loading')}
       </div>
     )
   }
@@ -136,17 +138,17 @@ export function FolderSettings() {
   if (!folder) {
     return (
       <div className="flex items-center justify-center h-full text-gray-500">
-        Folder not found
+        {t('folder.notFound')}
       </div>
     )
   }
 
   const tabs: { id: FolderTab; label: string }[] = [
-    { id: 'general', label: 'General' },
-    { id: 'headers', label: 'Headers' },
-    { id: 'params', label: 'Params' },
-    { id: 'auth', label: 'Auth' },
-    { id: 'scripts', label: 'Scripts' },
+    { id: 'general', label: t('folder.tabs.general') },
+    { id: 'headers', label: t('folder.tabs.headers') },
+    { id: 'params', label: t('folder.tabs.params') },
+    { id: 'auth', label: t('folder.tabs.auth') },
+    { id: 'scripts', label: t('folder.tabs.scripts') },
   ]
 
   return (
@@ -154,11 +156,11 @@ export function FolderSettings() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-400">Folder:</span>
+          <span className="text-sm text-gray-400">{t('folder.title')}:</span>
           <span className="font-medium">{folder.name}</span>
         </div>
         {updateFolder.isPending && (
-          <span className="text-xs text-gray-500">Saving...</span>
+          <span className="text-xs text-gray-500">{t('folder.saving')}</span>
         )}
       </div>
 
@@ -186,7 +188,7 @@ export function FolderSettings() {
           <div className="p-4 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">
-                Name
+                {t('folder.name')}
               </label>
               <input
                 type="text"
@@ -199,32 +201,32 @@ export function FolderSettings() {
 
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">
-                Description
+                {t('folder.description')}
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 onBlur={handleDescriptionBlur}
                 rows={3}
-                placeholder="Describe this folder's purpose..."
+                placeholder={t('folder.descriptionPlaceholder')}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500 resize-none"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">
-                Base URL
+                {t('folder.baseUrl')}
               </label>
               <input
                 type="text"
                 value={baseUrl}
                 onChange={(e) => setBaseUrl(e.target.value)}
                 onBlur={handleBaseUrlBlur}
-                placeholder="e.g., {{host}}/api/v1 or /users"
+                placeholder={t('folder.baseUrlPlaceholder')}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
               />
               <p className="mt-1 text-xs text-gray-500">
-                Prepended to all request URLs in this folder. Supports environment variables.
+                {t('folder.baseUrlHelp')}
               </p>
             </div>
           </div>
@@ -235,7 +237,7 @@ export function FolderSettings() {
             items={headers}
             onChange={handleHeadersChange}
             onBlur={handleHeadersBlur}
-            placeholder="Header"
+            placeholder={t('folder.tabs.headers')}
           />
         )}
 
@@ -244,7 +246,7 @@ export function FolderSettings() {
             items={queryParams}
             onChange={handleParamsChange}
             onBlur={handleParamsBlur}
-            placeholder="Parameter"
+            placeholder={t('folder.tabs.params')}
           />
         )}
 
@@ -252,7 +254,7 @@ export function FolderSettings() {
           <div className="p-4 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">
-                Auth Type
+                {t('folder.authType')}
               </label>
               <select
                 value={authType}
@@ -270,7 +272,7 @@ export function FolderSettings() {
             {authType === 'bearer' && (
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">
-                  Token
+                  {t('auth.token')}
                 </label>
                 <input
                   type="text"
@@ -287,7 +289,7 @@ export function FolderSettings() {
               <>
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">
-                    Username
+                    {t('auth.username')}
                   </label>
                   <input
                     type="text"
@@ -300,7 +302,7 @@ export function FolderSettings() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">
-                    Password
+                    {t('auth.password')}
                   </label>
                   <input
                     type="password"
@@ -318,7 +320,7 @@ export function FolderSettings() {
               <>
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">
-                    Key Name
+                    {t('auth.keyName')}
                   </label>
                   <input
                     type="text"
@@ -331,7 +333,7 @@ export function FolderSettings() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">
-                    Value
+                    {t('common.value')}
                   </label>
                   <input
                     type="text"
@@ -344,7 +346,7 @@ export function FolderSettings() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">
-                    Add To
+                    {t('auth.addTo')}
                   </label>
                   <select
                     value={authConfig.addTo || 'header'}
@@ -354,9 +356,9 @@ export function FolderSettings() {
                     }}
                     className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
                   >
-                    <option value="header">Header</option>
-                    <option value="query">Query Parameter</option>
-                    <option value="cookie">Cookie</option>
+                    <option value="header">{t('auth.header')}</option>
+                    <option value="query">{t('auth.queryParameter')}</option>
+                    <option value="cookie">{t('auth.cookie')}</option>
                   </select>
                 </div>
               </>
@@ -364,13 +366,13 @@ export function FolderSettings() {
 
             {authType === 'inherit' && (
               <p className="text-sm text-gray-500">
-                This folder will use the auth settings from its parent folder.
+                {t('folder.inheritAuthHelp')}
               </p>
             )}
 
             {authType === 'none' && (
               <p className="text-sm text-gray-500">
-                No authentication will be applied to requests in this folder.
+                {t('folder.noAuthHelp')}
               </p>
             )}
           </div>
@@ -380,28 +382,28 @@ export function FolderSettings() {
           <div className="p-4 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">
-                Pre-request Script
+                {t('folder.preScript')}
               </label>
               <textarea
                 value={preScript}
                 onChange={(e) => setPreScript(e.target.value)}
                 onBlur={handlePreScriptBlur}
                 rows={8}
-                placeholder="// Runs before all requests in this folder&#10;// Available: env.get(), env.set(), request.headers.set()..."
+                placeholder={t('folder.preScriptPlaceholder')}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500 resize-none"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">
-                Post-response Script
+                {t('folder.postScript')}
               </label>
               <textarea
                 value={postScript}
                 onChange={(e) => setPostScript(e.target.value)}
                 onBlur={handlePostScriptBlur}
                 rows={8}
-                placeholder="// Runs after all requests in this folder&#10;// Available: response.status, response.body.json(), test()..."
+                placeholder={t('folder.postScriptPlaceholder')}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500 resize-none"
               />
             </div>

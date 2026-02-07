@@ -44,6 +44,7 @@ export function RequestBuilder() {
   const setActiveTab = useAppStore((s) => s.setActiveTab)
   const isLoading = useAppStore((s) => s.isLoading)
   const clearScriptOutput = useAppStore((s) => s.clearScriptOutput)
+  const updateRequestTabInfo = useAppStore((s) => s.updateRequestTabInfo)
 
   const { data: requestData } = useRequest(selectedRequestId)
   const updateRequest = useUpdateRequest()
@@ -54,15 +55,23 @@ export function RequestBuilder() {
 
   useEffect(() => {
     if (requestData) {
-      setLocalRequest(requestData as RequestData)
+      const data = requestData as RequestData
+      setLocalRequest(data)
+      // Update tab info when request data loads
+      updateRequestTabInfo(data.id, data.name, data.method)
     } else {
       setLocalRequest(null)
     }
-  }, [requestData])
+  }, [requestData, updateRequestTabInfo])
 
   const handleChange = (field: keyof RequestData, value: unknown) => {
     if (!localRequest) return
-    setLocalRequest({ ...localRequest, [field]: value })
+    const updated = { ...localRequest, [field]: value }
+    setLocalRequest(updated)
+    // Update tab info if name or method changed
+    if (field === 'name' || field === 'method') {
+      updateRequestTabInfo(localRequest.id, updated.name, updated.method)
+    }
   }
 
   const handleSave = () => {

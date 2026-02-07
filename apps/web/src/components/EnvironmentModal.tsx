@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { X, Plus, Trash2, RotateCcw, Lock, Unlock } from 'lucide-react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { X, Plus, Trash2, RotateCcw, Lock, Unlock, GripVertical, Tag, Cog } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
 import { useEnvironmentVariables } from '../hooks/useApi'
@@ -14,6 +14,8 @@ interface VariableView {
   description: string
   type: string
   isSecret: boolean
+  category: 'input' | 'generated'
+  sortOrder: number
   status: 'team' | 'overridden'
 }
 
@@ -22,10 +24,13 @@ export function EnvironmentModal() {
   const [newKey, setNewKey] = useState('')
   const [newValue, setNewValue] = useState('')
   const [newIsSecret, setNewIsSecret] = useState(false)
+  const [newCategory, setNewCategory] = useState<'input' | 'generated'>('input')
   const [showSecrets, setShowSecrets] = useState(false)
   const [editedName, setEditedName] = useState('')
   const [editedDescription, setEditedDescription] = useState('')
   const [settingsChanged, setSettingsChanged] = useState(false)
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
 
   const showEnvironmentModal = useAppStore((s) => s.showEnvironmentModal)
   const setShowEnvironmentModal = useAppStore((s) => s.setShowEnvironmentModal)
@@ -36,6 +41,7 @@ export function EnvironmentModal() {
   const { data: variables, refetch } = useEnvironmentVariables(activeEnvironmentId)
   const queryClient = useQueryClient()
   const { t } = useTranslation()
+  const dragRowRef = useRef<HTMLTableRowElement | null>(null)
 
   const activeEnv = environments.find((e) => e.id === activeEnvironmentId)
 
@@ -48,6 +54,49 @@ export function EnvironmentModal() {
     }
   }, [activeEnv?.id])
 
+  const variablesList = (variables || []) as VariableView[]
+
+  // Drag & drop handlers
+  const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
+    setDragIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', String(index))
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.4'
+    }
+  }, [])
+
+  const handleDragEnd = useCallback((e: React.DragEvent) => {
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '1'
+    }
+    setDragIndex(null)
+    setDragOverIndex(null)
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverIndex(index)
+  }, [])
+
+  const handleDrop = useCallback(async (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault()
+    const fromIndex = dragIndex
+    setDragIndex(null)
+    setDragOverIndex(null)
+
+    if (fromIndex === null || fromIndex === dropIndex || !activeEnvironmentId) return
+
+    const list = [...variablesList]
+    const [moved] = list.splice(fromIndex, 1)
+    list.splice(dropIndex, 0, moved)
+    const keys = list.map((v) => v.key)
+
+    await environmentsApi.reorderVariables(activeEnvironmentId, keys)
+    refetch()
+  }, [dragIndex, variablesList, activeEnvironmentId, refetch])
+
   if (!showEnvironmentModal) return null
 
   const handleAddVariable = async () => {
@@ -57,10 +106,12 @@ export function EnvironmentModal() {
       value: newValue,
       type: 'string',
       isSecret: newIsSecret,
+      category: newCategory,
     })
     setNewKey('')
     setNewValue('')
     setNewIsSecret(false)
+    setNewCategory('input')
     refetch()
   }
 
@@ -73,6 +124,22 @@ export function EnvironmentModal() {
       value: variable.teamValue,
       type: variable.type || 'string',
       isSecret: !currentIsSecret,
+      category: variable.category,
+    })
+    refetch()
+  }
+
+  const handleToggleCategory = async (key: string, currentCategory: string) => {
+    if (!activeEnvironmentId) return
+    const variable = variablesList.find(v => v.key === key)
+    if (!variable) return
+
+    const newCat = currentCategory === 'input' ? 'generated' : 'input'
+    await environmentsApi.setVariable(activeEnvironmentId, key, {
+      value: variable.teamValue,
+      type: variable.type || 'string',
+      isSecret: variable.isSecret,
+      category: newCat,
     })
     refetch()
   }
@@ -118,6 +185,35 @@ export function EnvironmentModal() {
     }
   }
 
+  const handlePromoteToTeam = async (key: string) => {
+    if (!activeEnvironmentId) return
+    const variable = variablesList.find(v => v.key === key)
+    if (!variable || !variable.localValue) return
+
+    if (confirm(t('environment.confirmPromoteToTeam').replace('{key}', key))) {
+      // Set team value to the local override value
+      await environmentsApi.setVariable(activeEnvironmentId, key, {
+        value: variable.localValue,
+        type: variable.type || 'string',
+        isSecret: variable.isSecret,
+        category: variable.category,
+      })
+      // Remove the local override
+      await environmentsApi.deleteOverride(activeEnvironmentId, key)
+      refetch()
+    }
+  }
+
+  const handleStartOverride = async (key: string) => {
+    if (!activeEnvironmentId) return
+    const variable = variablesList.find(v => v.key === key)
+    if (!variable) return
+
+    // Copy team value to local override
+    await environmentsApi.setOverride(activeEnvironmentId, key, { value: variable.teamValue })
+    refetch()
+  }
+
   const handleDeleteVariable = async (key: string) => {
     if (!activeEnvironmentId) return
     if (confirm(`Delete variable "${key}"?`)) {
@@ -126,11 +222,9 @@ export function EnvironmentModal() {
     }
   }
 
-  const variablesList = (variables || []) as VariableView[]
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-4xl max-h-[80vh] bg-gray-900 border border-gray-700 rounded-lg shadow-xl flex flex-col">
+      <div className="w-full max-w-5xl max-h-[80vh] bg-gray-900 border border-gray-700 rounded-lg shadow-xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
           <div>
@@ -201,7 +295,9 @@ export function EnvironmentModal() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-xs text-gray-500 uppercase">
+                    <th className="pb-2 w-8"></th>
                     <th className="pb-2 font-medium">{t('environment.key')}</th>
+                    <th className="pb-2 font-medium w-16">{t('environment.category')}</th>
                     <th className="pb-2 font-medium">{t('environment.teamValue')}</th>
                     <th className="pb-2 font-medium">{t('environment.yourValue')}</th>
                     <th className="pb-2 font-medium">{t('environment.status')}</th>
@@ -209,17 +305,52 @@ export function EnvironmentModal() {
                   </tr>
                 </thead>
                 <tbody>
-                  {variablesList.map((v) => (
-                    <tr key={v.key} className="border-t border-gray-700/50">
-                      <td className="py-3 pr-4 font-mono text-gray-300">
-                        <div className="flex items-center gap-2">
+                  {variablesList.map((v, idx) => (
+                    <tr
+                      key={v.key}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, idx)}
+                      onDragEnd={handleDragEnd}
+                      onDragOver={(e) => handleDragOver(e, idx)}
+                      onDrop={(e) => handleDrop(e, idx)}
+                      className={clsx(
+                        'border-t border-gray-700/50 transition-colors',
+                        dragOverIndex === idx && dragIndex !== idx && 'bg-blue-900/20 border-t-blue-500',
+                        dragIndex === idx && 'opacity-40'
+                      )}
+                    >
+                      <td className="py-3 pr-1">
+                        <div className="cursor-grab active:cursor-grabbing text-gray-600 hover:text-gray-400">
+                          <GripVertical className="w-4 h-4" />
+                        </div>
+                      </td>
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center gap-2 font-mono text-gray-300">
                           {v.isSecret && (
                             <span title={t('environment.protected')}>
-                              <Lock className="w-3 h-3 text-yellow-500" />
+                              <Lock className="w-3 h-3 text-yellow-500 flex-shrink-0" />
                             </span>
                           )}
                           {v.key}
                         </div>
+                        {v.description && (
+                          <p className="text-xs text-gray-500 mt-0.5">{v.description}</p>
+                        )}
+                      </td>
+                      <td className="py-3 pr-4">
+                        <button
+                          onClick={() => handleToggleCategory(v.key, v.category)}
+                          className={clsx(
+                            'inline-flex items-center gap-1 px-1.5 py-0.5 text-xs rounded border cursor-pointer',
+                            v.category === 'input'
+                              ? 'bg-green-900/30 border-green-700/50 text-green-400'
+                              : 'bg-purple-900/30 border-purple-700/50 text-purple-400'
+                          )}
+                          title={v.category === 'input' ? t('environment.inputVar') : t('environment.generatedVar')}
+                        >
+                          {v.category === 'input' ? <Tag className="w-3 h-3" /> : <Cog className="w-3 h-3" />}
+                          {v.category === 'input' ? t('environment.input') : t('environment.generated')}
+                        </button>
                       </td>
                       <td className="py-3 pr-4 font-mono text-gray-400">
                         {v.isSecret && !showSecrets ? '••••••••' : v.teamValue || '-'}
@@ -234,16 +365,26 @@ export function EnvironmentModal() {
                         />
                       </td>
                       <td className="py-3 pr-4">
-                        <span
-                          className={clsx(
-                            'inline-flex items-center px-2 py-0.5 text-xs rounded',
+                        <button
+                          onClick={() =>
                             v.status === 'overridden'
-                              ? 'bg-blue-900/50 text-blue-400'
-                              : 'bg-gray-700 text-gray-400'
+                              ? handlePromoteToTeam(v.key)
+                              : handleStartOverride(v.key)
+                          }
+                          className={clsx(
+                            'inline-flex items-center px-2 py-0.5 text-xs rounded cursor-pointer transition-colors',
+                            v.status === 'overridden'
+                              ? 'bg-blue-900/50 text-blue-400 hover:bg-blue-800/60'
+                              : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
                           )}
+                          title={
+                            v.status === 'overridden'
+                              ? t('environment.clickToPromoteToTeam')
+                              : t('environment.clickToOverride')
+                          }
                         >
                           [{t(`environment.${v.status}`)}]
-                        </span>
+                        </button>
                       </td>
                       <td className="py-3">
                         <div className="flex items-center gap-1">
@@ -300,6 +441,18 @@ export function EnvironmentModal() {
                   placeholder={t('common.value')}
                   className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
                 />
+                <button
+                  onClick={() => setNewCategory(newCategory === 'input' ? 'generated' : 'input')}
+                  className={clsx(
+                    'p-2 rounded border',
+                    newCategory === 'input'
+                      ? 'bg-green-900/30 border-green-700/50 text-green-400'
+                      : 'bg-purple-900/30 border-purple-700/50 text-purple-400'
+                  )}
+                  title={newCategory === 'input' ? t('environment.inputVar') : t('environment.generatedVar')}
+                >
+                  {newCategory === 'input' ? <Tag className="w-4 h-4" /> : <Cog className="w-4 h-4" />}
+                </button>
                 <button
                   onClick={() => setNewIsSecret(!newIsSecret)}
                   className={clsx(

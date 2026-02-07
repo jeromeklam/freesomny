@@ -7,6 +7,95 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// User model for authentication
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  password     String    // bcrypt hashed
+  name         String
+  role         String    @default("user") // user | admin
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Ownership
+  folders      Folder[]
+  environments Environment[]
+  history      HistoryEntry[]
+
+  // Sharing (direct user sharing)
+  sharedFolders      FolderShare[]      @relation("SharedWithUser")
+  sharedEnvironments EnvironmentShare[] @relation("SharedWithUser")
+
+  // Group membership
+  groupMemberships   GroupMember[]
+
+  @@index([email])
+}
+
+// Group for team collaboration
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  description String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Members
+  members     GroupMember[]
+
+  // Owned resources
+  folders     Folder[]
+  environments Environment[]
+
+  @@index([name])
+}
+
+// Group membership (users belong to groups)
+model GroupMember {
+  id        String   @id @default(cuid())
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("member") // member | admin | owner
+  createdAt DateTime @default(now())
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+  @@index([userId])
+}
+
+// Folder sharing
+model FolderShare {
+  id         String   @id @default(cuid())
+  folderId   String
+  folder     Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation("SharedWithUser", fields: [userId], references: [id], onDelete: Cascade)
+  permission String   @default("read") // read | write | admin
+  createdAt  DateTime @default(now())
+
+  @@unique([folderId, userId])
+  @@index([folderId])
+  @@index([userId])
+}
+
+// Environment sharing
+model EnvironmentShare {
+  id            String      @id @default(cuid())
+  environmentId String
+  environment   Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User        @relation("SharedWithUser", fields: [userId], references: [id], onDelete: Cascade)
+  permission    String      @default("read") // read | write | admin
+  createdAt     DateTime    @default(now())
+
+  @@unique([environmentId, userId])
+  @@index([environmentId])
+  @@index([userId])
+}
+
 model Folder {
   id          String    @id @default(cuid())
   name        String
@@ -31,11 +120,20 @@ model Folder {
   verifySsl       String  @default("inherit") // inherit | true | false
   proxy           String?
 
+  // Ownership (either user OR group, not both)
+  userId      String?
+  owner       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  groupId     String?
+  group       Group?   @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  shares      FolderShare[]
+
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([parentId])
+  @@index([userId])
+  @@index([groupId])
 }
 
 model Request {
@@ -75,8 +173,19 @@ model Environment {
   description String                @default("")
   isActive    Boolean               @default(false)
   variables   EnvironmentVariable[]
+
+  // Ownership (either user OR group, not both)
+  userId      String?
+  owner       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  groupId     String?
+  group       Group?   @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  shares      EnvironmentShare[]
+
   createdAt   DateTime              @default(now())
   updatedAt   DateTime              @updatedAt
+
+  @@index([userId])
+  @@index([groupId])
 }
 
 model EnvironmentVariable {
@@ -87,6 +196,8 @@ model EnvironmentVariable {
   type          String      @default("string") // string | secret | dynamic
   scope         String      @default("global") // global | collection | request | local
   isSecret      Boolean     @default(false)
+  category      String      @default("input") // input | generated
+  sortOrder     Int         @default(0)
   environmentId String
   environment   Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
 
@@ -119,9 +230,15 @@ model HistoryEntry {
   responseBody    String?
   responseTime    Int      // ms
   responseSize    Int      // bytes
+
+  // Ownership
+  userId          String?
+  owner           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
   createdAt       DateTime @default(now())
 
   @@index([createdAt])
+  @@index([userId])
 }
 
 model Settings {

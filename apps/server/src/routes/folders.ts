@@ -3,14 +3,54 @@ import type { Folder } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { createFolderSchema, updateFolderSchema, reorderSchema } from '@api-client/shared'
 import { parseHeaders, parseQueryParams, parseAuthConfig, stringifyJson } from '../lib/json.js'
+import { optionalAuth, requireAuth, getCurrentUserId } from '../lib/auth.js'
+import { z } from 'zod'
+
+const shareFolderSchema = z.object({
+  email: z.string().email(),
+  permission: z.enum(['read', 'write', 'admin']).default('read'),
+})
 
 export async function folderRoutes(fastify: FastifyInstance) {
   // Get all folders as tree
-  fastify.get('/api/folders', async () => {
+  fastify.get('/api/folders', { preHandler: [optionalAuth] }, async (request) => {
+    const userId = getCurrentUserId(request)
+
+    // Build where clause: if authenticated, show owned + shared + group folders
+    // If not authenticated, show all folders (backward compatibility)
+    let whereClause = {}
+    if (userId) {
+      // Get folder IDs that are shared with the user
+      const sharedFolders = await prisma.folderShare.findMany({
+        where: { userId },
+        select: { folderId: true },
+      })
+      const sharedFolderIds = sharedFolders.map(sf => sf.folderId)
+
+      // Get groups the user is a member of
+      const groupMemberships = await prisma.groupMember.findMany({
+        where: { userId },
+        select: { groupId: true },
+      })
+      const groupIds = groupMemberships.map(gm => gm.groupId)
+
+      whereClause = {
+        OR: [
+          { userId },
+          { id: { in: sharedFolderIds } },
+          { groupId: { in: groupIds } },
+        ],
+      }
+    }
+
     const folders = await prisma.folder.findMany({
+      where: whereClause,
       include: {
         requests: {
           orderBy: { sortOrder: 'asc' },
+        },
+        group: {
+          select: { id: true, name: true },
         },
       },
       orderBy: { sortOrder: 'asc' },
@@ -78,12 +118,13 @@ export async function folderRoutes(fastify: FastifyInstance) {
   })
 
   // Create folder
-  fastify.post<{ Body: unknown }>('/api/folders', async (request) => {
+  fastify.post<{ Body: unknown }>('/api/folders', { preHandler: [optionalAuth] }, async (request) => {
     const parsed = createFolderSchema.safeParse(request.body)
     if (!parsed.success) {
       return { error: 'Validation failed', details: parsed.error.errors }
     }
 
+    const userId = getCurrentUserId(request)
     const data = parsed.data
     const folder = await prisma.folder.create({
       data: {
@@ -102,6 +143,7 @@ export async function folderRoutes(fastify: FastifyInstance) {
         verifySsl: data.verifySsl,
         proxy: data.proxy,
         sortOrder: data.sortOrder,
+        userId: userId,
       },
     })
 
@@ -253,4 +295,158 @@ export async function folderRoutes(fastify: FastifyInstance) {
       },
     }
   })
+
+  // Share folder with a user
+  fastify.post<{ Params: { id: string }; Body: unknown }>(
+    '/api/folders/:id/share',
+    { preHandler: [requireAuth] },
+    async (request, reply) => {
+      const parsed = shareFolderSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: 'Validation failed', details: parsed.error.errors })
+      }
+
+      const userId = getCurrentUserId(request)
+      const { email, permission } = parsed.data
+
+      // Check if the current user owns the folder or has admin permission
+      const folder = await prisma.folder.findUnique({
+        where: { id: request.params.id },
+        include: {
+          shares: {
+            where: { userId: userId! },
+          },
+        },
+      })
+
+      if (!folder) {
+        return reply.status(404).send({ error: 'Folder not found' })
+      }
+
+      const isOwner = folder.userId === userId
+      const hasAdminShare = folder.shares.some(s => s.permission === 'admin')
+
+      if (!isOwner && !hasAdminShare) {
+        return reply.status(403).send({ error: 'You do not have permission to share this folder' })
+      }
+
+      // Find the user to share with
+      const targetUser = await prisma.user.findUnique({
+        where: { email },
+      })
+
+      if (!targetUser) {
+        return reply.status(404).send({ error: 'User not found' })
+      }
+
+      if (targetUser.id === userId) {
+        return reply.status(400).send({ error: 'Cannot share with yourself' })
+      }
+
+      // Create or update share
+      const share = await prisma.folderShare.upsert({
+        where: {
+          folderId_userId: {
+            folderId: request.params.id,
+            userId: targetUser.id,
+          },
+        },
+        update: { permission },
+        create: {
+          folderId: request.params.id,
+          userId: targetUser.id,
+          permission,
+        },
+        include: {
+          user: {
+            select: { id: true, email: true, name: true },
+          },
+        },
+      })
+
+      return { data: share }
+    }
+  )
+
+  // Get folder shares
+  fastify.get<{ Params: { id: string } }>(
+    '/api/folders/:id/shares',
+    { preHandler: [requireAuth] },
+    async (request, reply) => {
+      const userId = getCurrentUserId(request)
+
+      // Check if the current user owns the folder or has access
+      const folder = await prisma.folder.findUnique({
+        where: { id: request.params.id },
+        include: {
+          shares: {
+            include: {
+              user: {
+                select: { id: true, email: true, name: true },
+              },
+            },
+          },
+        },
+      })
+
+      if (!folder) {
+        return reply.status(404).send({ error: 'Folder not found' })
+      }
+
+      const isOwner = folder.userId === userId
+      const hasAccess = folder.shares.some(s => s.userId === userId)
+
+      if (!isOwner && !hasAccess) {
+        return reply.status(403).send({ error: 'You do not have access to this folder' })
+      }
+
+      return {
+        data: {
+          owner: folder.userId,
+          shares: folder.shares,
+        },
+      }
+    }
+  )
+
+  // Remove folder share
+  fastify.delete<{ Params: { id: string; userId: string } }>(
+    '/api/folders/:id/shares/:userId',
+    { preHandler: [requireAuth] },
+    async (request, reply) => {
+      const currentUserId = getCurrentUserId(request)
+
+      // Check if the current user owns the folder or has admin permission
+      const folder = await prisma.folder.findUnique({
+        where: { id: request.params.id },
+        include: {
+          shares: {
+            where: { userId: currentUserId! },
+          },
+        },
+      })
+
+      if (!folder) {
+        return reply.status(404).send({ error: 'Folder not found' })
+      }
+
+      const isOwner = folder.userId === currentUserId
+      const hasAdminShare = folder.shares.some(s => s.permission === 'admin')
+
+      if (!isOwner && !hasAdminShare) {
+        return reply.status(403).send({ error: 'You do not have permission to manage shares for this folder' })
+      }
+
+      await prisma.folderShare.delete({
+        where: {
+          folderId_userId: {
+            folderId: request.params.id,
+            userId: request.params.userId,
+          },
+        },
+      })
+
+      return { data: { success: true } }
+    }
+  )
 }

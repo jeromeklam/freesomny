@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { foldersApi, requestsApi, environmentsApi, historyApi, settingsApi } from '../lib/api'
+import { foldersApi, requestsApi, environmentsApi, historyApi, settingsApi, authApi } from '../lib/api'
 import { useAppStore } from '../stores/app'
 
 // Folders
@@ -101,6 +101,17 @@ export function useDeleteRequest() {
   })
 }
 
+export function useDuplicateRequest() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: requestsApi.duplicate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['folders'] })
+    },
+  })
+}
+
 export function useReorderRequest() {
   const queryClient = useQueryClient()
 
@@ -128,6 +139,7 @@ export function useReorderFolder() {
 export function useSendRequest() {
   const setCurrentResponse = useAppStore((s) => s.setCurrentResponse)
   const setIsLoading = useAppStore((s) => s.setIsLoading)
+  const setRequestError = useAppStore((s) => s.setRequestError)
   const setScriptOutput = useAppStore((s) => s.setScriptOutput)
   const activeEnvironmentId = useAppStore((s) => s.activeEnvironmentId)
   const queryClient = useQueryClient()
@@ -137,6 +149,7 @@ export function useSendRequest() {
     onMutate: () => {
       setIsLoading(true)
       setCurrentResponse(null)
+      setRequestError(null)
     },
     onSuccess: (data: unknown) => {
       const result = data as {
@@ -157,10 +170,16 @@ export function useSendRequest() {
           }
         }
         skipped?: boolean
+        error?: string
       }
 
-      if (result.response) {
+      // Check for error in response (e.g., network error, timeout)
+      if (result.error) {
+        setRequestError(result.error)
+        setCurrentResponse(null)
+      } else if (result.response) {
         setCurrentResponse(result.response)
+        setRequestError(null)
       }
 
       // Combine script outputs
@@ -171,6 +190,12 @@ export function useSendRequest() {
 
       // Refresh history
       queryClient.invalidateQueries({ queryKey: ['history'] })
+    },
+    onError: (error: Error) => {
+      // Handle network errors, server unreachable, etc.
+      setRequestError(error.message || 'Request failed')
+      setCurrentResponse(null)
+      setScriptOutput({ logs: [], errors: [], tests: [] })
     },
     onSettled: () => {
       setIsLoading(false)
@@ -274,5 +299,13 @@ export function useUpdateSettings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] })
     },
+  })
+}
+
+// Auth
+export function useAuthStatus() {
+  return useQuery({
+    queryKey: ['auth-status'],
+    queryFn: () => authApi.status(),
   })
 }

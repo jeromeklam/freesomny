@@ -182,6 +182,7 @@ export const updateEnvironmentSchema = createEnvironmentSchema.partial()
 // Variable schemas
 export const variableTypeSchema = z.enum(['string', 'secret', 'dynamic'])
 export const variableScopeSchema = z.enum(['global', 'collection', 'request', 'local'])
+export const variableCategorySchema = z.enum(['input', 'generated'])
 
 export const createVariableSchema = z.object({
   key: z.string().min(1),
@@ -190,6 +191,7 @@ export const createVariableSchema = z.object({
   type: variableTypeSchema.default('string'),
   scope: variableScopeSchema.default('global'),
   isSecret: z.boolean().default(false),
+  category: variableCategorySchema.default('input'),
 })
 
 export const updateVariableSchema = createVariableSchema.partial()

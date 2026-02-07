@@ -2,6 +2,7 @@ import CodeMirror from '@uiw/react-codemirror'
 import { json } from '@codemirror/lang-json'
 import { clsx } from 'clsx'
 import { BODY_TYPES } from '@api-client/shared'
+import { useTranslation } from '../hooks/useTranslation'
 
 interface BodyEditorProps {
   bodyType: string
@@ -11,6 +12,8 @@ interface BodyEditorProps {
 }
 
 export function BodyEditor({ bodyType, body, onChange, onBlur }: BodyEditorProps) {
+  const { t } = useTranslation()
+
   const handleTypeChange = (type: string) => {
     onChange(type, body)
     onBlur?.()
@@ -54,14 +57,14 @@ export function BodyEditor({ bodyType, body, onChange, onBlur }: BodyEditorProps
             onClick={formatJson}
             className="ml-auto px-3 py-1 text-xs text-gray-400 hover:text-white border border-gray-600 rounded hover:border-gray-500"
           >
-            Format
+            {t('body.format')}
           </button>
         )}
       </div>
 
       {bodyType === 'none' ? (
         <div className="flex items-center justify-center flex-1 text-gray-500">
-          <p>This request does not have a body</p>
+          <p>{t('body.noBody')}</p>
         </div>
       ) : bodyType === 'json' ? (
         <div className="flex-1 overflow-auto">
@@ -88,10 +91,10 @@ export function BodyEditor({ bodyType, body, onChange, onBlur }: BodyEditorProps
             onBlur={onBlur}
             placeholder={
               bodyType === 'raw'
-                ? 'Enter raw body content...'
+                ? t('body.enterRaw')
                 : bodyType === 'urlencoded'
-                ? 'key1=value1&key2=value2'
-                : 'Enter body content...'
+                ? t('body.enterUrlencoded')
+                : t('body.enterContent')
             }
             className="w-full h-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono resize-none focus:outline-none focus:border-blue-500"
           />

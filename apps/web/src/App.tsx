@@ -1,20 +1,24 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { Settings, Clock, Upload, Globe } from 'lucide-react'
+import { Settings, Clock, Upload, Globe, LogOut, User } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from './stores/app'
-import { useFolders, useEnvironments } from './hooks/useApi'
+import { useFolders, useEnvironments, useAuthStatus } from './hooks/useApi'
 import { useTranslation } from './hooks/useTranslation'
 import { languages, type Language } from './i18n'
+import { setAuthToken } from './lib/api'
 import { FolderTree } from './components/FolderTree'
 import { RequestBuilder } from './components/RequestBuilder'
+import { RequestTabBar } from './components/RequestTabBar'
 import { ResponseViewer } from './components/ResponseViewer'
 import { EnvironmentSelector } from './components/EnvironmentSelector'
 import { EnvironmentModal } from './components/EnvironmentModal'
 import { History } from './components/History'
 import { FolderSettings } from './components/FolderSettings'
 import { ImportModal } from './components/ImportModal'
+import { SettingsModal } from './components/SettingsModal'
+import { AuthScreen } from './components/AuthScreen'
 
-function App() {
+function MainApp() {
   const [isDraggingSidebar, setIsDraggingSidebar] = useState(false)
   const [isDraggingSplitter, setIsDraggingSplitter] = useState(false)
   const [showImport, setShowImport] = useState(false)
@@ -27,12 +31,19 @@ function App() {
   const setShowSettings = useAppStore((s) => s.setShowSettings)
   const selectedFolderId = useAppStore((s) => s.selectedFolderId)
   const selectedRequestId = useAppStore((s) => s.selectedRequestId)
+  const user = useAppStore((s) => s.user)
+  const setUser = useAppStore((s) => s.setUser)
 
   const { t, language, setLanguage } = useTranslation()
 
   // Load initial data
   useFolders()
   useEnvironments()
+
+  const handleLogout = () => {
+    setAuthToken(null)
+    setUser(null)
+  }
 
   // Handle sidebar resize
   const handleSidebarMouseDown = useCallback((e: React.MouseEvent) => {
@@ -132,6 +143,23 @@ function App() {
               ))}
             </select>
           </div>
+
+          {/* User menu */}
+          {user && (
+            <div className="flex items-center gap-2 ml-2 border-l border-gray-600 pl-2">
+              <div className="flex items-center gap-1 text-sm text-gray-400">
+                <User className="w-4 h-4" />
+                <span>{user.name}</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="p-1 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
+                title={t('auth.logout')}
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
@@ -168,10 +196,13 @@ function App() {
             </div>
           ) : (
             <div ref={splitContainerRef} className="flex flex-col h-full">
+              {/* Request tabs */}
+              <RequestTabBar />
+
               {/* Request builder */}
               <div
-                className="overflow-hidden"
-                style={{ height: `calc(${requestPanelHeight}% - 2px)` }}
+                className="overflow-hidden flex-1"
+                style={{ maxHeight: `calc(${requestPanelHeight}% - 2px)` }}
               >
                 <RequestBuilder />
               </div>
@@ -206,8 +237,66 @@ function App() {
       <EnvironmentModal />
       <History />
       <ImportModal isOpen={showImport} onClose={() => setShowImport(false)} />
+      <SettingsModal />
     </div>
   )
+}
+
+function App() {
+  const [isLoading, setIsLoading] = useState(true)
+  const user = useAppStore((s) => s.user)
+  const setUser = useAppStore((s) => s.setUser)
+  const authRequired = useAppStore((s) => s.authRequired)
+  const setAuthRequired = useAppStore((s) => s.setAuthRequired)
+  const setupRequired = useAppStore((s) => s.setupRequired)
+  const setSetupRequired = useAppStore((s) => s.setSetupRequired)
+
+  // Check auth status on load
+  const { data: authStatus } = useAuthStatus()
+
+  useEffect(() => {
+    if (authStatus) {
+      setAuthRequired(authStatus.authRequired)
+      setSetupRequired(authStatus.setupRequired)
+      setIsLoading(false)
+    }
+  }, [authStatus, setAuthRequired, setSetupRequired])
+
+  // Try to restore session from token
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token')
+    if (token && !user) {
+      // Token exists but no user - try to fetch user info
+      import('./lib/api').then(({ authApi, setAuthToken }) => {
+        setAuthToken(token)
+        authApi.me()
+          .then((userData) => {
+            setUser(userData)
+          })
+          .catch(() => {
+            // Token invalid, clear it
+            setAuthToken(null)
+          })
+      })
+    }
+  }, [user, setUser])
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-gray-400">Loading...</div>
+      </div>
+    )
+  }
+
+  // Show auth screen if auth is required and user is not logged in
+  // OR if setup is required (no users exist yet)
+  if ((authRequired && !user) || setupRequired) {
+    return <AuthScreen />
+  }
+
+  return <MainApp />
 }
 
 export default App

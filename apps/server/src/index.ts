@@ -1,10 +1,12 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
+import fastifyJwt from '@fastify/jwt'
 import fastifyStatic from '@fastify/static'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { existsSync } from 'fs'
 
+import { authRoutes } from './routes/auth.js'
 import { folderRoutes } from './routes/folders.js'
 import { requestRoutes } from './routes/requests.js'
 import { environmentRoutes } from './routes/environments.js'
@@ -12,6 +14,7 @@ import { historyRoutes } from './routes/history.js'
 import { sendRoutes } from './routes/send.js'
 import { settingsRoutes } from './routes/settings.js'
 import { importRoutes } from './routes/import.js'
+import { groupRoutes } from './routes/groups.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -28,7 +31,16 @@ async function main() {
     credentials: true,
   })
 
+  // JWT
+  await fastify.register(fastifyJwt, {
+    secret: process.env.JWT_SECRET || 'change-me-in-production-very-secret-key',
+    sign: {
+      expiresIn: '7d', // Token expires in 7 days
+    },
+  })
+
   // API routes
+  await fastify.register(authRoutes)
   await fastify.register(folderRoutes)
   await fastify.register(requestRoutes)
   await fastify.register(environmentRoutes)
@@ -36,6 +48,7 @@ async function main() {
   await fastify.register(sendRoutes)
   await fastify.register(settingsRoutes)
   await fastify.register(importRoutes)
+  await fastify.register(groupRoutes)
 
   // Serve static files in production
   const webDistPath = join(__dirname, '../../web/dist')

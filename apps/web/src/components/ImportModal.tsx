@@ -3,6 +3,7 @@ import { X, Upload, FileJson, Terminal, FileCode, Zap } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useQueryClient } from '@tanstack/react-query'
 import { importApi } from '../lib/api'
+import { useTranslation } from '../hooks/useTranslation'
 
 type ImportFormat = 'postman' | 'hoppscotch' | 'openapi' | 'curl'
 
@@ -20,6 +21,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
   const [success, setSuccess] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const queryClient = useQueryClient()
+  const { t } = useTranslation()
 
   if (!isOpen) return null
 
@@ -54,14 +56,14 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
     try {
       if (format === 'curl') {
         if (!curlCommand.trim()) {
-          throw new Error('Please enter a cURL command')
+          throw new Error(t('import.error.noCurl'))
         }
         await importApi.curl(curlCommand)
-        setSuccess('cURL command imported successfully')
+        setSuccess(t('import.success.curl'))
         setCurlCommand('')
       } else {
         if (!file) {
-          throw new Error('Please select a file to import')
+          throw new Error(t('import.error.noFile'))
         }
 
         const content = await file.text()
@@ -73,19 +75,19 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
           if (format === 'openapi' && (content.startsWith('openapi:') || content.startsWith('swagger:'))) {
             parsed = content
           } else {
-            throw new Error('Invalid JSON file')
+            throw new Error(t('import.error.invalidJson'))
           }
         }
 
         if (format === 'postman') {
           await importApi.postman(parsed)
-          setSuccess('Postman collection imported successfully')
+          setSuccess(t('import.success.postman'))
         } else if (format === 'hoppscotch') {
           await importApi.hoppscotch(parsed)
-          setSuccess('Hoppscotch collection imported successfully')
+          setSuccess(t('import.success.hoppscotch'))
         } else if (format === 'openapi') {
           await importApi.openapi(parsed)
-          setSuccess('OpenAPI specification imported successfully')
+          setSuccess(t('import.success.openapi'))
         }
 
         setFile(null)
@@ -115,7 +117,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-lg mx-4">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
-          <h2 className="text-lg font-semibold">Import Collection</h2>
+          <h2 className="text-lg font-semibold">{t('import.title')}</h2>
           <button
             onClick={handleClose}
             className="p-1 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
@@ -127,7 +129,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
         <div className="p-4 space-y-4">
           {/* Format selection */}
           <div>
-            <label className="block text-sm text-gray-400 mb-2">Format</label>
+            <label className="block text-sm text-gray-400 mb-2">{t('import.format')}</label>
             <div className="flex gap-2">
               <button
                 onClick={() => {
@@ -143,7 +145,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
                 )}
               >
                 <FileJson className="w-4 h-4" />
-                Postman
+                {t('import.postman')}
               </button>
               <button
                 onClick={() => {
@@ -159,7 +161,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
                 )}
               >
                 <Zap className="w-4 h-4" />
-                Hoppscotch
+                {t('import.hoppscotch')}
               </button>
               <button
                 onClick={() => {
@@ -175,7 +177,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
                 )}
               >
                 <FileCode className="w-4 h-4" />
-                OpenAPI
+                {t('import.openapi')}
               </button>
               <button
                 onClick={() => {
@@ -191,7 +193,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
                 )}
               >
                 <Terminal className="w-4 h-4" />
-                cURL
+                {t('import.curl')}
               </button>
             </div>
           </div>
@@ -199,7 +201,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
           {/* File upload or cURL input */}
           {format === 'curl' ? (
             <div>
-              <label className="block text-sm text-gray-400 mb-2">cURL Command</label>
+              <label className="block text-sm text-gray-400 mb-2">{t('import.curlCommand')}</label>
               <textarea
                 value={curlCommand}
                 onChange={(e) => setCurlCommand(e.target.value)}
@@ -211,10 +213,10 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
             <div>
               <label className="block text-sm text-gray-400 mb-2">
                 {format === 'postman'
-                  ? 'Postman Collection (JSON)'
+                  ? t('import.postmanCollection')
                   : format === 'hoppscotch'
-                    ? 'Hoppscotch Collection (JSON)'
-                    : 'OpenAPI Specification (JSON/YAML)'}
+                    ? t('import.hoppscotchCollection')
+                    : t('import.openapiSpec')}
               </label>
               <div
                 onDrop={handleDrop}
@@ -245,13 +247,13 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
                 ) : (
                   <div className="text-gray-400">
                     <Upload className="w-8 h-8 mx-auto mb-2" />
-                    <p>Drop file here or click to browse</p>
+                    <p>{t('import.dropFile')}</p>
                     <p className="text-sm mt-1">
                       {format === 'postman'
-                        ? 'Supports Postman v2.1 collections'
+                        ? t('import.supportsPostman')
                         : format === 'hoppscotch'
-                          ? 'Supports Hoppscotch collections'
-                          : 'Supports OpenAPI 3.x'}
+                          ? t('import.supportsHoppscotch')
+                          : t('import.supportsOpenapi')}
                     </p>
                   </div>
                 )}
@@ -279,7 +281,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
             onClick={handleClose}
             className="px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded"
           >
-            Cancel
+            {t('import.cancel')}
           </button>
           <button
             onClick={handleImport}
@@ -291,7 +293,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
                 : 'bg-blue-600 text-white hover:bg-blue-500'
             )}
           >
-            {isLoading ? 'Importing...' : 'Import'}
+            {isLoading ? t('import.importing') : t('import.import')}
           </button>
         </div>
       </div>

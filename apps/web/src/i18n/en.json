@@ -8,9 +8,17 @@
     "settings": "Settings"
   },
   "sidebar": {
-    "collections": "Collections",
-    "newFolder": "New folder",
-    "newRequest": "New request"
+    "collections": "COLLECTIONS",
+    "newCollection": "New Collection",
+    "noCollections": "No collections yet.",
+    "createFirst": "Create your first collection",
+    "addFolder": "Add Folder",
+    "addRequest": "Add Request",
+    "editSettings": "Edit Settings",
+    "duplicate": "Duplicate",
+    "delete": "Delete",
+    "confirmDeleteFolder": "Delete folder \"{name}\" and all its contents?",
+    "confirmDeleteRequest": "Delete request \"{name}\"?"
   },
   "request": {
     "selectRequest": "Select a request from the sidebar to get started",
@@ -37,7 +45,9 @@
     },
     "copy": "Copy",
     "copied": "Copied",
-    "download": "Download"
+    "download": "Download",
+    "error": "Request Failed",
+    "errorDetails": "Error details"
   },
   "environment": {
     "title": "Environment",
@@ -66,31 +76,64 @@
     "markAsProtected": "Mark as protected",
     "protectedClickToMakeVisible": "Protected (click to make visible)",
     "visibleClickToProtect": "Visible (click to protect)",
-    "manageVariables": "Manage variables and settings"
+    "manageVariables": "Manage variables and settings",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "category": "Type",
+    "input": "input",
+    "generated": "work",
+    "inputVar": "Input variable — user-provided configuration value",
+    "generatedVar": "Work variable — generated or computed value",
+    "clickToPromoteToTeam": "Click to set your value as the team value",
+    "clickToOverride": "Click to create a local override",
+    "confirmPromoteToTeam": "Set your local value for \"{key}\" as the new team value? This will update the value for all team members."
   },
   "import": {
     "title": "Import Collection",
-    "selectFormat": "Select format to import",
+    "format": "Format",
     "postman": "Postman",
     "hoppscotch": "Hoppscotch",
     "openapi": "OpenAPI",
     "curl": "cURL",
-    "dropFile": "Drop JSON file here or click to browse",
-    "enterCurl": "Paste cURL command here...",
+    "curlCommand": "cURL Command",
+    "postmanCollection": "Postman Collection (JSON)",
+    "hoppscotchCollection": "Hoppscotch Collection (JSON)",
+    "openapiSpec": "OpenAPI Specification (JSON/YAML)",
+    "dropFile": "Drop file here or click to browse",
+    "supportsPostman": "Supports Postman v2.1 collections",
+    "supportsHoppscotch": "Supports Hoppscotch collections",
+    "supportsOpenapi": "Supports OpenAPI 3.x",
     "import": "Import",
     "cancel": "Cancel",
-    "importing": "Importing..."
+    "importing": "Importing...",
+    "success": {
+      "curl": "cURL command imported successfully",
+      "postman": "Postman collection imported successfully",
+      "hoppscotch": "Hoppscotch collection imported successfully",
+      "openapi": "OpenAPI specification imported successfully"
+    },
+    "error": {
+      "noCurl": "Please enter a cURL command",
+      "noFile": "Please select a file to import",
+      "invalidJson": "Invalid JSON file"
+    }
   },
   "history": {
-    "title": "History",
+    "title": "Request History",
     "search": "Search history...",
     "clearAll": "Clear all",
     "noHistory": "No history yet",
-    "confirmClear": "Clear all history entries?"
+    "noHistoryDesc": "Send some requests to see them here",
+    "confirmClear": "Clear all history? This cannot be undone.",
+    "loading": "Loading history...",
+    "entries": "entries",
+    "close": "Close",
+    "justNow": "Just now"
   },
   "auth": {
-    "type": "Type",
-    "inheritFromParent": "Inherit from parent",
+    "type": "Auth Type",
+    "inheritFromParent": "Using authentication from parent folder",
+    "noAuth": "No authentication will be applied",
     "none": "None",
     "bearer": "Bearer Token",
     "basic": "Basic Auth",
@@ -100,8 +143,27 @@
     "openid": "OpenID Connect",
     "hawk": "Hawk",
     "token": "Token",
+    "tokenHelp": "Sent as: Authorization: Bearer <token>",
     "username": "Username",
-    "password": "Password"
+    "password": "Password",
+    "keyName": "Key Name",
+    "addTo": "Add To",
+    "header": "Header",
+    "queryParameter": "Query Parameter",
+    "cookie": "Cookie",
+    "algorithm": "Algorithm",
+    "secretKey": "Secret / Private Key",
+    "payload": "Payload (JSON)",
+    "headerPrefix": "Header Prefix",
+    "grantType": "Grant Type",
+    "tokenUrl": "Token URL",
+    "clientId": "Client ID",
+    "clientSecret": "Client Secret",
+    "scope": "Scope",
+    "enablePkce": "Enable PKCE",
+    "authId": "Auth ID",
+    "authKey": "Auth Key",
+    "includePayloadHash": "Include payload hash"
   },
   "body": {
     "type": "Body type",
@@ -110,13 +172,24 @@
     "formData": "Form Data",
     "urlencoded": "URL Encoded",
     "raw": "Raw",
-    "binary": "Binary"
+    "binary": "Binary",
+    "format": "Format",
+    "noBody": "This request does not have a body",
+    "enterRaw": "Enter raw body content...",
+    "enterUrlencoded": "key1=value1&key2=value2",
+    "enterContent": "Enter body content..."
   },
   "scripts": {
-    "preRequest": "Pre-request Script",
-    "postResponse": "Post-response Script",
+    "preRequest": "Pre-request",
+    "postResponse": "Post-response",
     "preRequestHelp": "Runs before the request is sent",
-    "postResponseHelp": "Runs after the response is received"
+    "postResponseHelp": "Runs after the response is received",
+    "availableApis": "Available APIs",
+    "environment": "Environment:",
+    "requestMutable": "Request (mutable):",
+    "responseReadOnly": "Response (read-only):",
+    "testing": "Testing:",
+    "consoleApi": "Console:"
   },
   "tests": {
     "noTests": "No tests run. Add tests in the Scripts tab.",
@@ -127,15 +200,82 @@
     "noOutput": "No console output. Use console.log() in scripts."
   },
   "folder": {
+    "title": "Folder",
     "settings": "Folder Settings",
-    "docs": "Docs",
-    "headers": "Headers",
-    "params": "Params",
-    "auth": "Auth",
+    "selectFolder": "Select a folder to edit its settings",
+    "notFound": "Folder not found",
+    "saving": "Saving...",
+    "tabs": {
+      "general": "General",
+      "headers": "Headers",
+      "params": "Params",
+      "auth": "Auth",
+      "scripts": "Scripts"
+    },
+    "name": "Name",
+    "description": "Description",
+    "descriptionPlaceholder": "Describe this folder's purpose...",
     "baseUrl": "Base URL",
-    "scripts": "Scripts",
-    "inherited": "Inherited",
-    "thisFolder": "This folder"
+    "baseUrlPlaceholder": "e.g., {{host}}/api/v1 or /users",
+    "baseUrlHelp": "Prepended to all request URLs in this folder. Supports environment variables.",
+    "authType": "Auth Type",
+    "inheritAuth": "Inherit from parent",
+    "noAuth": "None",
+    "bearerToken": "Bearer Token",
+    "basicAuth": "Basic Auth",
+    "apiKey": "API Key",
+    "inheritAuthHelp": "This folder will use the auth settings from its parent folder.",
+    "noAuthHelp": "No authentication will be applied to requests in this folder.",
+    "preScript": "Pre-request Script",
+    "preScriptPlaceholder": "// Runs before all requests in this folder\n// Available: env.get(), env.set(), request.headers.set()...",
+    "postScript": "Post-response Script",
+    "postScriptPlaceholder": "// Runs after all requests in this folder\n// Available: response.status, response.body.json(), test()..."
+  },
+  "keyValue": {
+    "key": "Key",
+    "value": "Value",
+    "description": "Description",
+    "add": "Add"
+  },
+  "settings": {
+    "title": "Settings",
+    "tabs": {
+      "general": "General",
+      "proxy": "Proxy",
+      "ssl": "SSL",
+      "data": "Data"
+    },
+    "general": {
+      "language": "Language",
+      "languageHelp": "Select the interface language",
+      "timeout": "Default Timeout",
+      "timeoutHelp": "Default request timeout in milliseconds",
+      "ms": "ms"
+    },
+    "proxy": {
+      "enableProxy": "Enable proxy",
+      "httpProxy": "HTTP Proxy",
+      "httpsProxy": "HTTPS Proxy",
+      "noProxy": "No Proxy",
+      "noProxyHelp": "Comma-separated list of hosts that bypass the proxy"
+    },
+    "ssl": {
+      "verifyCertificates": "Verify SSL certificates",
+      "verifyCertificatesHelp": "Disable for self-signed certificates",
+      "clientCert": "Client Certificate",
+      "clientKey": "Client Key",
+      "caCert": "CA Certificate",
+      "browse": "Browse..."
+    },
+    "data": {
+      "clearHistory": "Clear History",
+      "clearHistoryHelp": "Delete all request history entries",
+      "clearHistoryConfirm": "This will permanently delete all history entries. Continue?",
+      "exportData": "Export Data",
+      "exportDataHelp": "Export all collections and environments",
+      "importData": "Import Data",
+      "importDataHelp": "Import collections and environments from backup"
+    }
   },
   "common": {
     "save": "Save",
@@ -149,5 +289,22 @@
     "value": "Value",
     "description": "Description",
     "enabled": "Enabled"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "signIn": "Sign In",
+    "createAccount": "Create Account",
+    "welcomeBack": "Welcome back",
+    "createFirstAccount": "Create your first account to get started",
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "passwordHint": "Minimum 6 characters",
+    "logout": "Logout",
+    "profile": "Profile"
   }
 }

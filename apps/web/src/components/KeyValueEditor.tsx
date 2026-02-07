@@ -1,6 +1,7 @@
 import { Plus, Trash2, GripVertical } from 'lucide-react'
 import { clsx } from 'clsx'
 import type { KeyValueItem } from '@api-client/shared'
+import { useTranslation } from '../hooks/useTranslation'
 
 interface KeyValueEditorProps {
   items: KeyValueItem[]
@@ -17,6 +18,8 @@ export function KeyValueEditor({
   placeholder = 'Key',
   showDescription = true,
 }: KeyValueEditorProps) {
+  const { t } = useTranslation()
+
   const handleAdd = () => {
     onChange([...items, { key: '', value: '', description: '', enabled: true }])
   }
@@ -38,9 +41,9 @@ export function KeyValueEditor({
         <thead>
           <tr className="text-left text-xs text-gray-500 uppercase">
             <th className="w-8"></th>
-            <th className="pb-2 font-medium">Key</th>
-            <th className="pb-2 font-medium">Value</th>
-            {showDescription && <th className="pb-2 font-medium">Description</th>}
+            <th className="pb-2 font-medium">{t('keyValue.key')}</th>
+            <th className="pb-2 font-medium">{t('keyValue.value')}</th>
+            {showDescription && <th className="pb-2 font-medium">{t('keyValue.description')}</th>}
             <th className="w-8"></th>
           </tr>
         </thead>
@@ -78,7 +81,7 @@ export function KeyValueEditor({
                   value={item.value}
                   onChange={(e) => handleChange(index, 'value', e.target.value)}
                   onBlur={onBlur}
-                  placeholder="Value"
+                  placeholder={t('keyValue.value')}
                   className={clsx(
                     'w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm font-mono',
                     'focus:outline-none focus:border-blue-500',
@@ -93,7 +96,7 @@ export function KeyValueEditor({
                     value={item.description || ''}
                     onChange={(e) => handleChange(index, 'description', e.target.value)}
                     onBlur={onBlur}
-                    placeholder="Description"
+                    placeholder={t('keyValue.description')}
                     className={clsx(
                       'w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm text-gray-400',
                       'focus:outline-none focus:border-blue-500',
@@ -120,7 +123,7 @@ export function KeyValueEditor({
         className="flex items-center gap-1 mt-3 px-3 py-1.5 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded"
       >
         <Plus className="w-4 h-4" />
-        Add {placeholder}
+        {t('keyValue.add')} {placeholder}
       </button>
     </div>
   )

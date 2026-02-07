@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma.js'
 import { stringifyJson } from '../lib/json.js'
 import { importPostman, importHoppscotch, parseCurl, toCurl, importOpenAPI, exportOpenAPI } from '@api-client/import-export'
 import type { AuthType, AuthConfig, KeyValueItem } from '@api-client/shared'
+import { optionalAuth, getCurrentUserId } from '../lib/auth.js'
 
 interface ImportedFolder {
   name: string
@@ -33,7 +34,7 @@ interface ImportedRequest {
   postScript: string | null
 }
 
-async function createFolderRecursive(folder: ImportedFolder, parentId: string | null = null): Promise<string> {
+async function createFolderRecursive(folder: ImportedFolder, parentId: string | null = null, userId: string | null = null): Promise<string> {
   const created = await prisma.folder.create({
     data: {
       name: folder.name,
@@ -46,6 +47,7 @@ async function createFolderRecursive(folder: ImportedFolder, parentId: string | 
       preScript: folder.preScript,
       postScript: folder.postScript,
       baseUrl: folder.baseUrl,
+      userId,
     },
   })
 
@@ -73,7 +75,7 @@ async function createFolderRecursive(folder: ImportedFolder, parentId: string | 
 
   for (let i = 0; i < folder.children.length; i++) {
     const child = folder.children[i]
-    await createFolderRecursive(child, created.id)
+    await createFolderRecursive(child, created.id, userId)
   }
 
   return created.id
@@ -81,10 +83,11 @@ async function createFolderRecursive(folder: ImportedFolder, parentId: string | 
 
 export async function importRoutes(fastify: FastifyInstance) {
   // Import Postman collection
-  fastify.post<{ Body: { collection: unknown } }>('/api/import/postman', async (request) => {
+  fastify.post<{ Body: { collection: unknown } }>('/api/import/postman', { preHandler: [optionalAuth] }, async (request) => {
     try {
+      const userId = getCurrentUserId(request)
       const { folder, environments } = importPostman(request.body.collection as Parameters<typeof importPostman>[0])
-      const folderId = await createFolderRecursive(folder as ImportedFolder)
+      const folderId = await createFolderRecursive(folder as ImportedFolder, null, userId)
 
       // Create environments with extracted variables
       const envIds: string[] = []
@@ -93,6 +96,7 @@ export async function importRoutes(fastify: FastifyInstance) {
           data: {
             name: env.name,
             description: env.description,
+            userId,
           },
         })
         envIds.push(created.id)
@@ -118,10 +122,11 @@ export async function importRoutes(fastify: FastifyInstance) {
   })
 
   // Import Hoppscotch collection
-  fastify.post<{ Body: { collection: unknown } }>('/api/import/hoppscotch', async (request) => {
+  fastify.post<{ Body: { collection: unknown } }>('/api/import/hoppscotch', { preHandler: [optionalAuth] }, async (request) => {
     try {
+      const userId = getCurrentUserId(request)
       const { folder, environments } = importHoppscotch(request.body.collection as Parameters<typeof importHoppscotch>[0])
-      const folderId = await createFolderRecursive(folder as ImportedFolder)
+      const folderId = await createFolderRecursive(folder as ImportedFolder, null, userId)
 
       // Create environments with extracted variables
       const envIds: string[] = []
@@ -130,6 +135,7 @@ export async function importRoutes(fastify: FastifyInstance) {
           data: {
             name: env.name,
             description: env.description,
+            userId,
           },
         })
         envIds.push(created.id)
@@ -155,14 +161,15 @@ export async function importRoutes(fastify: FastifyInstance) {
   })
 
   // Import cURL command
-  fastify.post<{ Body: { curl: string; folderId?: string } }>('/api/import/curl', async (request) => {
+  fastify.post<{ Body: { curl: string; folderId?: string } }>('/api/import/curl', { preHandler: [optionalAuth] }, async (request) => {
     try {
+      const userId = getCurrentUserId(request)
       const parsed = parseCurl(request.body.curl)
 
       let folderId = request.body.folderId
       if (!folderId) {
         const folder = await prisma.folder.create({
-          data: { name: 'Imported from cURL' },
+          data: { name: 'Imported from cURL', userId },
         })
         folderId = folder.id
       }
@@ -188,13 +195,14 @@ export async function importRoutes(fastify: FastifyInstance) {
   })
 
   // Import OpenAPI spec
-  fastify.post<{ Body: { spec: unknown } }>('/api/import/openapi', async (request) => {
+  fastify.post<{ Body: { spec: unknown } }>('/api/import/openapi', { preHandler: [optionalAuth] }, async (request) => {
     try {
+      const userId = getCurrentUserId(request)
       const { folders, environments } = importOpenAPI(request.body.spec as string | object)
 
       const folderIds: string[] = []
       for (const folder of folders) {
-        const id = await createFolderRecursive(folder as ImportedFolder)
+        const id = await createFolderRecursive(folder as ImportedFolder, null, userId)
         folderIds.push(id)
       }
 
@@ -204,6 +212,7 @@ export async function importRoutes(fastify: FastifyInstance) {
           data: {
             name: env.name,
             description: env.description,
+            userId,
           },
         })
         envIds.push(created.id)

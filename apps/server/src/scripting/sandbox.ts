@@ -35,12 +35,13 @@ interface ScriptResult {
 }
 
 // Create sandbox code for pre-request scripts
+// Returns JSON string to avoid isolated-vm serialization issues
 function createPreRequestCode(userScript: string): string {
   return `
     (function() {
       const __logs = [];
       const __errors = [];
-      const __envUpdates = new Map();
+      const __envUpdates = [];
       let __skip = false;
       const __requestMods = {};
 
@@ -54,9 +55,9 @@ function createPreRequestCode(userScript: string): string {
 
       // Environment API
       const env = {
-        get: (key) => __env.get(key),
-        set: (key, value) => __envUpdates.set(key, value),
-        delete: (key) => __envUpdates.set(key, null),
+        get: (key) => __env[key],
+        set: (key, value) => { __envUpdates.push([key, String(value)]); __env[key] = String(value); },
+        delete: (key) => { __envUpdates.push([key, null]); delete __env[key]; },
       };
 
       // Request API (pre-request)
@@ -94,31 +95,36 @@ function createPreRequestCode(userScript: string): string {
         skip: () => { __skip = true; },
       };
 
+      // pw.* compatibility (Hoppscotch / Postman style)
+      const pw = { env, request, console };
+
       try {
         ${userScript}
       } catch (e) {
         __errors.push(e.message || String(e));
       }
 
-      return {
+      // Return as JSON string to safely cross isolate boundary
+      return JSON.stringify({
         logs: __logs,
         errors: __errors,
-        envUpdates: Array.from(__envUpdates.entries()),
+        envUpdates: __envUpdates,
         requestMods: __requestMods,
         skip: __skip,
-      };
+      });
     })()
   `
 }
 
 // Create sandbox code for post-response scripts
+// Returns JSON string to avoid isolated-vm serialization issues
 function createPostResponseCode(userScript: string): string {
   return `
     (function() {
       const __logs = [];
       const __errors = [];
       const __tests = [];
-      const __envUpdates = new Map();
+      const __envUpdates = [];
 
       // Console API
       const console = {
@@ -130,40 +136,107 @@ function createPostResponseCode(userScript: string): string {
 
       // Environment API
       const env = {
-        get: (key) => __env.get(key),
-        set: (key, value) => __envUpdates.set(key, value),
-        delete: (key) => __envUpdates.set(key, null),
+        get: (key) => __env[key],
+        set: (key, value) => { __envUpdates.push([key, String(value)]); __env[key] = String(value); },
+        delete: (key) => { __envUpdates.push([key, null]); delete __env[key]; },
       };
 
-      // Response API (read-only, except body parsing)
+      // Build headers: array of {key,value} with direct property access (both Hoppscotch and native)
+      const __headersObj = (typeof __response !== 'undefined' && __response && __response.headers) ? __response.headers : {};
+      const __headersArray = Object.entries(__headersObj).map(function(entry) { return { key: entry[0], value: entry[1] }; });
+      // Also add object-style access: headers['content-type'] works
+      for (var __hk in __headersObj) {
+        __headersArray[__hk] = __headersObj[__hk];
+      }
+
+      // Safe response getters
+      const __safeResponse = (typeof __response !== 'undefined' && __response) ? __response : {};
+
+      // Response API (read-only, with body methods)
       const response = {
-        get status() { return __response.status; },
-        get statusText() { return __response.statusText; },
-        get headers() { return __response.headers; },
-        get time() { return __response.time; },
-        get size() { return __response.size; },
+        get status() { return __safeResponse.status || 0; },
+        get statusText() { return __safeResponse.statusText || ''; },
+        get headers() { return __headersArray; },
+        get time() { return __safeResponse.time || 0; },
+        get size() { return __safeResponse.size || 0; },
         body: {
-          text: () => __response.body,
-          json: () => {
+          text: function() { return __safeResponse.body || ''; },
+          json: function() {
             try {
-              return JSON.parse(__response.body);
-            } catch {
+              return JSON.parse(__safeResponse.body);
+            } catch (e) {
               return null;
             }
           },
         },
       };
 
+      // pw.* compatibility (Hoppscotch / Postman style)
+      // In Hoppscotch: pw.response.body is a raw string, not an object with methods
+      const pw = {
+        env: env,
+        response: {
+          get status() { return __safeResponse.status || 0; },
+          get statusText() { return __safeResponse.statusText || ''; },
+          get headers() { return __headersArray; },
+          get body() { return __safeResponse.body || ''; },
+          get time() { return __safeResponse.time || 0; },
+          get size() { return __safeResponse.size || 0; },
+        },
+        console: console,
+        test: undefined,
+      };
+
+      // Expect API (Hoppscotch pw.expect compatibility)
+      function __createExpectation(value) {
+        var assertion = {
+          toBe: function(expected) { if (value !== expected) throw new Error('Expected ' + JSON.stringify(value) + ' to be ' + JSON.stringify(expected)); return true; },
+          toBeLevel2xx: function() { if (value < 200 || value >= 300) throw new Error('Expected status ' + value + ' to be 2xx'); return true; },
+          toBeLevel3xx: function() { if (value < 300 || value >= 400) throw new Error('Expected status ' + value + ' to be 3xx'); return true; },
+          toBeLevel4xx: function() { if (value < 400 || value >= 500) throw new Error('Expected status ' + value + ' to be 4xx'); return true; },
+          toBeLevel5xx: function() { if (value < 500 || value >= 600) throw new Error('Expected status ' + value + ' to be 5xx'); return true; },
+          toHaveProperty: function(key) { if (typeof value !== 'object' || value === null || !(key in value)) throw new Error('Expected object to have property "' + key + '"'); return true; },
+          toBeType: function(type) { if (typeof value !== type) throw new Error('Expected type "' + typeof value + '" to be "' + type + '"'); return true; },
+          toInclude: function(item) {
+            if (typeof value === 'string') { if (value.indexOf(item) === -1) throw new Error('Expected string to include "' + item + '"'); }
+            else if (Array.isArray(value)) { if (value.indexOf(item) === -1) throw new Error('Expected array to include ' + JSON.stringify(item)); }
+            else throw new Error('toInclude requires string or array');
+            return true;
+          },
+          toHaveLength: function(len) { if (!value || value.length !== len) throw new Error('Expected length ' + (value ? value.length : 0) + ' to be ' + len); return true; },
+          not: {
+            toBe: function(expected) { if (value === expected) throw new Error('Expected ' + JSON.stringify(value) + ' not to be ' + JSON.stringify(expected)); return true; },
+            toBeLevel2xx: function() { if (value >= 200 && value < 300) throw new Error('Expected status ' + value + ' not to be 2xx'); return true; },
+            toBeLevel3xx: function() { if (value >= 300 && value < 400) throw new Error('Expected status ' + value + ' not to be 3xx'); return true; },
+            toBeLevel4xx: function() { if (value >= 400 && value < 500) throw new Error('Expected status ' + value + ' not to be 4xx'); return true; },
+            toBeLevel5xx: function() { if (value >= 500 && value < 600) throw new Error('Expected status ' + value + ' not to be 5xx'); return true; },
+            toHaveProperty: function(key) { if (typeof value === 'object' && value !== null && key in value) throw new Error('Expected object not to have property "' + key + '"'); return true; },
+            toBeType: function(type) { if (typeof value === type) throw new Error('Expected type not to be "' + type + '"'); return true; },
+            toInclude: function(item) {
+              if (typeof value === 'string' && value.indexOf(item) !== -1) throw new Error('Expected string not to include "' + item + '"');
+              if (Array.isArray(value) && value.indexOf(item) !== -1) throw new Error('Expected array not to include ' + JSON.stringify(item));
+              return true;
+            },
+          },
+        };
+        return assertion;
+      }
+
       // Test API
       function test(name, fn) {
         try {
-          const result = fn();
-          __tests.push({ name, passed: !!result });
+          fn();
+          __tests.push({ name: name, passed: true });
         } catch (e) {
-          __tests.push({ name, passed: false });
+          __tests.push({ name: name, passed: false });
           __errors.push('Test "' + name + '" failed: ' + (e.message || String(e)));
         }
       }
+      pw.test = test;
+      pw.expect = __createExpectation;
+
+      // Top-level aliases
+      const expect = __createExpectation;
 
       try {
         ${userScript}
@@ -171,12 +244,13 @@ function createPostResponseCode(userScript: string): string {
         __errors.push(e.message || String(e));
       }
 
-      return {
+      // Return as JSON string to safely cross isolate boundary
+      return JSON.stringify({
         logs: __logs,
         errors: __errors,
         tests: __tests,
-        envUpdates: Array.from(__envUpdates.entries()),
-      };
+        envUpdates: __envUpdates,
+      });
     })()
   `
 }
@@ -191,7 +265,7 @@ export async function runPreRequestScript(
     const ctx = await isolate.createContext()
     const jail = ctx.global
 
-    // Set up environment
+    // Set up environment as plain object (bracket access)
     await jail.set('__env', new ivm.ExternalCopy(Object.fromEntries(context.env)).copyInto())
 
     // Set up request
@@ -201,9 +275,21 @@ export async function runPreRequestScript(
 
     const code = createPreRequestCode(script)
     const compiledScript = await isolate.compileScript(code)
-    const result = await compiledScript.run(ctx, { timeout: 5000 })
+    const jsonResult = await compiledScript.run(ctx, { timeout: 5000 })
 
-    const parsed = result as {
+    // Result is a JSON string from the sandbox
+    if (typeof jsonResult !== 'string') {
+      return {
+        success: false,
+        logs: [],
+        errors: ['Script returned no result'],
+        tests: [],
+        envUpdates: new Map(),
+        skip: false,
+      }
+    }
+
+    const parsed = JSON.parse(jsonResult) as {
       logs: string[]
       errors: string[]
       envUpdates: Array<[string, string | null]>
@@ -244,7 +330,7 @@ export async function runPostResponseScript(
     const ctx = await isolate.createContext()
     const jail = ctx.global
 
-    // Set up environment
+    // Set up environment as plain object (bracket access)
     await jail.set('__env', new ivm.ExternalCopy(Object.fromEntries(context.env)).copyInto())
 
     // Set up response
@@ -254,9 +340,21 @@ export async function runPostResponseScript(
 
     const code = createPostResponseCode(script)
     const compiledScript = await isolate.compileScript(code)
-    const result = await compiledScript.run(ctx, { timeout: 5000 })
+    const jsonResult = await compiledScript.run(ctx, { timeout: 5000 })
 
-    const parsed = result as {
+    // Result is a JSON string from the sandbox
+    if (typeof jsonResult !== 'string') {
+      return {
+        success: false,
+        logs: [],
+        errors: ['Script returned no result'],
+        tests: [],
+        envUpdates: new Map(),
+        skip: false,
+      }
+    }
+
+    const parsed = JSON.parse(jsonResult) as {
       logs: string[]
       errors: string[]
       tests: Array<{ name: string; passed: boolean }>

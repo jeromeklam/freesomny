@@ -123,6 +123,56 @@ export async function requestRoutes(fastify: FastifyInstance) {
     return { data: { success: true } }
   })
 
+  // Duplicate request
+  fastify.post<{ Params: { id: string } }>('/api/requests/:id/duplicate', async (request) => {
+    const original = await prisma.request.findUnique({
+      where: { id: request.params.id },
+    })
+
+    if (!original) {
+      return { error: 'Request not found' }
+    }
+
+    // Get the max sortOrder in the folder to place the duplicate after the original
+    const maxSortOrder = await prisma.request.aggregate({
+      where: { folderId: original.folderId },
+      _max: { sortOrder: true },
+    })
+
+    const duplicated = await prisma.request.create({
+      data: {
+        name: `${original.name} (copy)`,
+        description: original.description,
+        method: original.method,
+        url: original.url,
+        queryParams: original.queryParams,
+        headers: original.headers,
+        bodyType: original.bodyType,
+        body: original.body,
+        bodyDescription: original.bodyDescription,
+        authType: original.authType,
+        authConfig: original.authConfig,
+        preScript: original.preScript,
+        postScript: original.postScript,
+        timeout: original.timeout,
+        followRedirects: original.followRedirects,
+        verifySsl: original.verifySsl,
+        proxy: original.proxy,
+        folderId: original.folderId,
+        sortOrder: (maxSortOrder._max.sortOrder ?? 0) + 1,
+      },
+    })
+
+    return {
+      data: {
+        ...duplicated,
+        headers: parseHeaders(duplicated.headers),
+        queryParams: parseQueryParams(duplicated.queryParams),
+        authConfig: parseAuthConfig(duplicated.authConfig),
+      },
+    }
+  })
+
   // Reorder request (move to different folder or change sort order)
   fastify.patch<{ Params: { id: string }; Body: unknown }>(
     '/api/requests/:id/reorder',
