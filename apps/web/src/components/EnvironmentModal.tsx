@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, Plus, Trash2, RotateCcw, Lock, Unlock, GripVertical, Tag, Cog } from 'lucide-react'
+import { ResizableModal } from './ResizableModal'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
 import { useEnvironmentVariables } from '../hooks/useApi'
@@ -223,8 +224,14 @@ export function EnvironmentModal() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-5xl max-h-[80vh] bg-gray-900 border border-gray-700 rounded-lg shadow-xl flex flex-col">
+    <ResizableModal
+      storageKey="environment"
+      defaultWidth={1024}
+      defaultHeight={Math.min(window.innerHeight * 0.8, 700)}
+      minWidth={600}
+      minHeight={400}
+      onClose={() => setShowEnvironmentModal(false)}
+    >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
           <div>
@@ -536,7 +543,6 @@ export function EnvironmentModal() {
             {t('environment.close')}
           </button>
         </div>
-      </div>
-    </div>
+    </ResizableModal>
   )
 }

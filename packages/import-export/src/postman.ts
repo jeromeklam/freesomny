@@ -1,4 +1,6 @@
 import type { KeyValueItem, AuthType, AuthConfig } from '@api-client/shared'
+import { isJsonApiBody } from './jsonapi-detect.js'
+import { extractAuthFromHeaders } from './auth-detect.js'
 
 interface PostmanHeader {
   key: string
@@ -191,19 +193,27 @@ function convertAuth(auth: PostmanAuth | undefined): { type: AuthType; config: A
   }
 }
 
-function convertBody(body: PostmanBody | undefined): { type: string; content: string } {
+function convertBody(body: PostmanBody | undefined, headers?: PostmanHeader[]): { type: string; content: string } {
   if (!body || !body.mode) return { type: 'none', content: '' }
 
   switch (body.mode) {
-    case 'raw':
+    case 'raw': {
       const language = body.options?.raw?.language || 'text'
-      return {
-        type: language === 'json' ? 'json' : 'raw',
-        content: body.raw || '',
+      const content = body.raw || ''
+      if (language === 'json') {
+        // Check Content-Type header for JSON:API
+        const ct = headers?.find((h) => h.key.toLowerCase() === 'content-type')?.value || ''
+        if (ct.includes('application/vnd.api+json') || isJsonApiBody(content)) {
+          return { type: 'jsonapi', content }
+        }
+        return { type: 'json', content }
       }
-    case 'urlencoded':
+      return { type: 'raw', content }
+    }
+    case 'urlencoded': {
       const params = body.urlencoded?.map((p) => `${p.key}=${p.value}`).join('&') || ''
       return { type: 'urlencoded', content: params }
+    }
     case 'formdata':
       return { type: 'form-data', content: JSON.stringify(body.formdata || []) }
     default:
@@ -234,21 +244,35 @@ function convertRequest(item: PostmanItem): ImportedRequest | null {
 
   const { request } = item
   const url = request.url?.raw || request.url?.path?.join('/') || ''
-  const body = convertBody(request.body)
+  const body = convertBody(request.body, request.header)
   const auth = convertAuth(request.auth)
   const scripts = extractScripts(item.event)
+
+  let headers = convertHeaders(request.header)
+  let authType = auth.type
+  let authConfig = auth.config
+
+  // If no native auth set, detect from Authorization header
+  if (authType === 'inherit' || authType === 'none') {
+    const extracted = extractAuthFromHeaders(headers)
+    if (extracted.authType !== 'none') {
+      headers = extracted.headers
+      authType = extracted.authType
+      authConfig = extracted.authConfig
+    }
+  }
 
   return {
     name: item.name,
     description: item.description || request.description || '',
     method: request.method || 'GET',
     url,
-    headers: convertHeaders(request.header),
+    headers,
     queryParams: convertQueryParams(request.url?.query),
     bodyType: body.type,
     body: body.content,
-    authType: auth.type,
-    authConfig: auth.config,
+    authType,
+    authConfig,
     preScript: scripts.pre,
     postScript: scripts.post,
   }

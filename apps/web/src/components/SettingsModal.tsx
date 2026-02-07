@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { X, Trash2, Download, Upload } from 'lucide-react'
+import { ResizableModal } from './ResizableModal'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
 import { useTranslation } from '../hooks/useTranslation'
@@ -45,8 +46,15 @@ export function SettingsModal() {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[80vh] flex flex-col">
+    <ResizableModal
+      storageKey="settings"
+      defaultWidth={672}
+      defaultHeight={Math.min(window.innerHeight * 0.8, 600)}
+      minWidth={400}
+      minHeight={300}
+      onClose={() => setShowSettings(false)}
+      className="bg-gray-800"
+    >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
           <h2 className="text-lg font-semibold">{t('settings.title')}</h2>
@@ -281,7 +289,6 @@ export function SettingsModal() {
             {t('common.close')}
           </button>
         </div>
-      </div>
-    </div>
+    </ResizableModal>
   )
 }

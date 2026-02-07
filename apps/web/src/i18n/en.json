@@ -47,7 +47,22 @@
     "copied": "Copied",
     "download": "Download",
     "error": "Request Failed",
-    "errorDetails": "Error details"
+    "errorDetails": "Error details",
+    "headerName": "Header",
+    "headerValue": "Value",
+    "saveToVariable": "Save to variable",
+    "noEnvironment": "No active environment. Select an environment first.",
+    "newVariable": "New variable",
+    "newVarPlaceholder": "variable_name",
+    "savedToVar": "Saved to {key}",
+    "search": "Search",
+    "searchPlaceholder": "Search in response...",
+    "matches": "matches",
+    "headersMatch": "headers matching",
+    "prevMatch": "Previous match",
+    "nextMatch": "Next match",
+    "noResults": "No results",
+    "binaryContent": "Binary content — download to view"
   },
   "environment": {
     "title": "Environment",
@@ -173,11 +188,16 @@
     "urlencoded": "URL Encoded",
     "raw": "Raw",
     "binary": "Binary",
+    "jsonapi": "JSON:API",
     "format": "Format",
+    "validJson": "Valid",
+    "invalidJson": "Invalid",
     "noBody": "This request does not have a body",
     "enterRaw": "Enter raw body content...",
     "enterUrlencoded": "key1=value1&key2=value2",
-    "enterContent": "Enter body content..."
+    "enterContent": "Enter body content...",
+    "generateSkeleton": "Generate JSON:API skeleton",
+    "generateSkeletonConfirm": "Replace current body with generated skeleton?"
   },
   "scripts": {
     "preRequest": "Pre-request",
@@ -277,6 +297,101 @@
       "importDataHelp": "Import collections and environments from backup"
     }
   },
+  "codegen": {
+    "title": "Code Snippet"
+  },
+  "jsonapi": {
+    "builder": "JSON:API Builder",
+    "title": "JSON:API Query Builder",
+    "tabs": {
+      "filters": "Filters",
+      "sort": "Sort",
+      "include": "Include",
+      "page": "Page",
+      "fields": "Fields",
+      "option": "Options"
+    },
+    "apply": "Apply",
+    "filters": {
+      "addCondition": "Add condition",
+      "addGroup": "Add group",
+      "removeGroup": "Remove group",
+      "field": "Field",
+      "operator": "Operator",
+      "value": "Value",
+      "valuePlaceholder": "Value",
+      "valueBetweenMin": "Min",
+      "valueBetweenMax": "Max",
+      "valueInPlaceholder": "val1, val2, val3",
+      "and": "AND",
+      "or": "OR",
+      "betweenGroups": "Between groups",
+      "betweenConditions": "Between conditions",
+      "noFilters": "No filters defined. Add a condition to start filtering.",
+      "group": "Group"
+    },
+    "sort": {
+      "addField": "Add sort field",
+      "field": "Field",
+      "asc": "Ascending",
+      "desc": "Descending",
+      "noSort": "No sort fields. Add a field to define the order.",
+      "moveUp": "Move up",
+      "moveDown": "Move down"
+    },
+    "include": {
+      "addRelation": "Add relation",
+      "relation": "Relation name",
+      "noInclude": "No relations. Add a relation to include related resources."
+    },
+    "page": {
+      "offset": "Offset",
+      "limit": "Limit",
+      "offsetPlaceholder": "Start index (e.g. 0)",
+      "limitPlaceholder": "Items per page (e.g. 25)",
+      "noPage": "No pagination set. Configure offset and limit.",
+      "setDefaults": "Set defaults (0 / 25)",
+      "clear": "Clear pagination"
+    },
+    "fields": {
+      "addFieldset": "Add fieldset",
+      "resourceType": "Resource type",
+      "resourceTypePlaceholder": "e.g. articles",
+      "fieldsList": "Fields",
+      "fieldsPlaceholder": "field1, field2, field3",
+      "noFields": "No sparse fieldsets. Add a resource type to select specific fields."
+    },
+    "option": {
+      "addOption": "Add option",
+      "keyPlaceholder": "e.g. CACHE",
+      "noOptions": "No options set. Add an option flag for FreeFW."
+    },
+    "operators": {
+      "eq": "equals",
+      "neq": "not equals",
+      "gt": "greater than",
+      "gte": "greater or equal",
+      "ltw": "less than",
+      "ltwe": "less or equal",
+      "contains": "contains",
+      "ncontains": "not contains",
+      "containsb": "starts with",
+      "containse": "ends with",
+      "in": "in list",
+      "nin": "not in list",
+      "empty": "is null",
+      "nempty": "is not null",
+      "between": "between",
+      "eqn": "equals (numeric)",
+      "neqn": "not equals (numeric)",
+      "gtn": "greater than (numeric)",
+      "gten": "greater or equal (numeric)",
+      "ltwn": "less than (numeric)",
+      "ltwen": "less or equal (numeric)",
+      "containsn": "contains (numeric)",
+      "soundex": "soundex"
+    }
+  },
   "common": {
     "save": "Save",
     "delete": "Delete",
@@ -305,6 +420,86 @@
     "passwordPlaceholder": "Enter your password",
     "passwordHint": "Minimum 6 characters",
     "logout": "Logout",
-    "profile": "Profile"
+    "profile": "Profile",
+    "forgotPassword": "Forgot password?",
+    "forgotPasswordTitle": "Forgot Password",
+    "forgotPasswordSend": "Send Reset Link",
+    "forgotPasswordSuccess": "If an account exists with this email, a reset link has been sent.",
+    "backToLogin": "Back to login",
+    "resetPasswordTitle": "Reset Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "resetPasswordSubmit": "Reset Password",
+    "resetPasswordSuccess": "Password has been reset. You can now login.",
+    "resetPasswordInvalid": "Invalid or expired reset link.",
+    "passwordMismatch": "Passwords do not match"
+  },
+  "admin": {
+    "title": "Administration",
+    "tabs": {
+      "dashboard": "Dashboard",
+      "users": "Users",
+      "groups": "Groups",
+      "audit": "Audit Log"
+    },
+    "dashboard": {
+      "totalUsers": "Total Users",
+      "totalGroups": "Total Groups",
+      "totalCollections": "Collections",
+      "totalRequests": "Requests",
+      "totalEnvironments": "Environments",
+      "smtpStatus": "SMTP Status",
+      "smtpConfigured": "Configured",
+      "smtpNotConfigured": "Not configured (console fallback)"
+    },
+    "users": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "created": "Created",
+      "actions": "Actions",
+      "changeRole": "Change role",
+      "deactivate": "Deactivate",
+      "activate": "Activate",
+      "resetPassword": "Reset password",
+      "delete": "Delete",
+      "confirmDeactivate": "Deactivate user \"{name}\"?",
+      "confirmDelete": "Delete user \"{name}\" permanently?",
+      "passwordResetSent": "Password reset link sent",
+      "passwordResetConsole": "Reset link logged to server console (SMTP not configured)",
+      "search": "Search users...",
+      "noUsers": "No users found",
+      "collections": "Collections",
+      "groups": "Groups"
+    },
+    "groups": {
+      "name": "Name",
+      "description": "Description",
+      "members": "Members",
+      "folders": "Folders",
+      "environments": "Environments",
+      "created": "Created",
+      "create": "Create Group",
+      "addMember": "Add Member",
+      "removeMember": "Remove",
+      "confirmDelete": "Delete group \"{name}\"?",
+      "memberEmail": "User email",
+      "memberRole": "Role",
+      "noGroups": "No groups found",
+      "groupName": "Group name",
+      "groupDescription": "Description (optional)"
+    },
+    "audit": {
+      "time": "Time",
+      "action": "Action",
+      "user": "User",
+      "target": "Target",
+      "details": "Details",
+      "noEntries": "No audit log entries",
+      "loadMore": "Load more"
+    }
   }
 }

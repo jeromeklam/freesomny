@@ -1,4 +1,6 @@
 import type { KeyValueItem, AuthType, AuthConfig } from '@api-client/shared'
+import { isJsonApiBody } from './jsonapi-detect.js'
+import { extractAuthFromHeaders } from './auth-detect.js'
 
 interface ParsedCurl {
   method: string
@@ -79,7 +81,7 @@ export function parseCurl(curlCommand: string): ParsedCurl {
 
   let method = 'GET'
   let url = ''
-  const headers: KeyValueItem[] = []
+  let headers: KeyValueItem[] = []
   let body: string | null = null
   let bodyType = 'none'
   let authType: AuthType = 'none'
@@ -182,21 +184,26 @@ export function parseCurl(curlCommand: string): ParsedCurl {
     }
   }
 
-  // Check for Authorization header
-  const authHeader = headers.find((h) => h.key.toLowerCase() === 'authorization')
-  if (authHeader && authType === 'none') {
-    const value = authHeader.value
-    if (value.toLowerCase().startsWith('bearer ')) {
-      authType = 'bearer'
-      authConfig = { token: value.slice(7) }
-      // Remove from headers since we're using auth
-      headers.splice(headers.indexOf(authHeader), 1)
-    } else if (value.toLowerCase().startsWith('basic ')) {
-      authType = 'basic'
-      const decoded = Buffer.from(value.slice(6), 'base64').toString()
-      const [username, password] = decoded.split(':')
-      authConfig = { username, password: password || '' }
-      headers.splice(headers.indexOf(authHeader), 1)
+  // Check Content-Type header for JSON:API
+  const contentTypeHeader = headers.find((h) => h.key.toLowerCase() === 'content-type')
+  if (contentTypeHeader) {
+    if (contentTypeHeader.value.includes('application/vnd.api+json')) {
+      bodyType = 'jsonapi'
+    }
+  }
+
+  // Auto-detect JSON:API from body content when bodyType is json
+  if (bodyType === 'json' && body && isJsonApiBody(body)) {
+    bodyType = 'jsonapi'
+  }
+
+  // Check for Authorization header (Bearer, Basic, JWT id=)
+  if (authType === 'none') {
+    const extracted = extractAuthFromHeaders(headers)
+    if (extracted.authType !== 'none') {
+      headers = extracted.headers
+      authType = extracted.authType
+      authConfig = extracted.authConfig
     }
   }
 

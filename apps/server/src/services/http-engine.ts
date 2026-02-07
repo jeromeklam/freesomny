@@ -142,6 +142,8 @@ export async function executeRequest(
     if (!headers['Content-Type'] && !headers['content-type']) {
       if (resolved.bodyType === 'json') {
         requestOptions.headers = { ...headers, 'Content-Type': 'application/json' }
+      } else if (resolved.bodyType === 'jsonapi') {
+        requestOptions.headers = { ...headers, 'Content-Type': 'application/vnd.api+json' }
       } else if (resolved.bodyType === 'urlencoded') {
         requestOptions.headers = { ...headers, 'Content-Type': 'application/x-www-form-urlencoded' }
       } else if (resolved.bodyType === 'raw') {
@@ -152,8 +154,6 @@ export async function executeRequest(
 
   try {
     const response = await undiciRequest(finalUrl, requestOptions)
-    const responseBody = await response.body.text()
-    const endTime = Date.now()
 
     // Convert headers to Record<string, string>
     const responseHeaders: Record<string, string> = {}
@@ -165,15 +165,44 @@ export async function executeRequest(
       }
     }
 
+    // Detect binary content types
+    const contentType = (responseHeaders['content-type'] || '').toLowerCase()
+    const isBinary = contentType.startsWith('image/') ||
+      contentType.startsWith('audio/') ||
+      contentType.startsWith('video/') ||
+      contentType.startsWith('font/') ||
+      contentType === 'application/octet-stream' ||
+      contentType === 'application/pdf' ||
+      contentType.includes('application/zip') ||
+      contentType.includes('application/gzip')
+
+    let responseBody: string
+    let bodyEncoding: 'base64' | 'utf8' = 'utf8'
+
+    if (isBinary) {
+      const buffer = Buffer.from(await response.body.arrayBuffer())
+      responseBody = buffer.toString('base64')
+      bodyEncoding = 'base64'
+    } else {
+      responseBody = await response.body.text()
+    }
+
+    const endTime = Date.now()
+
     // Calculate response size
     const contentLength = responseHeaders['content-length']
-    const size = contentLength ? parseInt(contentLength, 10) : Buffer.byteLength(responseBody, 'utf8')
+    const size = contentLength
+      ? parseInt(contentLength, 10)
+      : bodyEncoding === 'base64'
+        ? Math.ceil(responseBody.length * 3 / 4)
+        : Buffer.byteLength(responseBody, 'utf8')
 
     return {
       status: response.statusCode,
       statusText: '', // undici doesn't provide status text
       headers: responseHeaders,
       body: responseBody,
+      bodyEncoding,
       time: endTime - startTime,
       size,
     }

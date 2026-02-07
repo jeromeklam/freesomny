@@ -91,6 +91,8 @@ interface AppState {
   setShowSettings: (show: boolean) => void
   showEnvironmentModal: boolean
   setShowEnvironmentModal: (show: boolean) => void
+  showAdmin: boolean
+  setShowAdmin: (show: boolean) => void
 
   // Language
   language: Language
@@ -255,6 +257,8 @@ export const useAppStore = create<AppState>()(
       setShowSettings: (show) => set({ showSettings: show }),
       showEnvironmentModal: false,
       setShowEnvironmentModal: (show) => set({ showEnvironmentModal: show }),
+      showAdmin: false,
+      setShowAdmin: (show) => set({ showAdmin: show }),
 
       // Language - detect browser language, default to 'en'
       language: getInitialLanguage(),

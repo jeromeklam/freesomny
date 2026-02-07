@@ -13,10 +13,12 @@ model User {
   email        String    @unique
   password     String    // bcrypt hashed
   name         String
-  role         String    @default("user") // user | admin
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  role                String    @default("user") // user | admin
+  isActive            Boolean   @default(true)
+  resetToken          String?
+  resetTokenExpiresAt DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   // Ownership
   folders      Folder[]
@@ -245,4 +247,17 @@ model Settings {
   id        String   @id @default("default")
   data      String   @default("{}") // JSON object with AppSettings
   updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String   // user.created, user.deactivated, user.role_changed, group.created, etc.
+  userId    String?  // who performed the action (null for system)
+  targetId  String?  // what was affected
+  details   String   @default("{}") // JSON with extra info
+  createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([userId])
+  @@index([createdAt])
 }

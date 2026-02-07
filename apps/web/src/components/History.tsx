@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { X, Trash2, Search, Clock } from 'lucide-react'
+import { ResizableModal } from './ResizableModal'
 import { clsx } from 'clsx'
 import { useHistory, useClearHistory } from '../hooks/useApi'
 import { useAppStore } from '../stores/app'
@@ -73,8 +74,14 @@ export function History() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-2xl max-h-[80vh] bg-gray-900 border border-gray-700 rounded-lg shadow-xl flex flex-col">
+    <ResizableModal
+      storageKey="history"
+      defaultWidth={672}
+      defaultHeight={Math.min(window.innerHeight * 0.8, 600)}
+      minWidth={400}
+      minHeight={300}
+      onClose={() => setShowHistory(false)}
+    >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
           <div className="flex items-center gap-2">
@@ -151,7 +158,6 @@ export function History() {
             {t('history.close')}
           </button>
         </div>
-      </div>
-    </div>
+    </ResizableModal>
   )
 }

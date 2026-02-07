@@ -47,6 +47,27 @@
   background: #4b5563;
 }
 
+/* URL editor - single line CodeMirror */
+.url-editor .cm-editor {
+  background: transparent !important;
+}
+
+.url-editor .cm-content {
+  padding: 6px 12px;
+}
+
+.url-editor .cm-focused {
+  outline: none !important;
+}
+
+.url-editor .cm-activeLine {
+  background: transparent !important;
+}
+
+.url-editor .cm-cursor {
+  border-left-color: #60a5fa !important;
+}
+
 /* Folder tree indentation */
 .folder-tree {
   --indent: 16px;

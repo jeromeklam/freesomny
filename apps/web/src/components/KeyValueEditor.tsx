@@ -3,12 +3,75 @@ import { clsx } from 'clsx'
 import type { KeyValueItem } from '@api-client/shared'
 import { useTranslation } from '../hooks/useTranslation'
 
+interface VariableInfo {
+  key: string
+  value: string
+  source?: string
+}
+
 interface KeyValueEditorProps {
   items: KeyValueItem[]
   onChange: (items: KeyValueItem[]) => void
   onBlur?: () => void
   placeholder?: string
   showDescription?: boolean
+  variables?: VariableInfo[]
+}
+
+// Resolve {{VAR}} patterns and return segments for rendering
+function resolveText(text: string, variables: VariableInfo[]): { hasVars: boolean; resolved: string; segments: Array<{ text: string; type: 'text' | 'resolved' | 'undefined'; source?: string }> } {
+  const pattern = /\{\{([^}]+)\}\}/g
+  const segments: Array<{ text: string; type: 'text' | 'resolved' | 'undefined'; source?: string }> = []
+  let lastIndex = 0
+  let match
+  let hasVars = false
+
+  while ((match = pattern.exec(text)) !== null) {
+    hasVars = true
+    if (match.index > lastIndex) {
+      segments.push({ text: text.slice(lastIndex, match.index), type: 'text' })
+    }
+    const varName = match[1].trim()
+    const found = variables.find((v) => v.key === varName)
+    const isSecret = /secret|password|token|key/i.test(varName)
+    if (found) {
+      segments.push({ text: isSecret ? '••••••••' : (found.value || '<empty>'), type: 'resolved', source: found.source })
+    } else {
+      segments.push({ text: `{{${varName}}}`, type: 'undefined' })
+    }
+    lastIndex = match.index + match[0].length
+  }
+
+  if (lastIndex < text.length) {
+    segments.push({ text: text.slice(lastIndex), type: 'text' })
+  }
+
+  const resolved = segments.map((s) => s.text).join('')
+  return { hasVars, resolved, segments }
+}
+
+function VariablePreview({ text, variables }: { text: string; variables: VariableInfo[] }) {
+  if (!text || !text.includes('{{')) return null
+  const { hasVars, segments } = resolveText(text, variables)
+  if (!hasVars) return null
+
+  return (
+    <div className="mt-0.5 px-1 text-[10px] font-mono leading-tight truncate" title={segments.map((s) => s.text).join('')}>
+      {segments.map((seg, i) => (
+        <span
+          key={i}
+          className={clsx(
+            seg.type === 'resolved' && 'text-green-400',
+            seg.type === 'undefined' && 'text-red-400',
+            seg.type === 'text' && 'text-gray-500'
+          )}
+          title={seg.type === 'resolved' && seg.source ? `${seg.source}` : undefined}
+        >
+          {seg.text}
+        </span>
+      ))}
+    </div>
+  )
 }
 
 export function KeyValueEditor({
@@ -17,6 +80,7 @@ export function KeyValueEditor({
   onBlur,
   placeholder = 'Key',
   showDescription = true,
+  variables = [],
 }: KeyValueEditorProps) {
   const { t } = useTranslation()
 
@@ -74,6 +138,7 @@ export function KeyValueEditor({
                     !item.enabled && 'opacity-50'
                   )}
                 />
+                {variables.length > 0 && <VariablePreview text={item.key} variables={variables} />}
               </td>
               <td className="py-1 pr-2">
                 <input
@@ -88,6 +153,7 @@ export function KeyValueEditor({
                     !item.enabled && 'opacity-50'
                   )}
                 />
+                {variables.length > 0 && <VariablePreview text={item.value} variables={variables} />}
               </td>
               {showDescription && (
                 <td className="py-1 pr-2">

@@ -15,6 +15,7 @@ import { sendRoutes } from './routes/send.js'
 import { settingsRoutes } from './routes/settings.js'
 import { importRoutes } from './routes/import.js'
 import { groupRoutes } from './routes/groups.js'
+import { adminRoutes } from './routes/admin.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -49,6 +50,7 @@ async function main() {
   await fastify.register(settingsRoutes)
   await fastify.register(importRoutes)
   await fastify.register(groupRoutes)
+  await fastify.register(adminRoutes)
 
   // Serve static files in production
   const webDistPath = join(__dirname, '../../web/dist')

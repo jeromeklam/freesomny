@@ -1,5 +1,6 @@
 import type { KeyValueItem, AuthType, AuthConfig } from '@api-client/shared'
 import YAML from 'yaml'
+import { isJsonApiBody } from './jsonapi-detect.js'
 
 interface OpenAPIParameter {
   name: string
@@ -253,13 +254,25 @@ function extractParametersAsQuery(params: OpenAPIParameter[] | undefined): KeyVa
 function getRequestBody(requestBody: OpenAPIRequestBody | undefined): { type: string; content: string } {
   if (!requestBody?.content) return { type: 'none', content: '' }
 
+  // Check for JSON:API content type first
+  const jsonApiContent = requestBody.content['application/vnd.api+json']
+  if (jsonApiContent) {
+    const example = jsonApiContent.example
+    return {
+      type: 'jsonapi',
+      content: example ? JSON.stringify(example, null, 2) : '{}',
+    }
+  }
+
   const jsonContent = requestBody.content['application/json']
   if (jsonContent) {
     const example = jsonContent.example
-    return {
-      type: 'json',
-      content: example ? JSON.stringify(example, null, 2) : '{}',
+    const content = example ? JSON.stringify(example, null, 2) : '{}'
+    // Auto-detect JSON:API from body content
+    if (isJsonApiBody(content)) {
+      return { type: 'jsonapi', content }
     }
+    return { type: 'json', content }
   }
 
   const formContent = requestBody.content['application/x-www-form-urlencoded']
@@ -462,7 +475,9 @@ export function exportOpenAPI(
       let requestBody: OpenAPIRequestBody | undefined
       if (request.body && request.bodyType !== 'none') {
         const contentType =
-          request.bodyType === 'json'
+          request.bodyType === 'jsonapi'
+            ? 'application/vnd.api+json'
+            : request.bodyType === 'json'
             ? 'application/json'
             : request.bodyType === 'urlencoded'
             ? 'application/x-www-form-urlencoded'
@@ -474,7 +489,9 @@ export function exportOpenAPI(
           description: '',
           content: {
             [contentType]: {
-              example: request.bodyType === 'json' ? JSON.parse(request.body || '{}') : request.body,
+              example: request.bodyType === 'json' || request.bodyType === 'jsonapi'
+                ? JSON.parse(request.body || '{}')
+                : request.body,
             },
           },
         }

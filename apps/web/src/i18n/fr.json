@@ -47,7 +47,22 @@
     "copied": "Copié",
     "download": "Télécharger",
     "error": "Échec de la requête",
-    "errorDetails": "Détails de l'erreur"
+    "errorDetails": "Détails de l'erreur",
+    "headerName": "En-tête",
+    "headerValue": "Valeur",
+    "saveToVariable": "Enregistrer dans une variable",
+    "noEnvironment": "Aucun environnement actif. Sélectionnez un environnement d'abord.",
+    "newVariable": "Nouvelle variable",
+    "newVarPlaceholder": "nom_variable",
+    "savedToVar": "Enregistré dans {key}",
+    "search": "Rechercher",
+    "searchPlaceholder": "Rechercher dans la réponse...",
+    "matches": "résultats",
+    "headersMatch": "en-têtes correspondants",
+    "prevMatch": "Résultat précédent",
+    "nextMatch": "Résultat suivant",
+    "noResults": "Aucun résultat",
+    "binaryContent": "Contenu binaire — télécharger pour visualiser"
   },
   "environment": {
     "title": "Environnement",
@@ -173,11 +188,16 @@
     "urlencoded": "URL Encoded",
     "raw": "Brut",
     "binary": "Binaire",
+    "jsonapi": "JSON:API",
     "format": "Formater",
+    "validJson": "Valide",
+    "invalidJson": "Invalide",
     "noBody": "Cette requête n'a pas de corps",
     "enterRaw": "Entrez le contenu brut...",
     "enterUrlencoded": "clé1=valeur1&clé2=valeur2",
-    "enterContent": "Entrez le contenu..."
+    "enterContent": "Entrez le contenu...",
+    "generateSkeleton": "Générer squelette JSON:API",
+    "generateSkeletonConfirm": "Remplacer le contenu actuel par le squelette généré ?"
   },
   "scripts": {
     "preRequest": "Pré-requête",
@@ -277,6 +297,101 @@
       "importDataHelp": "Importer les collections et environnements depuis une sauvegarde"
     }
   },
+  "codegen": {
+    "title": "Extrait de code"
+  },
+  "jsonapi": {
+    "builder": "Constructeur JSON:API",
+    "title": "Constructeur de requête JSON:API",
+    "tabs": {
+      "filters": "Filtres",
+      "sort": "Tri",
+      "include": "Inclure",
+      "page": "Page",
+      "fields": "Champs",
+      "option": "Options"
+    },
+    "apply": "Appliquer",
+    "filters": {
+      "addCondition": "Ajouter une condition",
+      "addGroup": "Ajouter un groupe",
+      "removeGroup": "Supprimer le groupe",
+      "field": "Champ",
+      "operator": "Opérateur",
+      "value": "Valeur",
+      "valuePlaceholder": "Valeur",
+      "valueBetweenMin": "Min",
+      "valueBetweenMax": "Max",
+      "valueInPlaceholder": "val1, val2, val3",
+      "and": "ET",
+      "or": "OU",
+      "betweenGroups": "Entre les groupes",
+      "betweenConditions": "Entre les conditions",
+      "noFilters": "Aucun filtre défini. Ajoutez une condition pour commencer.",
+      "group": "Groupe"
+    },
+    "sort": {
+      "addField": "Ajouter un champ de tri",
+      "field": "Champ",
+      "asc": "Croissant",
+      "desc": "Décroissant",
+      "noSort": "Aucun champ de tri. Ajoutez un champ pour définir l'ordre.",
+      "moveUp": "Monter",
+      "moveDown": "Descendre"
+    },
+    "include": {
+      "addRelation": "Ajouter une relation",
+      "relation": "Nom de la relation",
+      "noInclude": "Aucune relation. Ajoutez une relation pour inclure les ressources liées."
+    },
+    "page": {
+      "offset": "Décalage",
+      "limit": "Limite",
+      "offsetPlaceholder": "Index de départ (ex. 0)",
+      "limitPlaceholder": "Éléments par page (ex. 25)",
+      "noPage": "Pas de pagination. Configurez le décalage et la limite.",
+      "setDefaults": "Valeurs par défaut (0 / 25)",
+      "clear": "Effacer la pagination"
+    },
+    "fields": {
+      "addFieldset": "Ajouter un jeu de champs",
+      "resourceType": "Type de ressource",
+      "resourceTypePlaceholder": "ex. articles",
+      "fieldsList": "Champs",
+      "fieldsPlaceholder": "champ1, champ2, champ3",
+      "noFields": "Aucun jeu de champs. Ajoutez un type de ressource pour sélectionner des champs."
+    },
+    "option": {
+      "addOption": "Ajouter une option",
+      "keyPlaceholder": "ex. CACHE",
+      "noOptions": "Aucune option. Ajoutez un flag d'option pour FreeFW."
+    },
+    "operators": {
+      "eq": "égal",
+      "neq": "différent de",
+      "gt": "supérieur à",
+      "gte": "supérieur ou égal",
+      "ltw": "inférieur à",
+      "ltwe": "inférieur ou égal",
+      "contains": "contient",
+      "ncontains": "ne contient pas",
+      "containsb": "commence par",
+      "containse": "se termine par",
+      "in": "dans la liste",
+      "nin": "pas dans la liste",
+      "empty": "est nul",
+      "nempty": "n'est pas nul",
+      "between": "entre",
+      "eqn": "égal (numérique)",
+      "neqn": "différent (numérique)",
+      "gtn": "supérieur à (numérique)",
+      "gten": "supérieur ou égal (numérique)",
+      "ltwn": "inférieur à (numérique)",
+      "ltwen": "inférieur ou égal (numérique)",
+      "containsn": "contient (numérique)",
+      "soundex": "soundex"
+    }
+  },
   "common": {
     "save": "Enregistrer",
     "delete": "Supprimer",
@@ -305,6 +420,86 @@
     "passwordPlaceholder": "Entrez votre mot de passe",
     "passwordHint": "Minimum 6 caractères",
     "logout": "Déconnexion",
-    "profile": "Profil"
+    "profile": "Profil",
+    "forgotPassword": "Mot de passe oublié ?",
+    "forgotPasswordTitle": "Mot de passe oublié",
+    "forgotPasswordSend": "Envoyer le lien",
+    "forgotPasswordSuccess": "Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.",
+    "backToLogin": "Retour à la connexion",
+    "resetPasswordTitle": "Réinitialiser le mot de passe",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "resetPasswordSubmit": "Réinitialiser",
+    "resetPasswordSuccess": "Le mot de passe a été réinitialisé. Vous pouvez maintenant vous connecter.",
+    "resetPasswordInvalid": "Lien de réinitialisation invalide ou expiré.",
+    "passwordMismatch": "Les mots de passe ne correspondent pas"
+  },
+  "admin": {
+    "title": "Administration",
+    "tabs": {
+      "dashboard": "Tableau de bord",
+      "users": "Utilisateurs",
+      "groups": "Groupes",
+      "audit": "Journal d'audit"
+    },
+    "dashboard": {
+      "totalUsers": "Utilisateurs",
+      "totalGroups": "Groupes",
+      "totalCollections": "Collections",
+      "totalRequests": "Requêtes",
+      "totalEnvironments": "Environnements",
+      "smtpStatus": "Statut SMTP",
+      "smtpConfigured": "Configuré",
+      "smtpNotConfigured": "Non configuré (affichage console)"
+    },
+    "users": {
+      "name": "Nom",
+      "email": "Email",
+      "role": "Rôle",
+      "status": "Statut",
+      "active": "Actif",
+      "inactive": "Inactif",
+      "created": "Créé",
+      "actions": "Actions",
+      "changeRole": "Changer le rôle",
+      "deactivate": "Désactiver",
+      "activate": "Activer",
+      "resetPassword": "Réinitialiser le mot de passe",
+      "delete": "Supprimer",
+      "confirmDeactivate": "Désactiver l'utilisateur « {name} » ?",
+      "confirmDelete": "Supprimer l'utilisateur « {name} » définitivement ?",
+      "passwordResetSent": "Lien de réinitialisation envoyé",
+      "passwordResetConsole": "Lien affiché dans la console du serveur (SMTP non configuré)",
+      "search": "Rechercher un utilisateur...",
+      "noUsers": "Aucun utilisateur trouvé",
+      "collections": "Collections",
+      "groups": "Groupes"
+    },
+    "groups": {
+      "name": "Nom",
+      "description": "Description",
+      "members": "Membres",
+      "folders": "Dossiers",
+      "environments": "Environnements",
+      "created": "Créé",
+      "create": "Créer un groupe",
+      "addMember": "Ajouter un membre",
+      "removeMember": "Retirer",
+      "confirmDelete": "Supprimer le groupe « {name} » ?",
+      "memberEmail": "Email de l'utilisateur",
+      "memberRole": "Rôle",
+      "noGroups": "Aucun groupe trouvé",
+      "groupName": "Nom du groupe",
+      "groupDescription": "Description (optionnel)"
+    },
+    "audit": {
+      "time": "Heure",
+      "action": "Action",
+      "user": "Utilisateur",
+      "target": "Cible",
+      "details": "Détails",
+      "noEntries": "Aucune entrée dans le journal",
+      "loadMore": "Charger plus"
+    }
   }
 }

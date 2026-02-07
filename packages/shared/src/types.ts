@@ -146,7 +146,7 @@ export interface Request {
   url: string
   queryParams: KeyValueItem[]
   headers: KeyValueItem[]
-  bodyType: 'none' | 'json' | 'form-data' | 'urlencoded' | 'raw' | 'binary'
+  bodyType: 'none' | 'json' | 'jsonapi' | 'form-data' | 'urlencoded' | 'raw' | 'binary'
   body: string
   bodyDescription: string
   authType: AuthType
@@ -236,6 +236,7 @@ export interface HttpResponse {
   statusText: string
   headers: Record<string, string>
   body: string
+  bodyEncoding?: 'base64' | 'utf8'
   time: number
   size: number
 }

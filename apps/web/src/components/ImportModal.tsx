@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { X, Upload, FileJson, Terminal, FileCode, Zap } from 'lucide-react'
+import { ResizableModal } from './ResizableModal'
 import { clsx } from 'clsx'
 import { useQueryClient } from '@tanstack/react-query'
 import { importApi } from '../lib/api'
@@ -114,8 +115,15 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-lg mx-4">
+    <ResizableModal
+      storageKey="import"
+      defaultWidth={512}
+      defaultHeight={Math.min(window.innerHeight * 0.7, 500)}
+      minWidth={380}
+      minHeight={300}
+      onClose={handleClose}
+      className="bg-gray-800"
+    >
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
           <h2 className="text-lg font-semibold">{t('import.title')}</h2>
           <button
@@ -296,7 +304,6 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
             {isLoading ? t('import.importing') : t('import.import')}
           </button>
         </div>
-      </div>
-    </div>
+    </ResizableModal>
   )
 }

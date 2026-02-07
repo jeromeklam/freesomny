@@ -122,7 +122,7 @@ export const inheritBoolSchema = z.enum(['inherit', 'true', 'false']).default('i
 export const httpMethodSchema = z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])
 
 // Body types
-export const bodyTypeSchema = z.enum(['none', 'json', 'form-data', 'urlencoded', 'raw', 'binary'])
+export const bodyTypeSchema = z.enum(['none', 'json', 'jsonapi', 'form-data', 'urlencoded', 'raw', 'binary'])
 
 // Folder schemas
 export const createFolderSchema = z.object({

@@ -1,14 +1,18 @@
-import { useState, useEffect } from 'react'
-import { Send, Loader2 } from 'lucide-react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import CodeMirror from '@uiw/react-codemirror'
+import { hoverTooltip, type Tooltip, EditorView } from '@codemirror/view'
+import { Send, Loader2, Code2, Filter } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
-import { useRequest, useUpdateRequest, useSendRequest } from '../hooks/useApi'
+import { useRequest, useUpdateRequest, useSendRequest, useEnvironmentVariables } from '../hooks/useApi'
 import { useTranslation } from '../hooks/useTranslation'
 import { KeyValueEditor } from './KeyValueEditor'
 import { AuthEditor } from './AuthEditor'
 import { BodyEditor } from './BodyEditor'
 import { ScriptEditor } from './ScriptEditor'
 import { ResolvedView } from './ResolvedView'
+import { CodeGeneratorModal } from './CodeGeneratorModal'
+import { JsonApiQueryModal } from './JsonApiQueryModal'
 import type { KeyValueItem, AuthType, AuthConfig } from '@api-client/shared'
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const
@@ -46,45 +50,146 @@ export function RequestBuilder() {
   const clearScriptOutput = useAppStore((s) => s.clearScriptOutput)
   const updateRequestTabInfo = useAppStore((s) => s.updateRequestTabInfo)
 
+  const activeEnvironmentId = useAppStore((s) => s.activeEnvironmentId)
+
   const { data: requestData } = useRequest(selectedRequestId)
+  const { data: envVarsData } = useEnvironmentVariables(activeEnvironmentId)
   const updateRequest = useUpdateRequest()
   const sendRequest = useSendRequest()
   const { t } = useTranslation()
 
+  const [showCodeGen, setShowCodeGen] = useState(false)
+  const [showJsonApiBuilder, setShowJsonApiBuilder] = useState(false)
+
+  // Map environment variables for tooltips
+  const variablesForTooltip = useMemo(() => {
+    if (!envVarsData || !Array.isArray(envVarsData)) return []
+    return (envVarsData as Array<{ key: string; teamValue?: string; localValue?: string; status?: string }>).map((v) => ({
+      key: v.key,
+      value: v.localValue ?? v.teamValue ?? '',
+      source: v.status === 'overridden' ? 'local override' : 'environment',
+    }))
+  }, [envVarsData])
+
+  const variablesRef = useRef(variablesForTooltip)
+  useEffect(() => { variablesRef.current = variablesForTooltip }, [variablesForTooltip])
+
+  // URL bar extensions: variable hover tooltips + single-line styling
+  const urlExtensions = useMemo(() => {
+    const tooltipExt = hoverTooltip((view, pos): Tooltip | null => {
+      const doc = view.state.doc
+      const line = doc.lineAt(pos)
+      const text = line.text
+      const lineStart = line.from
+      const offsetInLine = pos - lineStart
+
+      const pattern = /\{\{([^}]+)\}\}/g
+      let match
+      while ((match = pattern.exec(text)) !== null) {
+        const start = match.index
+        const end = start + match[0].length
+        if (offsetInLine >= start && offsetInLine <= end) {
+          const varName = match[1].trim()
+          const vars = variablesRef.current
+          const found = vars.find((v) => v.key === varName)
+
+          const dom = document.createElement('div')
+          dom.className = 'cm-variable-tooltip'
+
+          if (found) {
+            const isSecret = /secret|password|token|key/i.test(varName)
+            dom.innerHTML = `<div style="padding:4px 8px;font-size:12px;font-family:monospace;">` +
+              `<div style="color:#93c5fd;margin-bottom:2px;">${varName}</div>` +
+              `<div style="color:#d1d5db;">${isSecret ? '••••••••' : found.value || '<empty>'}</div>` +
+              (found.source ? `<div style="color:#9ca3af;font-size:10px;margin-top:2px;">${found.source}</div>` : '') +
+              `</div>`
+          } else {
+            dom.innerHTML = `<div style="padding:4px 8px;font-size:12px;font-family:monospace;">` +
+              `<div style="color:#fbbf24;">${varName}</div>` +
+              `<div style="color:#f87171;">undefined</div>` +
+              `</div>`
+          }
+
+          return {
+            pos: lineStart + start,
+            end: lineStart + end,
+            above: true,
+            create: () => ({ dom }),
+          }
+        }
+      }
+      return null
+    })
+
+    // Single-line theme: no wrapping, no line numbers, compact
+    const singleLineTheme = EditorView.theme({
+      '&': { maxHeight: '36px', fontSize: '14px' },
+      '.cm-content': { padding: '6px 0', fontFamily: 'ui-monospace, monospace' },
+      '.cm-line': { padding: '0' },
+      '.cm-scroller': { overflow: 'hidden auto' },
+    })
+
+    // Prevent Enter from creating new lines
+    const preventNewline = EditorView.domEventHandlers({
+      keydown(event) {
+        if (event.key === 'Enter') {
+          event.preventDefault()
+          return true
+        }
+        return false
+      },
+    })
+
+    return [tooltipExt, singleLineTheme, preventNewline]
+  }, [])
+
   const [localRequest, setLocalRequest] = useState<RequestData | null>(null)
+  const localRequestRef = useRef<RequestData | null>(null)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (requestData) {
       const data = requestData as RequestData
       setLocalRequest(data)
+      localRequestRef.current = data
       // Update tab info when request data loads
       updateRequestTabInfo(data.id, data.name, data.method)
     } else {
       setLocalRequest(null)
+      localRequestRef.current = null
     }
   }, [requestData, updateRequestTabInfo])
 
   const handleChange = (field: keyof RequestData, value: unknown) => {
-    if (!localRequest) return
-    const updated = { ...localRequest, [field]: value }
-    setLocalRequest(updated)
-    // Update tab info if name or method changed
-    if (field === 'name' || field === 'method') {
-      updateRequestTabInfo(localRequest.id, updated.name, updated.method)
-    }
+    if (!localRequestRef.current) return
+    setLocalRequest((prev) => {
+      if (!prev) return prev
+      const updated = { ...prev, [field]: value }
+      localRequestRef.current = updated
+      if (field === 'name' || field === 'method') {
+        updateRequestTabInfo(prev.id, updated.name, updated.method)
+      }
+      return updated
+    })
   }
 
-  const handleSave = () => {
-    if (!localRequest || !selectedRequestId) return
-    updateRequest.mutate({ id: selectedRequestId, data: localRequest })
-  }
+  // Debounced save: coalesces rapid blur+click into a single save with latest data
+  const handleSave = useCallback(() => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(() => {
+      const current = localRequestRef.current
+      if (!current || !selectedRequestId) return
+      updateRequest.mutate({ id: selectedRequestId, data: current })
+    }, 0)
+  }, [selectedRequestId, updateRequest])
 
   const handleSend = () => {
     if (!selectedRequestId) return
+    const current = localRequestRef.current
     // Save first, then send
-    if (localRequest) {
+    if (current) {
       updateRequest.mutate(
-        { id: selectedRequestId, data: localRequest },
+        { id: selectedRequestId, data: current },
         {
           onSuccess: () => {
             clearScriptOutput()
@@ -134,14 +239,26 @@ export function RequestBuilder() {
           ))}
         </select>
 
-        <input
-          type="text"
-          value={localRequest.url}
-          onChange={(e) => handleChange('url', e.target.value)}
-          onBlur={handleSave}
-          placeholder={t('request.urlPlaceholder')}
-          className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
-        />
+        <div className="flex-1 bg-gray-800 border border-gray-600 rounded focus-within:border-blue-500 overflow-hidden">
+          <CodeMirror
+            value={localRequest.url}
+            onChange={(val) => handleChange('url', val)}
+            onBlur={handleSave}
+            placeholder={t('request.urlPlaceholder')}
+            theme="dark"
+            extensions={urlExtensions}
+            basicSetup={false}
+            className="url-editor"
+          />
+        </div>
+
+        <button
+          onClick={() => setShowCodeGen(true)}
+          className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
+          title={t('codegen.title')}
+        >
+          <Code2 className="w-4 h-4" />
+        </button>
 
         <button
           onClick={handleSend}
@@ -178,12 +295,24 @@ export function RequestBuilder() {
       {/* Tab Content */}
       <div className="flex-1 overflow-auto">
         {activeTab === 'params' && (
-          <KeyValueEditor
-            items={localRequest.queryParams}
-            onChange={(items) => handleChange('queryParams', items)}
-            onBlur={handleSave}
-            placeholder="Query parameter"
-          />
+          <div>
+            <div className="flex items-center justify-end px-4 pt-3">
+              <button
+                onClick={() => setShowJsonApiBuilder(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-800 border border-gray-700 rounded"
+              >
+                <Filter className="w-4 h-4" />
+                {t('jsonapi.builder')}
+              </button>
+            </div>
+            <KeyValueEditor
+              items={localRequest.queryParams}
+              onChange={(items) => handleChange('queryParams', items)}
+              onBlur={handleSave}
+              placeholder="Query parameter"
+              variables={variablesForTooltip}
+            />
+          </div>
         )}
 
         {activeTab === 'headers' && (
@@ -192,6 +321,7 @@ export function RequestBuilder() {
             onChange={(items) => handleChange('headers', items)}
             onBlur={handleSave}
             placeholder="Header"
+            variables={variablesForTooltip}
           />
         )}
 
@@ -216,6 +346,8 @@ export function RequestBuilder() {
               handleChange('body', body)
             }}
             onBlur={handleSave}
+            variables={variablesForTooltip}
+            queryParams={localRequest.queryParams}
           />
         )}
 
@@ -233,6 +365,24 @@ export function RequestBuilder() {
 
         {activeTab === 'resolved' && <ResolvedView requestId={selectedRequestId} />}
       </div>
+
+      {showCodeGen && (
+        <CodeGeneratorModal
+          request={localRequest}
+          onClose={() => setShowCodeGen(false)}
+        />
+      )}
+
+      {showJsonApiBuilder && (
+        <JsonApiQueryModal
+          queryParams={localRequest.queryParams}
+          onApply={(params) => {
+            handleChange('queryParams', params)
+            handleSave()
+          }}
+          onClose={() => setShowJsonApiBuilder(false)}
+        />
+      )}
     </div>
   )
 }

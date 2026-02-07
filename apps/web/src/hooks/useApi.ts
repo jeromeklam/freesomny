@@ -264,6 +264,19 @@ export function useEnvironmentVariables(id: string | null) {
   })
 }
 
+export function useSetEnvironmentVariable() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ envId, key, data }: { envId: string; key: string; data: unknown }) =>
+      environmentsApi.setVariable(envId, key, data),
+    onSuccess: (_, { envId }) => {
+      queryClient.invalidateQueries({ queryKey: ['environment-variables', envId] })
+      queryClient.invalidateQueries({ queryKey: ['environments'] })
+    },
+  })
+}
+
 // History
 export function useHistory(params?: { limit?: number; offset?: number; search?: string }) {
   return useQuery({

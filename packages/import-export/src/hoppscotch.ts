@@ -1,4 +1,6 @@
 import type { KeyValueItem, AuthType, AuthConfig } from '@api-client/shared'
+import { isJsonApiBody } from './jsonapi-detect.js'
+import { extractAuthFromHeaders } from './auth-detect.js'
 
 // Hoppscotch collection format
 interface HoppscotchHeader {
@@ -52,6 +54,7 @@ interface HoppscotchFormDataItem {
 interface HoppscotchBody {
   contentType:
     | 'application/json'
+    | 'application/vnd.api+json'
     | 'application/x-www-form-urlencoded'
     | 'multipart/form-data'
     | 'text/plain'
@@ -222,10 +225,14 @@ function convertAuth(auth: HoppscotchAuth | undefined): { type: AuthType; config
   }
 }
 
-function convertBodyType(contentType: string | null): string {
+function convertBodyType(contentType: string | null, bodyContent?: string): string {
   if (!contentType) return 'none'
   switch (contentType) {
+    case 'application/vnd.api+json':
+      return 'jsonapi'
     case 'application/json':
+      // Auto-detect JSON:API from body content
+      if (bodyContent && isJsonApiBody(bodyContent)) return 'jsonapi'
       return 'json'
     case 'application/x-www-form-urlencoded':
       return 'urlencoded'
@@ -257,17 +264,33 @@ function convertBody(body: HoppscotchBody): string {
 
 function convertRequest(req: HoppscotchRequest): ImportedRequest {
   const auth = convertAuth(req.auth)
+  const bodyContent = convertBody(req.body)
+
+  let headers = convertHeaders(req.headers)
+  let authType = auth.type
+  let authConfig = auth.config
+
+  // If no native auth set, detect from Authorization header
+  if (authType === 'inherit' || authType === 'none') {
+    const extracted = extractAuthFromHeaders(headers)
+    if (extracted.authType !== 'none') {
+      headers = extracted.headers
+      authType = extracted.authType
+      authConfig = extracted.authConfig
+    }
+  }
+
   return {
     name: req.name,
     description: '',
     method: req.method,
     url: normalizeVariableSyntax(req.endpoint),
-    headers: convertHeaders(req.headers),
+    headers,
     queryParams: convertParams(req.params),
-    bodyType: convertBodyType(req.body.contentType),
-    body: convertBody(req.body),
-    authType: auth.type,
-    authConfig: auth.config,
+    bodyType: convertBodyType(req.body.contentType, bodyContent),
+    body: bodyContent,
+    authType,
+    authConfig,
     preScript: req.preRequestScript?.trim() ? normalizeVariableSyntax(req.preRequestScript.trim()) : null,
     postScript: req.testScript?.trim() ? normalizeVariableSyntax(req.testScript.trim()) : null,
   }
@@ -275,13 +298,28 @@ function convertRequest(req: HoppscotchRequest): ImportedRequest {
 
 function convertFolder(folder: HoppscotchFolder): ImportedFolder {
   const auth = convertAuth(folder.auth)
+
+  let headers = convertHeaders(folder.headers)
+  let authType = auth.type
+  let authConfig = auth.config
+
+  // If no native auth set, detect from Authorization header at folder level
+  if (authType === 'inherit' || authType === 'none') {
+    const extracted = extractAuthFromHeaders(headers)
+    if (extracted.authType !== 'none') {
+      headers = extracted.headers
+      authType = extracted.authType
+      authConfig = extracted.authConfig
+    }
+  }
+
   return {
     name: folder.name,
     description: '',
-    headers: convertHeaders(folder.headers),
+    headers,
     queryParams: [],
-    authType: auth.type,
-    authConfig: auth.config,
+    authType,
+    authConfig,
     preScript: null,
     postScript: null,
     baseUrl: null,

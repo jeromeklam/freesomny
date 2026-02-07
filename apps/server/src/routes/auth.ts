@@ -1,7 +1,9 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
+import { randomBytes } from 'crypto'
 import { prisma } from '../lib/prisma.js'
 import { hashPassword, verifyPassword, requireAuth, getCurrentUser, type JwtPayload } from '../lib/auth.js'
+import { sendPasswordResetEmail } from '../services/email.js'
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -18,6 +20,15 @@ const updateProfileSchema = z.object({
   name: z.string().min(1).optional(),
   password: z.string().min(6).optional(),
   currentPassword: z.string().optional(),
+})
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email(),
+})
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(6),
 })
 
 export async function authRoutes(fastify: FastifyInstance) {
@@ -184,6 +195,68 @@ export async function authRoutes(fastify: FastifyInstance) {
     })
 
     return { data: user }
+  })
+
+  // Forgot password — request reset link
+  fastify.post<{ Body: unknown }>('/api/auth/forgot-password', async (request, reply) => {
+    const parsed = forgotPasswordSchema.safeParse(request.body)
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Validation failed', details: parsed.error.errors })
+    }
+
+    const { email } = parsed.data
+
+    // Always return success to not leak user existence
+    const user = await prisma.user.findUnique({ where: { email } })
+    if (user && user.isActive) {
+      const token = randomBytes(32).toString('hex')
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { resetToken: token, resetTokenExpiresAt: expiresAt },
+      })
+
+      const appUrl = process.env.APP_URL || 'http://localhost:5173'
+      const resetUrl = `${appUrl}/reset-password?token=${token}`
+
+      await sendPasswordResetEmail(email, resetUrl)
+    }
+
+    return { data: { success: true } }
+  })
+
+  // Reset password — set new password with token
+  fastify.post<{ Body: unknown }>('/api/auth/reset-password', async (request, reply) => {
+    const parsed = resetPasswordSchema.safeParse(request.body)
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Validation failed', details: parsed.error.errors })
+    }
+
+    const { token, password } = parsed.data
+
+    const user = await prisma.user.findFirst({
+      where: {
+        resetToken: token,
+        resetTokenExpiresAt: { gt: new Date() },
+      },
+    })
+
+    if (!user) {
+      return reply.status(400).send({ error: 'Invalid or expired reset link' })
+    }
+
+    const hashedPassword = await hashPassword(password)
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiresAt: null,
+      },
+    })
+
+    return { data: { success: true } }
   })
 
   // Check if auth is required (used by frontend to determine if login is needed)

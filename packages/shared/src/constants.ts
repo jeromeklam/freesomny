@@ -40,6 +40,7 @@ export const HTTP_METHODS = {
 export const BODY_TYPES = {
   none: { label: 'None', contentType: null },
   json: { label: 'JSON', contentType: 'application/json' },
+  jsonapi: { label: 'JSON:API', contentType: 'application/vnd.api+json' },
   'form-data': { label: 'Form Data', contentType: 'multipart/form-data' },
   urlencoded: { label: 'URL Encoded', contentType: 'application/x-www-form-urlencoded' },
   raw: { label: 'Raw', contentType: 'text/plain' },
@@ -126,9 +127,37 @@ export const COMMON_HEADERS = [
   'X-Requested-With',
 ] as const
 
+// JSON:API filter operators (FreeFW compatible)
+export const JSONAPI_FILTER_OPERATORS = [
+  { value: 'eq', label: 'Equals', symbol: '=', needsValue: true },
+  { value: 'neq', label: 'Not equals', symbol: '!=', needsValue: true },
+  { value: 'gt', label: 'Greater than', symbol: '>', needsValue: true },
+  { value: 'gte', label: 'Greater or equal', symbol: '>=', needsValue: true },
+  { value: 'ltw', label: 'Less than', symbol: '<', needsValue: true },
+  { value: 'ltwe', label: 'Less or equal', symbol: '<=', needsValue: true },
+  { value: 'contains', label: 'Contains', symbol: '*x*', needsValue: true },
+  { value: 'ncontains', label: 'Not contains', symbol: '!*x*', needsValue: true },
+  { value: 'containsb', label: 'Starts with', symbol: 'x*', needsValue: true },
+  { value: 'containse', label: 'Ends with', symbol: '*x', needsValue: true },
+  { value: 'in', label: 'In list', symbol: '∈', needsValue: true },
+  { value: 'nin', label: 'Not in list', symbol: '∉', needsValue: true },
+  { value: 'empty', label: 'Is null', symbol: '∅', needsValue: false },
+  { value: 'nempty', label: 'Is not null', symbol: '!∅', needsValue: false },
+  { value: 'between', label: 'Between', symbol: '↔', needsValue: true },
+  { value: 'eqn', label: 'Equals (numeric)', symbol: '=#', needsValue: true },
+  { value: 'neqn', label: 'Not equals (numeric)', symbol: '!=#', needsValue: true },
+  { value: 'gtn', label: 'Greater than (numeric)', symbol: '>#', needsValue: true },
+  { value: 'gten', label: 'Greater or equal (numeric)', symbol: '>=#', needsValue: true },
+  { value: 'ltwn', label: 'Less than (numeric)', symbol: '<#', needsValue: true },
+  { value: 'ltwen', label: 'Less or equal (numeric)', symbol: '<=#', needsValue: true },
+  { value: 'containsn', label: 'Contains (numeric)', symbol: '*#*', needsValue: true },
+  { value: 'soundex', label: 'Soundex', symbol: '~', needsValue: true },
+] as const
+
 // Common content types
 export const COMMON_CONTENT_TYPES = [
   'application/json',
+  'application/vnd.api+json',
   'application/xml',
   'application/x-www-form-urlencoded',
   'multipart/form-data',

@@ -205,4 +205,99 @@ export const authApi = {
   me: () => request<AuthUser>('/auth/me'),
   updateProfile: (data: { name?: string; password?: string; currentPassword?: string }) =>
     request<AuthUser>('/auth/profile', { method: 'PUT', body: JSON.stringify(data) }),
+  forgotPassword: (email: string) =>
+    request<{ success: boolean }>('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+  resetPassword: (token: string, password: string) =>
+    request<{ success: boolean }>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, password }),
+    }),
+}
+
+// Admin
+export interface AdminUser {
+  id: string
+  email: string
+  name: string
+  role: string
+  isActive: boolean
+  createdAt: string
+  _count: { folders: number; groupMemberships: number; environments?: number }
+  groupMemberships?: { group: { id: string; name: string }; role: string }[]
+}
+
+export interface AdminGroup {
+  id: string
+  name: string
+  description: string
+  createdAt: string
+  updatedAt: string
+  _count: { members: number; folders: number; environments: number }
+  members?: { id: string; role: string; user: { id: string; email: string; name: string } }[]
+}
+
+export interface AuditEntry {
+  id: string
+  action: string
+  userId: string | null
+  targetId: string | null
+  details: string
+  createdAt: string
+}
+
+export interface AdminStats {
+  users: number
+  groups: number
+  collections: number
+  requests: number
+  environments: number
+}
+
+export const adminApi = {
+  // Stats
+  getStats: () => request<AdminStats>('/admin/stats'),
+  getSmtpStatus: () => request<{ configured: boolean }>('/admin/smtp-status'),
+
+  // Users
+  getUsers: () => request<AdminUser[]>('/admin/users'),
+  getUser: (id: string) => request<AdminUser>(`/admin/users/${id}`),
+  updateUser: (id: string, data: { role?: string; isActive?: boolean; name?: string }) =>
+    request<AdminUser>(`/admin/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteUser: (id: string) =>
+    request<{ success: boolean }>(`/admin/users/${id}`, { method: 'DELETE' }),
+  resetUserPassword: (id: string) =>
+    request<{ success: boolean; consoleOnly?: boolean }>(`/admin/users/${id}/reset-password`, {
+      method: 'POST',
+    }),
+
+  // Groups
+  getGroups: () => request<AdminGroup[]>('/admin/groups'),
+  getGroup: (id: string) => request<AdminGroup>(`/admin/groups/${id}`),
+  createGroup: (data: { name: string; description?: string }) =>
+    request<AdminGroup>('/admin/groups', { method: 'POST', body: JSON.stringify(data) }),
+  updateGroup: (id: string, data: { name?: string; description?: string }) =>
+    request<AdminGroup>(`/admin/groups/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteGroup: (id: string) =>
+    request<{ success: boolean }>(`/admin/groups/${id}`, { method: 'DELETE' }),
+  addGroupMember: (groupId: string, data: { email: string; role?: string }) =>
+    request<unknown>(`/admin/groups/${groupId}/members`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  removeGroupMember: (groupId: string, memberId: string) =>
+    request<{ success: boolean }>(`/admin/groups/${groupId}/members/${memberId}`, {
+      method: 'DELETE',
+    }),
+
+  // Audit
+  getAuditLog: (params?: { limit?: number; offset?: number }) => {
+    const searchParams = new URLSearchParams()
+    if (params?.limit) searchParams.set('limit', params.limit.toString())
+    if (params?.offset) searchParams.set('offset', params.offset.toString())
+    const query = searchParams.toString()
+    return request<{ entries: AuditEntry[]; total: number }>(`/admin/audit${query ? `?${query}` : ''}`)
+  },
 }

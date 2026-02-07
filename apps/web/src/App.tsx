@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { Settings, Clock, Upload, Globe, LogOut, User } from 'lucide-react'
+import { Settings, Clock, Upload, Globe, LogOut, User, ShieldCheck } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from './stores/app'
 import { useFolders, useEnvironments, useAuthStatus } from './hooks/useApi'
@@ -17,6 +17,8 @@ import { FolderSettings } from './components/FolderSettings'
 import { ImportModal } from './components/ImportModal'
 import { SettingsModal } from './components/SettingsModal'
 import { AuthScreen } from './components/AuthScreen'
+import { ResetPasswordScreen } from './components/ResetPasswordScreen'
+import { AdminModal } from './components/AdminModal'
 
 function MainApp() {
   const [isDraggingSidebar, setIsDraggingSidebar] = useState(false)
@@ -33,6 +35,8 @@ function MainApp() {
   const selectedRequestId = useAppStore((s) => s.selectedRequestId)
   const user = useAppStore((s) => s.user)
   const setUser = useAppStore((s) => s.setUser)
+  const showAdmin = useAppStore((s) => s.showAdmin)
+  const setShowAdmin = useAppStore((s) => s.setShowAdmin)
 
   const { t, language, setLanguage } = useTranslation()
 
@@ -127,6 +131,17 @@ function MainApp() {
           >
             <Settings className="w-5 h-5" />
           </button>
+
+          {/* Admin button (admin only) */}
+          {user?.role === 'admin' && (
+            <button
+              onClick={() => setShowAdmin(true)}
+              className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
+              title={t('admin.title')}
+            >
+              <ShieldCheck className="w-5 h-5" />
+            </button>
+          )}
 
           {/* Language selector */}
           <div className="flex items-center gap-1 ml-2 border-l border-gray-600 pl-2">
@@ -238,6 +253,7 @@ function MainApp() {
       <History />
       <ImportModal isOpen={showImport} onClose={() => setShowImport(false)} />
       <SettingsModal />
+      {showAdmin && <AdminModal onClose={() => setShowAdmin(false)} />}
     </div>
   )
 }
@@ -280,6 +296,11 @@ function App() {
       })
     }
   }, [user, setUser])
+
+  // Handle /reset-password route
+  if (window.location.pathname === '/reset-password') {
+    return <ResetPasswordScreen />
+  }
 
   // Show loading state
   if (isLoading) {
