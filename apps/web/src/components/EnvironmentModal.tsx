@@ -3,7 +3,7 @@ import { X, Plus, Trash2, RotateCcw, Lock, Unlock, GripVertical, Tag, Cog } from
 import { ResizableModal } from './ResizableModal'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
-import { useEnvironmentVariables } from '../hooks/useApi'
+import { useEnvironmentVariables, useDeleteEnvironment } from '../hooks/useApi'
 import { useTranslation } from '../hooks/useTranslation'
 import { environmentsApi } from '../lib/api'
 import { useQueryClient } from '@tanstack/react-query'
@@ -40,6 +40,7 @@ export function EnvironmentModal() {
   const setEnvironments = useAppStore((s) => s.setEnvironments)
 
   const { data: variables, refetch } = useEnvironmentVariables(activeEnvironmentId)
+  const deleteEnvironment = useDeleteEnvironment()
   const queryClient = useQueryClient()
   const { t } = useTranslation()
   const dragRowRef = useRef<HTMLTableRowElement | null>(null)
@@ -530,6 +531,25 @@ export function EnvironmentModal() {
                   </button>
                 </div>
               )}
+
+              {/* Delete environment */}
+              <div className="pt-6 mt-6 border-t border-gray-700">
+                <h3 className="text-sm font-medium text-red-400 mb-2">{t('environment.dangerZone')}</h3>
+                <p className="text-xs text-gray-500 mb-3">{t('environment.deleteWarning')}</p>
+                <button
+                  onClick={() => {
+                    if (!activeEnvironmentId) return
+                    if (confirm(t('environment.confirmDelete').replace('{name}', activeEnv?.name || ''))) {
+                      deleteEnvironment.mutate(activeEnvironmentId)
+                      setShowEnvironmentModal(false)
+                    }
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:text-white hover:bg-red-600 border border-red-700 rounded"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {t('environment.deleteEnvironment')}
+                </button>
+              </div>
             </div>
           )}
         </div>

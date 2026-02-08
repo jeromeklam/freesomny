@@ -101,7 +101,11 @@
     "generatedVar": "Variable de travail — valeur générée ou calculée",
     "clickToPromoteToTeam": "Cliquer pour définir votre valeur comme valeur d'équipe",
     "clickToOverride": "Cliquer pour créer un remplacement local",
-    "confirmPromoteToTeam": "Définir votre valeur locale pour « {key} » comme nouvelle valeur d'équipe ? Cela mettra à jour la valeur pour tous les membres."
+    "confirmPromoteToTeam": "Définir votre valeur locale pour « {key} » comme nouvelle valeur d'équipe ? Cela mettra à jour la valeur pour tous les membres.",
+    "dangerZone": "Zone de danger",
+    "deleteWarning": "La suppression de cet environnement est définitive et irréversible. Toutes les variables seront perdues.",
+    "deleteEnvironment": "Supprimer l'environnement",
+    "confirmDelete": "Supprimer définitivement l'environnement « {name} » ? Cette action est irréversible."
   },
   "import": {
     "title": "Importer une collection",
@@ -178,7 +182,9 @@
     "enablePkce": "Activer PKCE",
     "authId": "Auth ID",
     "authKey": "Auth Key",
-    "includePayloadHash": "Inclure le hash du payload"
+    "includePayloadHash": "Inclure le hash du payload",
+    "jwtFreefw": "JWT FreeFW",
+    "jwtFreefwTokenHelp": "Envoyé comme : Authorization: JWT id=<token>"
   },
   "body": {
     "type": "Type de corps",
@@ -501,5 +507,11 @@
       "noEntries": "Aucune entrée dans le journal",
       "loadMore": "Charger plus"
     }
+  },
+  "inherited": {
+    "inherited": "Hérités",
+    "showInherited": "Afficher les éléments hérités des dossiers parents",
+    "hideInherited": "Masquer les éléments hérités",
+    "fromFolder": "De : {folder}"
   }
 }

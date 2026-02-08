@@ -16,6 +16,7 @@ export const authTypeSchema = z.enum([
   'basic',
   'apikey',
   'jwt',
+  'jwt_freefw',
   'oauth2',
   'openid',
   'hawk',
@@ -44,6 +45,10 @@ export const authJwtSchema = z.object({
   headerPrefix: z.string().default('Bearer'),
   addTo: z.enum(['header', 'query']).default('header'),
   queryParamName: z.string().optional(),
+})
+
+export const authJwtFreefwSchema = z.object({
+  token: z.string(),
 })
 
 export const authOAuth2Schema = z.object({
@@ -110,6 +115,7 @@ export const authConfigSchema = z.union([
   authBasicSchema,
   authApiKeySchema,
   authJwtSchema,
+  authJwtFreefwSchema,
   authOAuth2Schema,
   authOpenIdSchema,
   authHawkSchema,

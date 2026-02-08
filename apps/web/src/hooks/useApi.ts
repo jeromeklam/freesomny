@@ -213,6 +213,14 @@ export function useResolvedRequest(id: string | null) {
   })
 }
 
+export function useInheritedContext(id: string | null) {
+  return useQuery({
+    queryKey: ['inherited', id],
+    queryFn: () => (id ? requestsApi.getInherited(id) : null),
+    enabled: !!id,
+  })
+}
+
 // Environments
 export function useEnvironments() {
   const setEnvironments = useAppStore((s) => s.setEnvironments)
@@ -238,6 +246,22 @@ export function useCreateEnvironment() {
   return useMutation({
     mutationFn: environmentsApi.create,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['environments'] })
+    },
+  })
+}
+
+export function useDeleteEnvironment() {
+  const queryClient = useQueryClient()
+  const activeEnvironmentId = useAppStore((s) => s.activeEnvironmentId)
+  const setActiveEnvironmentId = useAppStore((s) => s.setActiveEnvironmentId)
+
+  return useMutation({
+    mutationFn: environmentsApi.delete,
+    onSuccess: (_, deletedId) => {
+      if (activeEnvironmentId === deletedId) {
+        setActiveEnvironmentId(null)
+      }
       queryClient.invalidateQueries({ queryKey: ['environments'] })
     },
   })

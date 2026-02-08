@@ -1,6 +1,7 @@
 import type { KeyValueItem, AuthType, AuthConfig } from '@api-client/shared'
 import { isJsonApiBody } from './jsonapi-detect.js'
 import { extractAuthFromHeaders } from './auth-detect.js'
+import { extractCommonParams } from './extract-common.js'
 
 // Hoppscotch collection format
 interface HoppscotchHeader {
@@ -422,6 +423,9 @@ export function importHoppscotch(collection: HoppscotchCollection): HoppscotchIm
       variables: extractedVars,
     })
   }
+
+  // Extract common headers/queryParams to folder level
+  extractCommonParams(folder)
 
   return { folder, environments }
 }

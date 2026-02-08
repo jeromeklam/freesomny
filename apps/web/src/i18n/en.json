@@ -101,7 +101,11 @@
     "generatedVar": "Work variable — generated or computed value",
     "clickToPromoteToTeam": "Click to set your value as the team value",
     "clickToOverride": "Click to create a local override",
-    "confirmPromoteToTeam": "Set your local value for \"{key}\" as the new team value? This will update the value for all team members."
+    "confirmPromoteToTeam": "Set your local value for \"{key}\" as the new team value? This will update the value for all team members.",
+    "dangerZone": "Danger zone",
+    "deleteWarning": "Deleting this environment is permanent and cannot be undone. All variables will be lost.",
+    "deleteEnvironment": "Delete environment",
+    "confirmDelete": "Delete environment \"{name}\" permanently? This action cannot be undone."
   },
   "import": {
     "title": "Import Collection",
@@ -178,7 +182,9 @@
     "enablePkce": "Enable PKCE",
     "authId": "Auth ID",
     "authKey": "Auth Key",
-    "includePayloadHash": "Include payload hash"
+    "includePayloadHash": "Include payload hash",
+    "jwtFreefw": "JWT FreeFW",
+    "jwtFreefwTokenHelp": "Sent as: Authorization: JWT id=<token>"
   },
   "body": {
     "type": "Body type",
@@ -501,5 +507,11 @@
       "noEntries": "No audit log entries",
       "loadMore": "Load more"
     }
+  },
+  "inherited": {
+    "inherited": "Inherited",
+    "showInherited": "Show inherited from parent folders",
+    "hideInherited": "Hide inherited",
+    "fromFolder": "From: {folder}"
   }
 }

@@ -1,6 +1,7 @@
 import type { KeyValueItem, AuthType, AuthConfig } from '@api-client/shared'
 import YAML from 'yaml'
 import { isJsonApiBody } from './jsonapi-detect.js'
+import { extractCommonParams } from './extract-common.js'
 
 interface OpenAPIParameter {
   name: string
@@ -420,6 +421,11 @@ export function importOpenAPI(input: string | object): {
         })),
       })
     }
+  }
+
+  // Extract common headers/queryParams to folder level
+  for (const folder of folders) {
+    extractCommonParams(folder)
   }
 
   return { folders, environments }

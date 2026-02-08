@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { hoverTooltip, type Tooltip, EditorView } from '@codemirror/view'
-import { Send, Loader2, Code2, Filter } from 'lucide-react'
+import { Send, Loader2, Code2, Filter, Eye, EyeOff } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
-import { useRequest, useUpdateRequest, useSendRequest, useEnvironmentVariables } from '../hooks/useApi'
+import { useRequest, useUpdateRequest, useSendRequest, useEnvironmentVariables, useInheritedContext } from '../hooks/useApi'
 import { useTranslation } from '../hooks/useTranslation'
 import { KeyValueEditor } from './KeyValueEditor'
 import { AuthEditor } from './AuthEditor'
@@ -60,6 +60,14 @@ export function RequestBuilder() {
 
   const [showCodeGen, setShowCodeGen] = useState(false)
   const [showJsonApiBuilder, setShowJsonApiBuilder] = useState(false)
+  const [showInherited, setShowInherited] = useState(true)
+
+  const { data: inheritedData } = useInheritedContext(selectedRequestId)
+  const inherited = inheritedData as {
+    headers: Array<{ key: string; value: string; description?: string; enabled: boolean; sourceFolderName: string; sourceFolderId: string }>
+    queryParams: Array<{ key: string; value: string; description?: string; enabled: boolean; sourceFolderName: string; sourceFolderId: string }>
+    auth: { type: AuthType; config: AuthConfig; sourceFolderName: string; sourceFolderId: string } | null
+  } | null
 
   // Map environment variables for tooltips
   const variablesForTooltip = useMemo(() => {
@@ -296,7 +304,22 @@ export function RequestBuilder() {
       <div className="flex-1 overflow-auto">
         {activeTab === 'params' && (
           <div>
-            <div className="flex items-center justify-end px-4 pt-3">
+            <div className="flex items-center justify-between px-4 pt-3">
+              {inherited?.queryParams && inherited.queryParams.length > 0 ? (
+                <button
+                  onClick={() => setShowInherited(!showInherited)}
+                  className={clsx(
+                    'flex items-center gap-1.5 px-2 py-1 text-xs rounded border',
+                    showInherited
+                      ? 'text-blue-400 border-blue-500/30 bg-blue-500/10'
+                      : 'text-gray-500 border-gray-700 hover:text-gray-400'
+                  )}
+                  title={showInherited ? t('inherited.hideInherited') : t('inherited.showInherited')}
+                >
+                  {showInherited ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                  {t('inherited.inherited')} ({inherited.queryParams.length})
+                </button>
+              ) : <div />}
               <button
                 onClick={() => setShowJsonApiBuilder(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-800 border border-gray-700 rounded"
@@ -311,18 +334,41 @@ export function RequestBuilder() {
               onBlur={handleSave}
               placeholder="Query parameter"
               variables={variablesForTooltip}
+              inheritedItems={inherited?.queryParams}
+              showInherited={showInherited}
             />
           </div>
         )}
 
         {activeTab === 'headers' && (
-          <KeyValueEditor
-            items={localRequest.headers}
-            onChange={(items) => handleChange('headers', items)}
-            onBlur={handleSave}
-            placeholder="Header"
-            variables={variablesForTooltip}
-          />
+          <div>
+            {inherited?.headers && inherited.headers.length > 0 && (
+              <div className="flex items-center px-4 pt-3">
+                <button
+                  onClick={() => setShowInherited(!showInherited)}
+                  className={clsx(
+                    'flex items-center gap-1.5 px-2 py-1 text-xs rounded border',
+                    showInherited
+                      ? 'text-blue-400 border-blue-500/30 bg-blue-500/10'
+                      : 'text-gray-500 border-gray-700 hover:text-gray-400'
+                  )}
+                  title={showInherited ? t('inherited.hideInherited') : t('inherited.showInherited')}
+                >
+                  {showInherited ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                  {t('inherited.inherited')} ({inherited.headers.length})
+                </button>
+              </div>
+            )}
+            <KeyValueEditor
+              items={localRequest.headers}
+              onChange={(items) => handleChange('headers', items)}
+              onBlur={handleSave}
+              placeholder="Header"
+              variables={variablesForTooltip}
+              inheritedItems={inherited?.headers}
+              showInherited={showInherited}
+            />
+          </div>
         )}
 
         {activeTab === 'auth' && (
@@ -334,6 +380,7 @@ export function RequestBuilder() {
               handleChange('authConfig', config)
             }}
             onBlur={handleSave}
+            inheritedAuth={inherited?.auth}
           />
         )}
 

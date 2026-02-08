@@ -36,7 +36,7 @@ export function extractAuthFromHeaders(headers: KeyValueItem[]): {
     }
   } else if (lowerValue.startsWith('jwt id=')) {
     // FreeFW format: JWT id=<token>
-    authType = 'bearer'
+    authType = 'jwt_freefw'
     authConfig = { token: value.slice(7) }
   } else {
     // Unknown scheme — leave the header as-is

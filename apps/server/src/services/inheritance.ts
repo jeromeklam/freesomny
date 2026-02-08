@@ -341,6 +341,84 @@ export async function resolveRequest(requestId: string): Promise<ResolvedRequest
   }
 }
 
+// Inherited context — returns only folder-level headers/params/auth (not the request's own)
+export interface InheritedItem {
+  key: string
+  value: string
+  description?: string
+  enabled: boolean
+  sourceFolderName: string
+  sourceFolderId: string
+}
+
+export interface InheritedContext {
+  headers: InheritedItem[]
+  queryParams: InheritedItem[]
+  auth: {
+    type: AuthType
+    config: AuthConfig
+    sourceFolderName: string
+    sourceFolderId: string
+  } | null
+}
+
+export async function getInheritedContext(requestId: string): Promise<InheritedContext> {
+  const request = await prisma.request.findUnique({
+    where: { id: requestId },
+  })
+
+  if (!request) {
+    throw new Error(`Request not found: ${requestId}`)
+  }
+
+  const chain = await getAncestorChain(request.folderId)
+
+  const headers: InheritedItem[] = []
+  const queryParams: InheritedItem[] = []
+
+  for (const folder of chain) {
+    for (const header of folder.headers) {
+      if (!header.enabled) continue
+      headers.push({
+        key: header.key,
+        value: header.value,
+        description: header.description,
+        enabled: header.enabled,
+        sourceFolderName: folder.name,
+        sourceFolderId: folder.id,
+      })
+    }
+    for (const param of folder.queryParams) {
+      if (!param.enabled) continue
+      queryParams.push({
+        key: param.key,
+        value: param.value,
+        description: param.description,
+        enabled: param.enabled,
+        sourceFolderName: folder.name,
+        sourceFolderId: folder.id,
+      })
+    }
+  }
+
+  // Resolve auth from folder chain (walk leaf → root, find first non-inherit)
+  let auth: InheritedContext['auth'] = null
+  for (let i = chain.length - 1; i >= 0; i--) {
+    const folder = chain[i]
+    if (folder.authType !== 'inherit') {
+      auth = {
+        type: folder.authType,
+        config: folder.authConfig,
+        sourceFolderName: folder.name,
+        sourceFolderId: folder.id,
+      }
+      break
+    }
+  }
+
+  return { headers, queryParams, auth }
+}
+
 export async function getResolvedView(requestId: string): Promise<ResolvedView> {
   const request = await prisma.request.findUnique({
     where: { id: requestId },

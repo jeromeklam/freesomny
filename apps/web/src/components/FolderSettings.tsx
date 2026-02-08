@@ -5,6 +5,7 @@ import { useFolder, useUpdateFolder } from '../hooks/useApi'
 import { useTranslation } from '../hooks/useTranslation'
 import { KeyValueEditor } from './KeyValueEditor'
 import type { Folder, KeyValueItem, AuthType } from '@api-client/shared'
+import { JWT_ALGORITHMS } from '@api-client/shared'
 
 type FolderTab = 'general' | 'headers' | 'params' | 'auth' | 'scripts'
 
@@ -33,6 +34,8 @@ export function FolderSettings() {
     { value: 'bearer', label: t('folder.bearerToken') },
     { value: 'basic', label: t('folder.basicAuth') },
     { value: 'apikey', label: t('folder.apiKey') },
+    { value: 'jwt', label: t('auth.jwt') },
+    { value: 'jwt_freefw', label: t('auth.jwtFreefw') },
   ]
 
   // Sync state when folder data changes
@@ -362,6 +365,87 @@ export function FolderSettings() {
                   </select>
                 </div>
               </>
+            )}
+
+            {authType === 'jwt' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                    {t('auth.algorithm')}
+                  </label>
+                  <select
+                    value={authConfig.algorithm || 'HS256'}
+                    onChange={(e) => {
+                      handleAuthConfigChange('algorithm', e.target.value)
+                      handleAuthConfigBlur()
+                    }}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
+                  >
+                    {JWT_ALGORITHMS.map(({ value, label }) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                    {t('auth.secretKey')}
+                  </label>
+                  <textarea
+                    value={authConfig.secret || ''}
+                    onChange={(e) => handleAuthConfigChange('secret', e.target.value)}
+                    onBlur={handleAuthConfigBlur}
+                    placeholder="{{jwt_secret}}"
+                    rows={3}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500 resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                    {t('auth.payload')}
+                  </label>
+                  <textarea
+                    value={authConfig.payload || '{}'}
+                    onChange={(e) => handleAuthConfigChange('payload', e.target.value)}
+                    onBlur={handleAuthConfigBlur}
+                    placeholder='{"sub": "{{user_id}}", "iat": {{$timestamp}}}'
+                    rows={4}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500 resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                    {t('auth.headerPrefix')}
+                  </label>
+                  <input
+                    type="text"
+                    value={authConfig.headerPrefix || 'Bearer'}
+                    onChange={(e) => handleAuthConfigChange('headerPrefix', e.target.value)}
+                    onBlur={handleAuthConfigBlur}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+              </>
+            )}
+
+            {authType === 'jwt_freefw' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                  {t('auth.token')}
+                </label>
+                <input
+                  type="text"
+                  value={authConfig.token || ''}
+                  onChange={(e) => handleAuthConfigChange('token', e.target.value)}
+                  onBlur={handleAuthConfigBlur}
+                  placeholder="{{token}}"
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  {t('auth.jwtFreefwTokenHelp')}
+                </p>
+              </div>
             )}
 
             {authType === 'inherit' && (

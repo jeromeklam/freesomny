@@ -14,6 +14,7 @@ export type AuthType =
   | 'basic'
   | 'apikey'
   | 'jwt'
+  | 'jwt_freefw'
   | 'oauth2'
   | 'openid'
   | 'hawk'
@@ -43,6 +44,10 @@ export interface AuthJwt {
   headerPrefix: string
   addTo: 'header' | 'query'
   queryParamName?: string
+}
+
+export interface AuthJwtFreefw {
+  token: string
 }
 
 export interface AuthOAuth2 {
@@ -109,6 +114,7 @@ export type AuthConfig =
   | AuthBasic
   | AuthApiKey
   | AuthJwt
+  | AuthJwtFreefw
   | AuthOAuth2
   | AuthOpenId
   | AuthHawk

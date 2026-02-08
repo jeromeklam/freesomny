@@ -55,6 +55,7 @@ export const AUTH_TYPES = {
   basic: { label: 'Basic Auth', description: 'HTTP Basic authentication' },
   apikey: { label: 'API Key', description: 'API key in header, query, or cookie' },
   jwt: { label: 'JWT', description: 'JSON Web Token (signed at send time)' },
+  jwt_freefw: { label: 'JWT FreeFW', description: 'FreeFW JWT token (Authorization: JWT id=<token>)' },
   oauth2: { label: 'OAuth 2.0', description: 'OAuth 2.0 authorization' },
   openid: { label: 'OpenID Connect', description: 'OpenID Connect with auto-discovery' },
   hawk: { label: 'Hawk', description: 'Hawk HTTP authentication' },

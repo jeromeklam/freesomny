@@ -1,4 +1,4 @@
-import { Plus, Trash2, GripVertical } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import { clsx } from 'clsx'
 import type { KeyValueItem } from '@api-client/shared'
 import { useTranslation } from '../hooks/useTranslation'
@@ -9,6 +9,15 @@ interface VariableInfo {
   source?: string
 }
 
+export interface InheritedKeyValueItem {
+  key: string
+  value: string
+  description?: string
+  enabled: boolean
+  sourceFolderName: string
+  sourceFolderId: string
+}
+
 interface KeyValueEditorProps {
   items: KeyValueItem[]
   onChange: (items: KeyValueItem[]) => void
@@ -16,6 +25,8 @@ interface KeyValueEditorProps {
   placeholder?: string
   showDescription?: boolean
   variables?: VariableInfo[]
+  inheritedItems?: InheritedKeyValueItem[]
+  showInherited?: boolean
 }
 
 // Resolve {{VAR}} patterns and return segments for rendering
@@ -81,6 +92,8 @@ export function KeyValueEditor({
   placeholder = 'Key',
   showDescription = true,
   variables = [],
+  inheritedItems = [],
+  showInherited = false,
 }: KeyValueEditorProps) {
   const { t } = useTranslation()
 
@@ -112,6 +125,56 @@ export function KeyValueEditor({
           </tr>
         </thead>
         <tbody>
+          {/* Inherited items from parent folders */}
+          {showInherited && inheritedItems.length > 0 && (
+            <>
+              {inheritedItems.map((item, index) => (
+                <tr key={`inherited-${index}`} className="opacity-50">
+                  <td className="py-1 pr-2">
+                    <input
+                      type="checkbox"
+                      checked={item.enabled}
+                      disabled
+                      className="w-4 h-4 rounded bg-gray-700 border-gray-600 cursor-not-allowed"
+                    />
+                  </td>
+                  <td className="py-1 pr-2">
+                    <input
+                      type="text"
+                      value={item.key}
+                      disabled
+                      className="w-full px-2 py-1.5 bg-gray-800/50 border border-gray-700/50 rounded text-sm text-gray-500 cursor-not-allowed"
+                    />
+                  </td>
+                  <td className="py-1 pr-2">
+                    <input
+                      type="text"
+                      value={item.value}
+                      disabled
+                      className="w-full px-2 py-1.5 bg-gray-800/50 border border-gray-700/50 rounded text-sm font-mono text-gray-500 cursor-not-allowed"
+                    />
+                  </td>
+                  {showDescription && (
+                    <td className="py-1 pr-2">
+                      <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-gray-700/60 text-gray-400 rounded">
+                        {item.sourceFolderName}
+                      </span>
+                    </td>
+                  )}
+                  <td className="py-1">
+                    {/* No delete button for inherited items */}
+                  </td>
+                </tr>
+              ))}
+              <tr>
+                <td colSpan={showDescription ? 5 : 4}>
+                  <div className="border-b border-dashed border-gray-700 my-1" />
+                </td>
+              </tr>
+            </>
+          )}
+
+          {/* Editable items */}
           {items.map((item, index) => (
             <tr key={index} className="group">
               <td className="py-1 pr-2">

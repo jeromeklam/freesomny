@@ -75,6 +75,8 @@ export const requestsApi = {
     request<unknown>(`/requests/${id}/reorder`, { method: 'PATCH', body: JSON.stringify(data) }),
   getResolved: (id: string, environmentId?: string) =>
     request<unknown>(`/requests/${id}/resolved${environmentId ? `?environmentId=${environmentId}` : ''}`),
+  getInherited: (id: string) =>
+    request<unknown>(`/requests/${id}/inherited`),
   send: (id: string, environmentId?: string) =>
     request<unknown>(`/requests/${id}/send${environmentId ? `?environmentId=${environmentId}` : ''}`, {
       method: 'POST',

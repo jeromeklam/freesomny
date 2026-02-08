@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { ChevronDown, Plus, Settings, Check } from 'lucide-react'
+import { ChevronDown, Plus, Settings, Check, Trash2 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
-import { useEnvironments, useCreateEnvironment, useActivateEnvironment } from '../hooks/useApi'
+import { useEnvironments, useCreateEnvironment, useActivateEnvironment, useDeleteEnvironment } from '../hooks/useApi'
+import { useTranslation } from '../hooks/useTranslation'
 
 export function EnvironmentSelector() {
   const [isOpen, setIsOpen] = useState(false)
@@ -16,6 +17,8 @@ export function EnvironmentSelector() {
   const { isLoading } = useEnvironments()
   const createEnvironment = useCreateEnvironment()
   const activateEnvironment = useActivateEnvironment()
+  const deleteEnvironment = useDeleteEnvironment()
+  const { t } = useTranslation()
 
   const activeEnv = environments.find((e) => e.id === activeEnvironmentId)
 
@@ -58,17 +61,33 @@ export function EnvironmentSelector() {
                 <p className="px-2 py-2 text-sm text-gray-500">No environments yet</p>
               ) : (
                 environments.map((env) => (
-                  <button
+                  <div
                     key={env.id}
-                    onClick={() => handleActivate(env.id)}
                     className={clsx(
-                      'w-full flex items-center justify-between px-3 py-2 text-sm rounded hover:bg-gray-700',
+                      'flex items-center justify-between px-3 py-2 text-sm rounded hover:bg-gray-700 group',
                       env.id === activeEnvironmentId && 'bg-gray-700'
                     )}
                   >
-                    <span>{env.name}</span>
-                    {env.id === activeEnvironmentId && <Check className="w-4 h-4 text-green-400" />}
-                  </button>
+                    <button
+                      onClick={() => handleActivate(env.id)}
+                      className="flex-1 flex items-center gap-2 text-left"
+                    >
+                      <span>{env.name}</span>
+                      {env.id === activeEnvironmentId && <Check className="w-4 h-4 text-green-400" />}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (confirm(t('environment.confirmDelete').replace('{name}', env.name))) {
+                          deleteEnvironment.mutate(env.id)
+                        }
+                      }}
+                      className="p-1 text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                      title={t('environment.deleteEnvironment')}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 ))
               )}
             </div>

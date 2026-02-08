@@ -1,16 +1,24 @@
 import { clsx } from 'clsx'
-import type { AuthType, AuthConfig, AuthBearer, AuthBasic, AuthApiKey, AuthJwt, AuthOAuth2, AuthHawk } from '@api-client/shared'
+import type { AuthType, AuthConfig, AuthBearer, AuthBasic, AuthApiKey, AuthJwt, AuthJwtFreefw, AuthOAuth2, AuthHawk } from '@api-client/shared'
 import { AUTH_TYPES, JWT_ALGORITHMS, OAUTH2_GRANT_TYPES } from '@api-client/shared'
 import { useTranslation } from '../hooks/useTranslation'
+
+export interface InheritedAuth {
+  type: AuthType
+  config: AuthConfig
+  sourceFolderName: string
+  sourceFolderId: string
+}
 
 interface AuthEditorProps {
   authType: AuthType
   authConfig: AuthConfig
   onChange: (type: AuthType, config: AuthConfig) => void
   onBlur?: () => void
+  inheritedAuth?: InheritedAuth | null
 }
 
-export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEditorProps) {
+export function AuthEditor({ authType, authConfig, onChange, onBlur, inheritedAuth }: AuthEditorProps) {
   const { t } = useTranslation()
 
   const handleTypeChange = (type: AuthType) => {
@@ -35,6 +43,9 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
           headerPrefix: 'Bearer',
           addTo: 'header',
         } as AuthJwt
+        break
+      case 'jwt_freefw':
+        newConfig = { token: '' } as AuthJwtFreefw
         break
       case 'oauth2':
         newConfig = {
@@ -90,7 +101,46 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
       </div>
 
       {authType === 'inherit' && (
-        <p className="text-sm text-gray-500">{t('auth.inheritFromParent')}</p>
+        <div>
+          <p className="text-sm text-gray-500">{t('auth.inheritFromParent')}</p>
+          {inheritedAuth && inheritedAuth.type !== 'none' && (
+            <div className="mt-3 p-3 bg-gray-800/50 border border-gray-700/50 rounded opacity-60">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-medium text-gray-400 uppercase">
+                  {AUTH_TYPES[inheritedAuth.type]?.label || inheritedAuth.type}
+                </span>
+                <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-gray-700/60 text-gray-400 rounded">
+                  {inheritedAuth.sourceFolderName}
+                </span>
+              </div>
+              {inheritedAuth.type === 'bearer' && (
+                <p className="text-xs text-gray-500 font-mono truncate">
+                  Token: {(inheritedAuth.config as AuthBearer).token ? '••••••••' : '(empty)'}
+                </p>
+              )}
+              {inheritedAuth.type === 'jwt_freefw' && (
+                <p className="text-xs text-gray-500 font-mono truncate">
+                  JWT id={((inheritedAuth.config as AuthJwtFreefw).token) ? '••••••••' : '(empty)'}
+                </p>
+              )}
+              {inheritedAuth.type === 'basic' && (
+                <p className="text-xs text-gray-500 font-mono">
+                  {(inheritedAuth.config as AuthBasic).username || '(empty)'} / ••••••
+                </p>
+              )}
+              {inheritedAuth.type === 'apikey' && (
+                <p className="text-xs text-gray-500 font-mono truncate">
+                  {(inheritedAuth.config as AuthApiKey).key}: ••••••••
+                </p>
+              )}
+              {inheritedAuth.type === 'jwt' && (
+                <p className="text-xs text-gray-500 font-mono">
+                  {(inheritedAuth.config as AuthJwt).algorithm || 'HS256'} — ••••••
+                </p>
+              )}
+            </div>
+          )}
+        </div>
       )}
 
       {authType === 'none' && (
@@ -232,6 +282,21 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur }: AuthEdito
               className={inputClass}
             />
           </div>
+        </div>
+      )}
+
+      {authType === 'jwt_freefw' && (
+        <div>
+          <label className={labelClass}>{t('auth.token')}</label>
+          <input
+            type="text"
+            value={(authConfig as AuthJwtFreefw).token || ''}
+            onChange={(e) => handleConfigChange('token', e.target.value)}
+            onBlur={onBlur}
+            placeholder="{{token}} or paste token"
+            className={clsx(inputClass, 'font-mono')}
+          />
+          <p className="mt-1 text-xs text-gray-500">{t('auth.jwtFreefwTokenHelp')}</p>
         </div>
       )}
 

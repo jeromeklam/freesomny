@@ -1,6 +1,7 @@
 import type { KeyValueItem, AuthType, AuthConfig } from '@api-client/shared'
 import { isJsonApiBody } from './jsonapi-detect.js'
 import { extractAuthFromHeaders } from './auth-detect.js'
+import { extractCommonParams } from './extract-common.js'
 
 interface PostmanHeader {
   key: string
@@ -413,6 +414,9 @@ export function importPostman(collection: PostmanCollection): PostmanImportResul
       variables: extractedVars,
     })
   }
+
+  // Extract common headers/queryParams to folder level
+  extractCommonParams(folder)
 
   return { folder, environments }
 }

@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma.js'
 import { createRequestSchema, updateRequestSchema, reorderSchema } from '@api-client/shared'
 import { parseHeaders, parseQueryParams, parseAuthConfig, stringifyJson } from '../lib/json.js'
-import { resolveRequest, getResolvedView } from '../services/inheritance.js'
+import { resolveRequest, getResolvedView, getInheritedContext } from '../services/inheritance.js'
 import { executeRequest } from '../services/http-engine.js'
 import { resolveVariables, getActiveEnvironment } from '../services/environment.js'
 import { executeScripts } from '../scripting/sandbox.js'
@@ -211,6 +211,19 @@ export async function requestRoutes(fastify: FastifyInstance) {
         return { data: resolved }
       } catch (error) {
         return { error: error instanceof Error ? error.message : 'Failed to resolve request' }
+      }
+    }
+  )
+
+  // Get inherited headers/params/auth from parent folders
+  fastify.get<{ Params: { id: string } }>(
+    '/api/requests/:id/inherited',
+    async (request) => {
+      try {
+        const inherited = await getInheritedContext(request.params.id)
+        return { data: inherited }
+      } catch (error) {
+        return { error: error instanceof Error ? error.message : 'Failed to get inherited context' }
       }
     }
   )

@@ -1,4 +1,4 @@
-import type { AuthType, AuthConfig, AuthBearer, AuthBasic, AuthApiKey, AuthJwt, AuthOAuth2, AuthOpenId, AuthHawk } from '@api-client/shared'
+import type { AuthType, AuthConfig, AuthBearer, AuthBasic, AuthApiKey, AuthJwt, AuthJwtFreefw, AuthOAuth2, AuthOpenId, AuthHawk } from '@api-client/shared'
 import jwt from 'jsonwebtoken'
 import { createHmac } from 'crypto'
 
@@ -123,6 +123,14 @@ export async function applyAuth(
         } catch {
           // Invalid payload or signing error - skip auth
         }
+      }
+      break
+    }
+
+    case 'jwt_freefw': {
+      const config = authConfig as AuthJwtFreefw
+      if (config.token) {
+        result.headers['Authorization'] = `JWT id=${config.token}`
       }
       break
     }
