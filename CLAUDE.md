@@ -77,8 +77,11 @@ inherit, none, bearer, basic, apikey, jwt, jwt_freefw, oauth2, openid, hawk
 ### Authorization header management
 - Authorization headers are **exclusively managed by the Auth tab** — never stored in raw headers
 - 3-layer defense: import-time stripping, save-time auto-sync, read-time filtering
+- **Headers tab**: shows auth-generated Authorization as a **read-only inherited row** (blue styling) with source folder name
+- To override manually: clear Auth tab first, then set Authorization in Headers tab
 - Resolved view (Résolu tab) shows auth-generated header preview with `[auth:source]` badge
 - FreeFW JWT format: `JWT id="<token>"` (with double quotes)
+- `getAuthHeaderPreview()` in inheritance.ts generates header value from auth config without executing
 - `POST /api/cleanup/auth-headers` — one-time bulk cleanup of stale Authorization headers in DB
 
 ### Groups (team collaboration)
@@ -135,6 +138,51 @@ NODE_ENV=development
 CORS_ORIGINS=http://localhost:5173
 JWT_SECRET=change-me-in-production
 AUTH_REQUIRED=false  # true = force login
+```
+
+## Installation Checklist
+
+### Prerequisites
+- [ ] Node.js 22+ installed
+- [ ] pnpm installed (`npm install -g pnpm`)
+- [ ] Git access to repository
+
+### Development (local)
+```bash
+git clone <repo-url> freesomnia && cd freesomnia
+pnpm install
+cp apps/server/.env.example apps/server/.env
+pnpm db:migrate      # Initialize SQLite database
+pnpm dev             # Start dev servers (frontend :5173 + backend :3000)
+```
+
+### Production (Debian/Ubuntu)
+1. [ ] Install Node.js 22: `curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash - && sudo apt install -y nodejs`
+2. [ ] Install pnpm: `npm install -g pnpm`
+3. [ ] Clone: `sudo mkdir -p /opt/freesomnia && cd /opt/freesomnia && git clone <repo> .`
+4. [ ] Install deps: `pnpm install`
+5. [ ] Configure: `cp apps/server/.env.example apps/server/.env && nano apps/server/.env`
+   - Set `DATABASE_URL` (SQLite or PostgreSQL)
+   - Set `NODE_ENV=production`
+   - Set `JWT_SECRET` (generate: `openssl rand -base64 32`)
+   - Set `AUTH_REQUIRED=true`
+   - Set `CORS_ORIGINS=https://yourdomain.com`
+   - (Optional) Set SMTP vars for password reset emails
+6. [ ] Build: `pnpm build`
+7. [ ] Run migrations: `pnpm --filter @api-client/server prisma migrate deploy`
+8. [ ] Create service user: `sudo useradd -r -s /bin/false freesomnia`
+9. [ ] Set ownership: `sudo chown -R freesomnia:freesomnia /opt/freesomnia`
+10. [ ] Copy env: `sudo cp apps/server/.env /opt/freesomnia/.env && sudo chmod 600 /opt/freesomnia/.env`
+11. [ ] Install systemd: `sudo cp apps/server/freesomnia.service /etc/systemd/system/`
+12. [ ] Enable & start: `sudo systemctl daemon-reload && sudo systemctl enable freesomnia && sudo systemctl start freesomnia`
+13. [ ] (Optional) Set up Nginx reverse proxy + Let's Encrypt SSL (see DEPLOYMENT.md)
+14. [ ] (Optional, one-time) Cleanup stale auth headers: `curl -X POST http://localhost:3000/api/cleanup/auth-headers`
+
+### Automated deployment
+```bash
+./scripts/deploy.sh dev        # Local development
+DEPLOY_HOST=server ./scripts/deploy.sh staging  # Remote staging
+DEPLOY_HOST=server ./scripts/deploy.sh prod     # Remote production (with confirmation)
 ```
 
 ## Coding conventions

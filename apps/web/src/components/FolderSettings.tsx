@@ -5,8 +5,54 @@ import { useAppStore } from '../stores/app'
 import { useFolder, useUpdateFolder, useFolderInheritedContext, useEnvironmentVariables } from '../hooks/useApi'
 import { useTranslation } from '../hooks/useTranslation'
 import { KeyValueEditor } from './KeyValueEditor'
-import type { Folder, KeyValueItem, AuthType, AuthConfig } from '@api-client/shared'
+import type { Folder, KeyValueItem, AuthType, AuthConfig, AuthBearer, AuthBasic, AuthApiKey, AuthJwtFreefw, AuthOAuth2, AuthOpenId } from '@api-client/shared'
 import { JWT_ALGORITHMS, AUTH_TYPES as SHARED_AUTH_TYPES } from '@api-client/shared'
+
+// Preview the Authorization header value from auth config (client-side)
+function getAuthHeaderPreviewClient(authType: AuthType, authConfig: AuthConfig): { key: string; value: string } | null {
+  switch (authType) {
+    case 'bearer': {
+      const config = authConfig as AuthBearer
+      return config.token ? { key: 'Authorization', value: `Bearer ${config.token}` } : null
+    }
+    case 'basic': {
+      const config = authConfig as AuthBasic
+      if (config.username !== undefined) {
+        return { key: 'Authorization', value: `Basic ${btoa(`${config.username}:${config.password || ''}`)}` }
+      }
+      return null
+    }
+    case 'jwt_freefw': {
+      const config = authConfig as AuthJwtFreefw
+      return config.token ? { key: 'Authorization', value: `JWT id="${config.token}"` } : null
+    }
+    case 'apikey': {
+      const config = authConfig as AuthApiKey
+      if (config.key && config.value && config.addTo === 'header') {
+        return { key: config.key, value: config.value }
+      }
+      return null
+    }
+    case 'oauth2': {
+      const config = authConfig as AuthOAuth2
+      if (config.accessToken) {
+        const prefix = config.headerPrefix || 'Bearer'
+        return { key: 'Authorization', value: `${prefix} ${config.accessToken}` }
+      }
+      return null
+    }
+    case 'openid': {
+      const config = authConfig as AuthOpenId
+      if (config.accessToken) {
+        const prefix = config.tokenPrefix || 'Bearer'
+        return { key: 'Authorization', value: `${prefix} ${config.accessToken}` }
+      }
+      return null
+    }
+    default:
+      return null
+  }
+}
 
 type FolderTab = 'general' | 'headers' | 'params' | 'auth' | 'scripts'
 
@@ -45,6 +91,29 @@ export function FolderSettings() {
   const [authConfig, setAuthConfig] = useState<Record<string, string>>({})
   const [preScript, setPreScript] = useState('')
   const [postScript, setPostScript] = useState('')
+
+  // Compute inherited headers: backend provides auth-generated header from ancestor folders.
+  // If folder itself has auth configured, add it client-side.
+  const inheritedHeaders = useMemo(() => {
+    const base = inherited?.headers || []
+    if (authType !== 'inherit' && authType !== 'none') {
+      const preview = getAuthHeaderPreviewClient(authType, authConfig)
+      if (preview) {
+        const alreadyHas = base.some(h => h.key.toLowerCase() === preview.key.toLowerCase() && h.sourceFolderName.startsWith('auth:'))
+        if (!alreadyHas) {
+          return [...base, {
+            key: preview.key,
+            value: preview.value,
+            description: undefined,
+            enabled: true,
+            sourceFolderName: `auth:${name || 'folder'}`,
+            sourceFolderId: selectedFolderId || '',
+          }]
+        }
+      }
+    }
+    return base
+  }, [inherited?.headers, authType, authConfig, name, selectedFolderId])
 
   const folder = folderData as Folder | null
 
@@ -257,7 +326,7 @@ export function FolderSettings() {
 
         {activeTab === 'headers' && (
           <div>
-            {inherited?.headers && inherited.headers.length > 0 && (
+            {inheritedHeaders.length > 0 && (
               <div className="flex items-center px-4 pt-3">
                 <button
                   onClick={() => setShowInherited(!showInherited)}
@@ -270,7 +339,7 @@ export function FolderSettings() {
                   title={showInherited ? t('inherited.hideInherited') : t('inherited.showInherited')}
                 >
                   {showInherited ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                  {t('inherited.inherited')} ({inherited.headers.length})
+                  {t('inherited.inherited')} ({inheritedHeaders.length})
                 </button>
               </div>
             )}
@@ -280,7 +349,7 @@ export function FolderSettings() {
               onBlur={handleHeadersBlur}
               placeholder={t('folder.tabs.headers')}
               variables={variablesForTooltip}
-              inheritedItems={inherited?.headers}
+              inheritedItems={inheritedHeaders}
               showInherited={showInherited}
             />
           </div>

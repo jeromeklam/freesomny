@@ -426,6 +426,21 @@ export async function getInheritedContext(requestId: string): Promise<InheritedC
     }
   }
 
+  // Add auth-generated Authorization header as inherited item so it shows in the Headers tab
+  if (auth && auth.type !== 'none') {
+    const authHeader = getAuthHeaderPreview(auth.type, auth.config)
+    if (authHeader) {
+      headers.push({
+        key: authHeader.key,
+        value: authHeader.value,
+        description: undefined,
+        enabled: true,
+        sourceFolderName: `auth:${auth.sourceFolderName}`,
+        sourceFolderId: auth.sourceFolderId,
+      })
+    }
+  }
+
   return { headers, queryParams, auth }
 }
 
@@ -487,6 +502,21 @@ export async function getInheritedContextForFolder(folderId: string): Promise<In
         sourceFolderId: ancestor.id,
       }
       break
+    }
+  }
+
+  // Add auth-generated Authorization header as inherited item so it shows in the Headers tab
+  if (auth && auth.type !== 'none') {
+    const authHeader = getAuthHeaderPreview(auth.type, auth.config)
+    if (authHeader) {
+      headers.push({
+        key: authHeader.key,
+        value: authHeader.value,
+        description: undefined,
+        enabled: true,
+        sourceFolderName: `auth:${auth.sourceFolderName}`,
+        sourceFolderId: auth.sourceFolderId,
+      })
     }
   }
 

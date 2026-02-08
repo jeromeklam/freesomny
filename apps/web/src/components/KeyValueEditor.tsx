@@ -146,44 +146,63 @@ export function KeyValueEditor({
           {/* Inherited items from parent folders */}
           {showInherited && inheritedItems.length > 0 && (
             <>
-              {inheritedItems.map((item, index) => (
-                <tr key={`inherited-${index}`} className="opacity-50">
-                  <td className="py-1 pr-2">
-                    <input
-                      type="checkbox"
-                      checked={item.enabled}
-                      disabled
-                      className="w-4 h-4 rounded bg-gray-700 border-gray-600 cursor-not-allowed"
-                    />
-                  </td>
-                  <td className="py-1 pr-2">
-                    <input
-                      type="text"
-                      value={item.key}
-                      disabled
-                      className="w-full px-2 py-1.5 bg-gray-800/50 border border-gray-700/50 rounded text-sm text-gray-500 cursor-not-allowed"
-                    />
-                  </td>
-                  <td className="py-1 pr-2">
-                    <input
-                      type="text"
-                      value={item.value}
-                      disabled
-                      className="w-full px-2 py-1.5 bg-gray-800/50 border border-gray-700/50 rounded text-sm font-mono text-gray-500 cursor-not-allowed"
-                    />
-                  </td>
-                  {showDescription && (
+              {inheritedItems.map((item, index) => {
+                const isAuthGenerated = item.sourceFolderName.startsWith('auth:')
+                const displaySource = isAuthGenerated ? item.sourceFolderName.slice(5) : item.sourceFolderName
+                return (
+                  <tr key={`inherited-${index}`} className={isAuthGenerated ? 'opacity-70' : 'opacity-50'}>
                     <td className="py-1 pr-2">
-                      <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-gray-700/60 text-gray-400 rounded">
-                        {item.sourceFolderName}
-                      </span>
+                      <input
+                        type="checkbox"
+                        checked={item.enabled}
+                        disabled
+                        className="w-4 h-4 rounded bg-gray-700 border-gray-600 cursor-not-allowed"
+                      />
                     </td>
-                  )}
-                  <td className="py-1">
-                    {/* No delete button for inherited items */}
-                  </td>
-                </tr>
-              ))}
+                    <td className="py-1 pr-2">
+                      <input
+                        type="text"
+                        value={item.key}
+                        disabled
+                        className={clsx(
+                          'w-full px-2 py-1.5 rounded text-sm cursor-not-allowed',
+                          isAuthGenerated
+                            ? 'bg-blue-900/20 border border-blue-700/30 text-blue-400'
+                            : 'bg-gray-800/50 border border-gray-700/50 text-gray-500'
+                        )}
+                      />
+                    </td>
+                    <td className="py-1 pr-2">
+                      <input
+                        type="text"
+                        value={item.value}
+                        disabled
+                        className={clsx(
+                          'w-full px-2 py-1.5 rounded text-sm font-mono cursor-not-allowed',
+                          isAuthGenerated
+                            ? 'bg-blue-900/20 border border-blue-700/30 text-blue-400'
+                            : 'bg-gray-800/50 border border-gray-700/50 text-gray-500'
+                        )}
+                      />
+                    </td>
+                    {showDescription && (
+                      <td className="py-1 pr-2">
+                        <span className={clsx(
+                          'inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded',
+                          isAuthGenerated
+                            ? 'bg-blue-900/40 text-blue-400 border border-blue-700/50'
+                            : 'bg-gray-700/60 text-gray-400'
+                        )}>
+                          {displaySource}
+                        </span>
+                      </td>
+                    )}
+                    <td className="py-1">
+                      {/* No delete button for inherited items */}
+                    </td>
+                  </tr>
+                )
+              })}
               <tr>
                 <td colSpan={showDescription ? 5 : 4}>
                   <div className="border-b border-dashed border-gray-700 my-1" />

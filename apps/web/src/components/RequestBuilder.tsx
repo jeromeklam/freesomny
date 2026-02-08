@@ -13,7 +13,53 @@ import { ScriptEditor } from './ScriptEditor'
 import { ResolvedView } from './ResolvedView'
 import { CodeGeneratorModal } from './CodeGeneratorModal'
 import { JsonApiQueryModal } from './JsonApiQueryModal'
-import type { KeyValueItem, AuthType, AuthConfig } from '@api-client/shared'
+import type { KeyValueItem, AuthType, AuthConfig, AuthBearer, AuthBasic, AuthApiKey, AuthJwtFreefw, AuthOAuth2, AuthOpenId } from '@api-client/shared'
+
+// Preview the Authorization header value from auth config (client-side)
+function getAuthHeaderPreview(authType: AuthType, authConfig: AuthConfig): { key: string; value: string } | null {
+  switch (authType) {
+    case 'bearer': {
+      const config = authConfig as AuthBearer
+      return config.token ? { key: 'Authorization', value: `Bearer ${config.token}` } : null
+    }
+    case 'basic': {
+      const config = authConfig as AuthBasic
+      if (config.username !== undefined) {
+        return { key: 'Authorization', value: `Basic ${btoa(`${config.username}:${config.password || ''}`)}` }
+      }
+      return null
+    }
+    case 'jwt_freefw': {
+      const config = authConfig as AuthJwtFreefw
+      return config.token ? { key: 'Authorization', value: `JWT id="${config.token}"` } : null
+    }
+    case 'apikey': {
+      const config = authConfig as AuthApiKey
+      if (config.key && config.value && config.addTo === 'header') {
+        return { key: config.key, value: config.value }
+      }
+      return null
+    }
+    case 'oauth2': {
+      const config = authConfig as AuthOAuth2
+      if (config.accessToken) {
+        const prefix = config.headerPrefix || 'Bearer'
+        return { key: 'Authorization', value: `${prefix} ${config.accessToken}` }
+      }
+      return null
+    }
+    case 'openid': {
+      const config = authConfig as AuthOpenId
+      if (config.accessToken) {
+        const prefix = config.tokenPrefix || 'Bearer'
+        return { key: 'Authorization', value: `${prefix} ${config.accessToken}` }
+      }
+      return null
+    }
+    default:
+      return null
+  }
+}
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const
 
@@ -154,6 +200,32 @@ export function RequestBuilder() {
   const [localRequest, setLocalRequest] = useState<RequestData | null>(null)
   const localRequestRef = useRef<RequestData | null>(null)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Compute inherited headers including auth-generated Authorization
+  // Backend provides auth header for inherited auth from parent folders.
+  // If the request itself has auth configured, add it client-side.
+  const inheritedHeaders = useMemo(() => {
+    const base = inherited?.headers || []
+    if (!localRequest) return base
+    // If request has its own auth (not inherit/none) AND backend didn't already add it
+    if (localRequest.authType !== 'inherit' && localRequest.authType !== 'none') {
+      const authHeader = getAuthHeaderPreview(localRequest.authType, localRequest.authConfig)
+      if (authHeader) {
+        const alreadyHas = base.some(h => h.key.toLowerCase() === authHeader.key.toLowerCase() && h.sourceFolderName.startsWith('auth:'))
+        if (!alreadyHas) {
+          return [...base, {
+            key: authHeader.key,
+            value: authHeader.value,
+            description: undefined,
+            enabled: true,
+            sourceFolderName: 'auth:request',
+            sourceFolderId: localRequest.id,
+          }]
+        }
+      }
+    }
+    return base
+  }, [inherited?.headers, localRequest?.authType, localRequest?.authConfig, localRequest?.id])
 
   useEffect(() => {
     if (requestData) {
@@ -342,7 +414,7 @@ export function RequestBuilder() {
 
         {activeTab === 'headers' && (
           <div>
-            {inherited?.headers && inherited.headers.length > 0 && (
+            {inheritedHeaders.length > 0 && (
               <div className="flex items-center px-4 pt-3">
                 <button
                   onClick={() => setShowInherited(!showInherited)}
@@ -355,7 +427,7 @@ export function RequestBuilder() {
                   title={showInherited ? t('inherited.hideInherited') : t('inherited.showInherited')}
                 >
                   {showInherited ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                  {t('inherited.inherited')} ({inherited.headers.length})
+                  {t('inherited.inherited')} ({inheritedHeaders.length})
                 </button>
               </div>
             )}
@@ -365,7 +437,7 @@ export function RequestBuilder() {
               onBlur={handleSave}
               placeholder="Header"
               variables={variablesForTooltip}
-              inheritedItems={inherited?.headers}
+              inheritedItems={inheritedHeaders}
               showInherited={showInherited}
             />
           </div>
