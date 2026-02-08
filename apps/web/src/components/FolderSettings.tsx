@@ -96,7 +96,11 @@ export function FolderSettings() {
   // If folder itself has auth configured, add it client-side.
   const inheritedHeaders = useMemo(() => {
     const base = inherited?.headers || []
-    if (authType !== 'inherit' && authType !== 'none') {
+    // When auth is 'none', suppress inherited auth headers — user manages Authorization manually
+    if (authType === 'none') {
+      return base.filter(h => !h.sourceFolderName.startsWith('auth:'))
+    }
+    if (authType !== 'inherit') {
       const preview = getAuthHeaderPreviewClient(authType, authConfig)
       if (preview) {
         const alreadyHas = base.some(h => h.key.toLowerCase() === preview.key.toLowerCase() && h.sourceFolderName.startsWith('auth:'))

@@ -9,8 +9,9 @@ import { optionalAuth, requireAuth, getCurrentUserId } from '../lib/auth.js'
 import type { KeyValueItem } from '@api-client/shared'
 import { z } from 'zod'
 
-/** Authorization is always managed by the Auth tab — strip from raw headers */
-function stripAuthHeader(headers: KeyValueItem[]): KeyValueItem[] {
+/** Authorization is managed by the Auth tab — strip from raw headers unless authType is 'none' (user manages manually) */
+function stripAuthHeader(headers: KeyValueItem[], authType: string): KeyValueItem[] {
+  if (authType === 'none') return headers
   return headers.filter(h => h.key.toLowerCase() !== 'authorization')
 }
 
@@ -67,12 +68,12 @@ export async function folderRoutes(fastify: FastifyInstance) {
     // Parse JSON fields and strip stale Authorization headers
     const parsed = folders.map(f => ({
       ...f,
-      headers: stripAuthHeader(parseHeaders(f.headers)),
+      headers: stripAuthHeader(parseHeaders(f.headers), f.authType),
       queryParams: parseQueryParams(f.queryParams),
       authConfig: parseAuthConfig(f.authConfig),
       requests: f.requests.map(r => ({
         ...r,
-        headers: stripAuthHeader(parseHeaders(r.headers)),
+        headers: stripAuthHeader(parseHeaders(r.headers), r.authType),
         queryParams: parseQueryParams(r.queryParams),
         authConfig: parseAuthConfig(r.authConfig),
       })),
@@ -118,7 +119,7 @@ export async function folderRoutes(fastify: FastifyInstance) {
     return {
       data: {
         ...folder,
-        headers: stripAuthHeader(parseHeaders(folder.headers)),
+        headers: stripAuthHeader(parseHeaders(folder.headers), folder.authType),
         queryParams: parseQueryParams(folder.queryParams),
         authConfig: parseAuthConfig(folder.authConfig),
       },
@@ -194,22 +195,23 @@ export async function folderRoutes(fastify: FastifyInstance) {
     // Auto-sync Authorization header ↔ Auth config
     if (data.headers && Array.isArray(data.headers)) {
       const currentAuthType = (data.authType as string) ?? (await prisma.folder.findUnique({ where: { id: request.params.id }, select: { authType: true } }))?.authType ?? 'inherit'
-      if (currentAuthType === 'inherit' || currentAuthType === 'none') {
-        // No auth configured — try to detect from Authorization header
+      if (currentAuthType === 'inherit') {
+        // No explicit auth — try to detect from Authorization header
         const extracted = extractAuthFromHeaders(data.headers)
         if (extracted.authType !== 'none') {
           updateData.headers = stringifyJson(extracted.headers)
           updateData.authType = extracted.authType
           updateData.authConfig = stringifyJson(extracted.authConfig)
         }
-      } else {
-        // Auth is already configured — always strip Authorization header
+      } else if (currentAuthType !== 'none') {
+        // Auth is configured (not 'none') — strip Authorization header
         const headersArr = data.headers as Array<{ key: string; value: string; description?: string; enabled: boolean }>
         const filtered = headersArr.filter((h) => h.key.toLowerCase() !== 'authorization')
         if (filtered.length !== headersArr.length) {
           updateData.headers = stringifyJson(filtered)
         }
       }
+      // When currentAuthType === 'none': pass headers through as-is (user manages manually)
     }
 
     // When auth type is explicitly changed, also strip Authorization from existing headers
@@ -509,9 +511,10 @@ export async function folderRoutes(fastify: FastifyInstance) {
     let foldersFixed = 0
     let requestsFixed = 0
 
-    // Fix folders — Authorization should never be in raw headers
+    // Fix folders — Authorization should never be in raw headers (except when authType is 'none')
     const folders = await prisma.folder.findMany()
     for (const folder of folders) {
+      if (folder.authType === 'none') continue
       const headers = JSON.parse(folder.headers) as Array<{ key: string; value: string; enabled: boolean }>
       const filtered = headers.filter(h => h.key.toLowerCase() !== 'authorization')
       if (filtered.length !== headers.length) {
@@ -523,9 +526,10 @@ export async function folderRoutes(fastify: FastifyInstance) {
       }
     }
 
-    // Fix requests
+    // Fix requests (except when authType is 'none')
     const requests = await prisma.request.findMany()
     for (const req of requests) {
+      if (req.authType === 'none') continue
       const headers = JSON.parse(req.headers) as Array<{ key: string; value: string; enabled: boolean }>
       const filtered = headers.filter(h => h.key.toLowerCase() !== 'authorization')
       if (filtered.length !== headers.length) {

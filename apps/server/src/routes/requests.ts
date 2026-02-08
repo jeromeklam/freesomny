@@ -9,8 +9,9 @@ import { executeRequest } from '../services/http-engine.js'
 import { resolveVariables, getActiveEnvironment } from '../services/environment.js'
 import { executeScripts } from '../scripting/sandbox.js'
 
-/** Authorization is always managed by the Auth tab — strip from raw headers */
-function stripAuthHeader(headers: KeyValueItem[]): KeyValueItem[] {
+/** Authorization is managed by the Auth tab — strip from raw headers unless authType is 'none' (user manages manually) */
+function stripAuthHeader(headers: KeyValueItem[], authType: string): KeyValueItem[] {
+  if (authType === 'none') return headers
   return headers.filter(h => h.key.toLowerCase() !== 'authorization')
 }
 
@@ -28,7 +29,7 @@ export async function requestRoutes(fastify: FastifyInstance) {
     return {
       data: {
         ...req,
-        headers: stripAuthHeader(parseHeaders(req.headers)),
+        headers: stripAuthHeader(parseHeaders(req.headers), req.authType),
         queryParams: parseQueryParams(req.queryParams),
         authConfig: parseAuthConfig(req.authConfig),
       },
@@ -109,22 +110,23 @@ export async function requestRoutes(fastify: FastifyInstance) {
     // Auto-sync Authorization header ↔ Auth config
     if (data.headers && Array.isArray(data.headers)) {
       const currentAuthType = (data.authType as string) ?? (await prisma.request.findUnique({ where: { id: request.params.id }, select: { authType: true } }))?.authType ?? 'inherit'
-      if (currentAuthType === 'inherit' || currentAuthType === 'none') {
-        // No auth configured — try to detect from Authorization header
+      if (currentAuthType === 'inherit') {
+        // No explicit auth — try to detect from Authorization header
         const extracted = extractAuthFromHeaders(data.headers)
         if (extracted.authType !== 'none') {
           updateData.headers = stringifyJson(extracted.headers)
           updateData.authType = extracted.authType
           updateData.authConfig = stringifyJson(extracted.authConfig)
         }
-      } else {
-        // Auth is already configured — always strip Authorization header
+      } else if (currentAuthType !== 'none') {
+        // Auth is configured (not 'none') — strip Authorization header
         const headersArr = data.headers as Array<{ key: string; value: string; description?: string; enabled: boolean }>
         const filtered = headersArr.filter((h) => h.key.toLowerCase() !== 'authorization')
         if (filtered.length !== headersArr.length) {
           updateData.headers = stringifyJson(filtered)
         }
       }
+      // When currentAuthType === 'none': pass headers through as-is (user manages manually)
     }
 
     // When auth type is explicitly changed, also strip Authorization from existing headers

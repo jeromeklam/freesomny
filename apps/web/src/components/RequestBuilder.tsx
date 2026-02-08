@@ -207,8 +207,12 @@ export function RequestBuilder() {
   const inheritedHeaders = useMemo(() => {
     const base = inherited?.headers || []
     if (!localRequest) return base
-    // If request has its own auth (not inherit/none) AND backend didn't already add it
-    if (localRequest.authType !== 'inherit' && localRequest.authType !== 'none') {
+    // When auth is 'none', suppress inherited auth headers — user manages Authorization manually
+    if (localRequest.authType === 'none') {
+      return base.filter(h => !h.sourceFolderName.startsWith('auth:'))
+    }
+    // If request has its own auth (not inherit) AND backend didn't already add it
+    if (localRequest.authType !== 'inherit') {
       const authHeader = getAuthHeaderPreview(localRequest.authType, localRequest.authConfig)
       if (authHeader) {
         const alreadyHas = base.some(h => h.key.toLowerCase() === authHeader.key.toLowerCase() && h.sourceFolderName.startsWith('auth:'))

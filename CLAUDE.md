@@ -78,11 +78,19 @@ inherit, none, bearer, basic, apikey, jwt, jwt_freefw, oauth2, openid, hawk
 - Authorization headers are **exclusively managed by the Auth tab** — never stored in raw headers
 - 3-layer defense: import-time stripping, save-time auto-sync, read-time filtering
 - **Headers tab**: shows auth-generated Authorization as a **read-only inherited row** (blue styling) with source folder name
-- To override manually: clear Auth tab first, then set Authorization in Headers tab
 - Resolved view (Résolu tab) shows auth-generated header preview with `[auth:source]` badge
 - FreeFW JWT format: `JWT id="<token>"` (with double quotes)
 - `getAuthHeaderPreview()` in inheritance.ts generates header value from auth config without executing
 - `POST /api/cleanup/auth-headers` — one-time bulk cleanup of stale Authorization headers in DB
+
+### Auth override with `authType: none`
+- Setting auth to "none" on a request/folder **suppresses inherited auth headers** (blue rows hidden)
+- Authorization header is **preserved in DB** — not stripped on read or save
+- User can freely add/edit Authorization manually in the Headers tab
+- Backend `stripAuthHeader()` accepts `authType` param: skips stripping when `'none'`
+- Backend save auto-sync: 3-branch logic — `inherit` (auto-detect), `none` (pass through), other (strip)
+- Frontend `inheritedHeaders` useMemo filters out `auth:` items when `authType === 'none'`
+- Cleanup endpoint also respects `authType: none` (skips those items)
 
 ### Groups (team collaboration)
 - Users belong to groups with roles (owner/admin/member)

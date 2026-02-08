@@ -1,7 +1,42 @@
+import { useState, useEffect, useRef } from 'react'
 import { Plus, Trash2, AlertTriangle } from 'lucide-react'
 import { clsx } from 'clsx'
 import type { KeyValueItem } from '@api-client/shared'
 import { useTranslation } from '../hooks/useTranslation'
+
+// Local-state input that prevents character dropping during fast typing.
+// Syncs from parent props only when the input is not focused.
+function SyncedInput({ value, onChange, onBlur, ...props }: {
+  value: string
+  onChange: (value: string) => void
+  onBlur?: () => void
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'onBlur'>) {
+  const [localValue, setLocalValue] = useState(value)
+  const isFocused = useRef(false)
+
+  useEffect(() => {
+    if (!isFocused.current) {
+      setLocalValue(value)
+    }
+  }, [value])
+
+  return (
+    <input
+      {...props}
+      value={localValue}
+      onChange={(e) => {
+        setLocalValue(e.target.value)
+        onChange(e.target.value)
+      }}
+      onFocus={() => { isFocused.current = true }}
+      onBlur={() => {
+        isFocused.current = false
+        setLocalValue(value)
+        onBlur?.()
+      }}
+    />
+  )
+}
 
 interface VariableInfo {
   key: string
@@ -226,10 +261,10 @@ export function KeyValueEditor({
                 />
               </td>
               <td className="py-1 pr-2">
-                <input
+                <SyncedInput
                   type="text"
                   value={item.key}
-                  onChange={(e) => handleChange(index, 'key', e.target.value)}
+                  onChange={(val) => handleChange(index, 'key', val)}
                   onBlur={onBlur}
                   placeholder={placeholder}
                   className={clsx(
@@ -241,10 +276,10 @@ export function KeyValueEditor({
                 {variables.length > 0 && <VariablePreview text={item.key} variables={variables} />}
               </td>
               <td className="py-1 pr-2">
-                <input
+                <SyncedInput
                   type="text"
                   value={item.value}
-                  onChange={(e) => handleChange(index, 'value', e.target.value)}
+                  onChange={(val) => handleChange(index, 'value', val)}
                   onBlur={onBlur}
                   placeholder={t('keyValue.value')}
                   className={clsx(
@@ -257,10 +292,10 @@ export function KeyValueEditor({
               </td>
               {showDescription && (
                 <td className="py-1 pr-2">
-                  <input
+                  <SyncedInput
                     type="text"
                     value={item.description || ''}
-                    onChange={(e) => handleChange(index, 'description', e.target.value)}
+                    onChange={(val) => handleChange(index, 'description', val)}
                     onBlur={onBlur}
                     placeholder={t('keyValue.description')}
                     className={clsx(
