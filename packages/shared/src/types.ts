@@ -4,6 +4,7 @@ export interface KeyValueItem {
   value: string
   description?: string
   enabled: boolean
+  singleKey?: boolean // When true, warn if duplicate keys exist (default: false = multiple allowed)
 }
 
 // Auth types

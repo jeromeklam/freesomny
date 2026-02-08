@@ -75,6 +75,8 @@ function extractItems(
   for (const req of requests) {
     for (const item of req[field]) {
       if (!item.enabled) continue
+      // Never extract Authorization headers — they are auth, not parameters
+      if (field === 'headers' && item.key.toLowerCase() === 'authorization') continue
       const compositeKey = `${item.key}::${item.value}`
       const existing = counts.get(compositeKey)
       if (existing) {

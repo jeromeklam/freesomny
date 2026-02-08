@@ -58,6 +58,7 @@ export const foldersApi = {
   reorder: (id: string, data: { parentId: string | null; sortOrder: number }) =>
     request<unknown>(`/folders/${id}/reorder`, { method: 'PATCH', body: JSON.stringify(data) }),
   getResolvedSettings: (id: string) => request<unknown>(`/folders/${id}/resolved-settings`),
+  getInherited: (id: string) => request<unknown>(`/folders/${id}/inherited`),
 }
 
 // Requests

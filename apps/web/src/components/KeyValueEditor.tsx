@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, AlertTriangle } from 'lucide-react'
 import { clsx } from 'clsx'
 import type { KeyValueItem } from '@api-client/shared'
 import { useTranslation } from '../hooks/useTranslation'
@@ -96,6 +96,24 @@ export function KeyValueEditor({
   showInherited = false,
 }: KeyValueEditorProps) {
   const { t } = useTranslation()
+
+  // Compute duplicate key warnings: keys marked singleKey that appear more than once
+  const duplicateKeys = new Set<string>()
+  const keyCounts = new Map<string, { count: number; hasSingle: boolean }>()
+  for (const item of items) {
+    if (!item.enabled || !item.key) continue
+    const lower = item.key.toLowerCase()
+    const existing = keyCounts.get(lower)
+    if (existing) {
+      existing.count++
+      if (item.singleKey) existing.hasSingle = true
+    } else {
+      keyCounts.set(lower, { count: 1, hasSingle: !!item.singleKey })
+    }
+  }
+  for (const [key, { count, hasSingle }] of keyCounts) {
+    if (count > 1 && hasSingle) duplicateKeys.add(key)
+  }
 
   const handleAdd = () => {
     onChange([...items, { key: '', value: '', description: '', enabled: true }])
@@ -235,12 +253,36 @@ export function KeyValueEditor({
                 </td>
               )}
               <td className="py-1">
-                <button
-                  onClick={() => handleRemove(index)}
-                  className="p-1 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center">
+                  {item.key && item.enabled && duplicateKeys.has(item.key.toLowerCase()) && (
+                    <span className="p-1 text-yellow-500" title={t('keyValue.duplicateWarning')}>
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                    </span>
+                  )}
+                  <button
+                    onClick={() => {
+                      const newItems = [...items]
+                      newItems[index] = { ...newItems[index], singleKey: !newItems[index].singleKey }
+                      onChange(newItems)
+                      onBlur?.()
+                    }}
+                    className={clsx(
+                      'p-1 text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity',
+                      item.singleKey
+                        ? 'text-blue-400'
+                        : 'text-gray-600 hover:text-gray-400'
+                    )}
+                    title={item.singleKey ? t('keyValue.singleKey') : t('keyValue.multipleKeys')}
+                  >
+                    {item.singleKey ? '1' : 'N'}
+                  </button>
+                  <button
+                    onClick={() => handleRemove(index)}
+                    className="p-1 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

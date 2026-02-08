@@ -261,7 +261,10 @@
     "key": "Key",
     "value": "Value",
     "description": "Description",
-    "add": "Add"
+    "add": "Add",
+    "singleKey": "Single key (warn if duplicates)",
+    "multipleKeys": "Multiple values allowed",
+    "duplicateWarning": "Duplicate key — this key is marked as single"
   },
   "settings": {
     "title": "Settings",

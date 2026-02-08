@@ -35,9 +35,14 @@ export function extractAuthFromHeaders(headers: KeyValueItem[]): {
       authConfig = { username: decoded, password: '' }
     }
   } else if (lowerValue.startsWith('jwt id=')) {
-    // FreeFW format: JWT id=<token>
+    // FreeFW format: JWT id="<token>" or JWT id=<token>
     authType = 'jwt_freefw'
-    authConfig = { token: value.slice(7) }
+    let token = value.slice(7)
+    // Strip surrounding quotes if present
+    if (token.startsWith('"') && token.endsWith('"')) {
+      token = token.slice(1, -1)
+    }
+    authConfig = { token }
   } else {
     // Unknown scheme — leave the header as-is
     return { headers, authType: 'none', authConfig: {} }

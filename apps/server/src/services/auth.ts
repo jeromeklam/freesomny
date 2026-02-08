@@ -130,7 +130,7 @@ export async function applyAuth(
     case 'jwt_freefw': {
       const config = authConfig as AuthJwtFreefw
       if (config.token) {
-        result.headers['Authorization'] = `JWT id=${config.token}`
+        result.headers['Authorization'] = `JWT id="${config.token}"`
       }
       break
     }

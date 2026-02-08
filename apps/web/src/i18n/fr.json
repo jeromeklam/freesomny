@@ -261,7 +261,10 @@
     "key": "Clé",
     "value": "Valeur",
     "description": "Description",
-    "add": "Ajouter"
+    "add": "Ajouter",
+    "singleKey": "Clé unique (avertir si doublons)",
+    "multipleKeys": "Valeurs multiples autorisées",
+    "duplicateWarning": "Clé en doublon — cette clé est marquée comme unique"
   },
   "settings": {
     "title": "Paramètres",

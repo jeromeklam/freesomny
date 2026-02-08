@@ -271,6 +271,17 @@ function convertRequest(req: HoppscotchRequest): ImportedRequest {
   let authType = auth.type
   let authConfig = auth.config
 
+  // Detect FreeFW JWT from bearer token
+  if (authType === 'bearer' && typeof (authConfig as Record<string, string>).token === 'string') {
+    const token = (authConfig as Record<string, string>).token
+    if (token.toLowerCase().startsWith('jwt id=')) {
+      authType = 'jwt_freefw'
+      let jwtToken = token.slice(7)
+      if (jwtToken.startsWith('"') && jwtToken.endsWith('"')) jwtToken = jwtToken.slice(1, -1)
+      authConfig = { token: jwtToken }
+    }
+  }
+
   // If no native auth set, detect from Authorization header
   if (authType === 'inherit' || authType === 'none') {
     const extracted = extractAuthFromHeaders(headers)
@@ -279,6 +290,9 @@ function convertRequest(req: HoppscotchRequest): ImportedRequest {
       authType = extracted.authType
       authConfig = extracted.authConfig
     }
+  } else {
+    // Auth is set from native auth section — strip any remaining Authorization header
+    headers = headers.filter((h) => h.key.toLowerCase() !== 'authorization')
   }
 
   return {
@@ -304,6 +318,17 @@ function convertFolder(folder: HoppscotchFolder): ImportedFolder {
   let authType = auth.type
   let authConfig = auth.config
 
+  // Detect FreeFW JWT from bearer token
+  if (authType === 'bearer' && typeof (authConfig as Record<string, string>).token === 'string') {
+    const token = (authConfig as Record<string, string>).token
+    if (token.toLowerCase().startsWith('jwt id=')) {
+      authType = 'jwt_freefw'
+      let jwtToken = token.slice(7)
+      if (jwtToken.startsWith('"') && jwtToken.endsWith('"')) jwtToken = jwtToken.slice(1, -1)
+      authConfig = { token: jwtToken }
+    }
+  }
+
   // If no native auth set, detect from Authorization header at folder level
   if (authType === 'inherit' || authType === 'none') {
     const extracted = extractAuthFromHeaders(headers)
@@ -312,6 +337,9 @@ function convertFolder(folder: HoppscotchFolder): ImportedFolder {
       authType = extracted.authType
       authConfig = extracted.authConfig
     }
+  } else {
+    // Auth is set from native auth section — strip any remaining Authorization header
+    headers = headers.filter((h) => h.key.toLowerCase() !== 'authorization')
   }
 
   return {
@@ -398,13 +426,41 @@ function extractVariablesFromCollection(collection: HoppscotchCollection): Impor
 
 export function importHoppscotch(collection: HoppscotchCollection): HoppscotchImportResult {
   const auth = convertAuth(collection.auth)
+  let rootHeaders = convertHeaders(collection.headers)
+  let rootAuthType = auth.type
+  let rootAuthConfig = auth.config
+
+  // Detect FreeFW JWT from bearer token
+  if (rootAuthType === 'bearer' && typeof (rootAuthConfig as Record<string, string>).token === 'string') {
+    const token = (rootAuthConfig as Record<string, string>).token
+    if (token.toLowerCase().startsWith('jwt id=')) {
+      rootAuthType = 'jwt_freefw'
+      let jwtToken = token.slice(7)
+      if (jwtToken.startsWith('"') && jwtToken.endsWith('"')) jwtToken = jwtToken.slice(1, -1)
+      rootAuthConfig = { token: jwtToken }
+    }
+  }
+
+  // If no native auth set, detect from Authorization header
+  if (rootAuthType === 'inherit' || rootAuthType === 'none') {
+    const extracted = extractAuthFromHeaders(rootHeaders)
+    if (extracted.authType !== 'none') {
+      rootHeaders = extracted.headers
+      rootAuthType = extracted.authType
+      rootAuthConfig = extracted.authConfig
+    }
+  } else {
+    // Auth is set — strip any remaining Authorization header
+    rootHeaders = rootHeaders.filter((h) => h.key.toLowerCase() !== 'authorization')
+  }
+
   const folder: ImportedFolder = {
     name: collection.name,
     description: '',
-    headers: convertHeaders(collection.headers),
+    headers: rootHeaders,
     queryParams: [],
-    authType: auth.type,
-    authConfig: auth.config,
+    authType: rootAuthType,
+    authConfig: rootAuthConfig,
     preScript: null,
     postScript: null,
     baseUrl: null,

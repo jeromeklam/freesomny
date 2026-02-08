@@ -43,7 +43,16 @@ export function useUpdateFolder() {
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['folders'] })
       queryClient.invalidateQueries({ queryKey: ['folder', id] })
+      queryClient.invalidateQueries({ queryKey: ['folder-inherited'] })
     },
+  })
+}
+
+export function useFolderInheritedContext(id: string | null) {
+  return useQuery({
+    queryKey: ['folder-inherited', id],
+    queryFn: () => (id ? foldersApi.getInherited(id) : null),
+    enabled: !!id,
   })
 }
 

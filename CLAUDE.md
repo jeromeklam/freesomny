@@ -72,7 +72,14 @@ Settings merge from root → leaf → request:
 - preScript/postScript: chain execution
 
 ### Auth types supported
-inherit, none, bearer, basic, apikey, jwt, oauth2, openid, hawk
+inherit, none, bearer, basic, apikey, jwt, jwt_freefw, oauth2, openid, hawk
+
+### Authorization header management
+- Authorization headers are **exclusively managed by the Auth tab** — never stored in raw headers
+- 3-layer defense: import-time stripping, save-time auto-sync, read-time filtering
+- Resolved view (Résolu tab) shows auth-generated header preview with `[auth:source]` badge
+- FreeFW JWT format: `JWT id="<token>"` (with double quotes)
+- `POST /api/cleanup/auth-headers` — one-time bulk cleanup of stale Authorization headers in DB
 
 ### Groups (team collaboration)
 - Users belong to groups with roles (owner/admin/member)
@@ -100,6 +107,13 @@ POST /api/folders/:id/share
 # Requests
 GET/POST/PUT/DELETE /api/requests/:id
 POST /api/requests/:id/send
+GET  /api/requests/:id/resolved
+GET  /api/requests/:id/inherited
+
+# Folders (additional)
+GET  /api/folders/:id/inherited
+GET  /api/folders/:id/resolved-settings
+POST /api/cleanup/auth-headers
 
 # Environments
 GET/POST /api/environments

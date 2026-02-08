@@ -3,6 +3,12 @@ import type {
   KeyValueItem,
   AuthType,
   AuthConfig,
+  AuthBearer,
+  AuthBasic,
+  AuthApiKey,
+  AuthJwtFreefw,
+  AuthOAuth2,
+  AuthOpenId,
   ResolvedRequest,
   ResolvedView,
   ResolvedHeader,
@@ -132,6 +138,8 @@ function mergeHeaders(
   for (const folder of chain) {
     for (const header of folder.headers) {
       if (!header.enabled) continue
+      // Authorization is always managed by the Auth tab — never include in headers
+      if (header.key.toLowerCase() === 'authorization') continue
       const existing = merged.get(header.key)
       if (existing) {
         existing.history.push({ value: existing.value, source: existing.source })
@@ -379,6 +387,8 @@ export async function getInheritedContext(requestId: string): Promise<InheritedC
   for (const folder of chain) {
     for (const header of folder.headers) {
       if (!header.enabled) continue
+      // Authorization is always managed by the Auth tab — never include in headers
+      if (header.key.toLowerCase() === 'authorization') continue
       headers.push({
         key: header.key,
         value: header.value,
@@ -417,6 +427,116 @@ export async function getInheritedContext(requestId: string): Promise<InheritedC
   }
 
   return { headers, queryParams, auth }
+}
+
+export async function getInheritedContextForFolder(folderId: string): Promise<InheritedContext> {
+  const folder = await prisma.folder.findUnique({
+    where: { id: folderId },
+  })
+
+  if (!folder) {
+    throw new Error(`Folder not found: ${folderId}`)
+  }
+
+  // Root folder has no parent => no inherited context
+  if (!folder.parentId) {
+    return { headers: [], queryParams: [], auth: null }
+  }
+
+  const chain = await getAncestorChain(folder.parentId)
+
+  const headers: InheritedItem[] = []
+  const queryParams: InheritedItem[] = []
+
+  for (const ancestor of chain) {
+    for (const header of ancestor.headers) {
+      if (!header.enabled) continue
+      // Authorization is always managed by the Auth tab — never include in headers
+      if (header.key.toLowerCase() === 'authorization') continue
+      headers.push({
+        key: header.key,
+        value: header.value,
+        description: header.description,
+        enabled: header.enabled,
+        sourceFolderName: ancestor.name,
+        sourceFolderId: ancestor.id,
+      })
+    }
+    for (const param of ancestor.queryParams) {
+      if (!param.enabled) continue
+      queryParams.push({
+        key: param.key,
+        value: param.value,
+        description: param.description,
+        enabled: param.enabled,
+        sourceFolderName: ancestor.name,
+        sourceFolderId: ancestor.id,
+      })
+    }
+  }
+
+  // Resolve auth from ancestor chain (walk leaf → root, find first non-inherit)
+  let auth: InheritedContext['auth'] = null
+  for (let i = chain.length - 1; i >= 0; i--) {
+    const ancestor = chain[i]
+    if (ancestor.authType !== 'inherit') {
+      auth = {
+        type: ancestor.authType,
+        config: ancestor.authConfig,
+        sourceFolderName: ancestor.name,
+        sourceFolderId: ancestor.id,
+      }
+      break
+    }
+  }
+
+  return { headers, queryParams, auth }
+}
+
+// Preview the Authorization header that auth config will generate (before variable interpolation)
+function getAuthHeaderPreview(authType: AuthType, authConfig: AuthConfig): { key: string; value: string } | null {
+  switch (authType) {
+    case 'bearer': {
+      const config = authConfig as AuthBearer
+      return config.token ? { key: 'Authorization', value: `Bearer ${config.token}` } : null
+    }
+    case 'basic': {
+      const config = authConfig as AuthBasic
+      if (config.username !== undefined) {
+        return { key: 'Authorization', value: `Basic ${Buffer.from(`${config.username}:${config.password || ''}`).toString('base64')}` }
+      }
+      return null
+    }
+    case 'jwt_freefw': {
+      const config = authConfig as AuthJwtFreefw
+      return config.token ? { key: 'Authorization', value: `JWT id="${config.token}"` } : null
+    }
+    case 'apikey': {
+      const config = authConfig as AuthApiKey
+      if (config.key && config.value && config.addTo === 'header') {
+        return { key: config.key, value: config.value }
+      }
+      return null
+    }
+    case 'oauth2': {
+      const config = authConfig as AuthOAuth2
+      if (config.accessToken) {
+        const prefix = config.headerPrefix || 'Bearer'
+        return { key: 'Authorization', value: `${prefix} ${config.accessToken}` }
+      }
+      return null
+    }
+    case 'openid': {
+      const config = authConfig as AuthOpenId
+      if (config.accessToken) {
+        const prefix = config.tokenPrefix || 'Bearer'
+        return { key: 'Authorization', value: `${prefix} ${config.accessToken}` }
+      }
+      return null
+    }
+    default:
+      return null
+  }
 }
 
 export async function getResolvedView(requestId: string): Promise<ResolvedView> {
@@ -512,6 +632,22 @@ export async function getResolvedView(requestId: string): Promise<ResolvedView> 
     config: auth.config,
     source: auth.source,
     inheritChain: auth.inheritChain,
+  }
+
+  // Add auth-generated header to resolved headers so user can preview the actual Authorization value
+  if (auth.type !== 'none' && auth.type !== 'inherit') {
+    const authHeader = getAuthHeaderPreview(auth.type, auth.config)
+    if (authHeader) {
+      const sourceName = auth.source.type === 'folder'
+        ? `auth:${auth.source.folderName}`
+        : 'auth:request'
+      resolvedHeaders.push({
+        key: authHeader.key,
+        value: authHeader.value,
+        source: sourceName,
+        overrides: [],
+      })
+    }
   }
 
   // Get scripts

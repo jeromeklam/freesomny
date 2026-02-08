@@ -253,6 +253,17 @@ function convertRequest(item: PostmanItem): ImportedRequest | null {
   let authType = auth.type
   let authConfig = auth.config
 
+  // Detect FreeFW JWT from bearer token (Postman stores JWT id=xxx as bearer)
+  if (authType === 'bearer' && typeof (authConfig as Record<string, string>).token === 'string') {
+    const token = (authConfig as Record<string, string>).token
+    if (token.toLowerCase().startsWith('jwt id=')) {
+      authType = 'jwt_freefw'
+      let jwtToken = token.slice(7)
+      if (jwtToken.startsWith('"') && jwtToken.endsWith('"')) jwtToken = jwtToken.slice(1, -1)
+      authConfig = { token: jwtToken }
+    }
+  }
+
   // If no native auth set, detect from Authorization header
   if (authType === 'inherit' || authType === 'none') {
     const extracted = extractAuthFromHeaders(headers)
@@ -261,6 +272,9 @@ function convertRequest(item: PostmanItem): ImportedRequest | null {
       authType = extracted.authType
       authConfig = extracted.authConfig
     }
+  } else {
+    // Auth is set from native auth section — strip any remaining Authorization header
+    headers = headers.filter((h) => h.key.toLowerCase() !== 'authorization')
   }
 
   return {
@@ -285,6 +299,20 @@ function convertFolder(item: PostmanItem): ImportedFolder {
   const children: ImportedFolder[] = []
   const requests: ImportedRequest[] = []
 
+  let authType = auth.type
+  let authConfig = auth.config
+
+  // Detect FreeFW JWT from bearer token
+  if (authType === 'bearer' && typeof (authConfig as Record<string, string>).token === 'string') {
+    const token = (authConfig as Record<string, string>).token
+    if (token.toLowerCase().startsWith('jwt id=')) {
+      authType = 'jwt_freefw'
+      let jwtToken = token.slice(7)
+      if (jwtToken.startsWith('"') && jwtToken.endsWith('"')) jwtToken = jwtToken.slice(1, -1)
+      authConfig = { token: jwtToken }
+    }
+  }
+
   if (item.item) {
     for (const child of item.item) {
       if (child.request) {
@@ -301,8 +329,8 @@ function convertFolder(item: PostmanItem): ImportedFolder {
     description: item.description || '',
     headers: [],
     queryParams: [],
-    authType: auth.type,
-    authConfig: auth.config,
+    authType,
+    authConfig,
     preScript: scripts.pre,
     postScript: scripts.post,
     baseUrl: null,
@@ -380,6 +408,20 @@ export function importPostman(collection: PostmanCollection): PostmanImportResul
   const children: ImportedFolder[] = []
   const requests: ImportedRequest[] = []
 
+  let rootAuthType = auth.type
+  let rootAuthConfig = auth.config
+
+  // Detect FreeFW JWT from bearer token at collection level
+  if (rootAuthType === 'bearer' && typeof (rootAuthConfig as Record<string, string>).token === 'string') {
+    const token = (rootAuthConfig as Record<string, string>).token
+    if (token.toLowerCase().startsWith('jwt id=')) {
+      rootAuthType = 'jwt_freefw'
+      let jwtToken = token.slice(7)
+      if (jwtToken.startsWith('"') && jwtToken.endsWith('"')) jwtToken = jwtToken.slice(1, -1)
+      rootAuthConfig = { token: jwtToken }
+    }
+  }
+
   for (const item of collection.item) {
     if (item.request) {
       const req = convertRequest(item)
@@ -394,8 +436,8 @@ export function importPostman(collection: PostmanCollection): PostmanImportResul
     description: collection.info.description || '',
     headers: [],
     queryParams: [],
-    authType: auth.type,
-    authConfig: auth.config,
+    authType: rootAuthType,
+    authConfig: rootAuthConfig,
     preScript: scripts.pre,
     postScript: scripts.post,
     baseUrl: null,

@@ -1,21 +1,41 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
-import { useFolder, useUpdateFolder } from '../hooks/useApi'
+import { useFolder, useUpdateFolder, useFolderInheritedContext, useEnvironmentVariables } from '../hooks/useApi'
 import { useTranslation } from '../hooks/useTranslation'
 import { KeyValueEditor } from './KeyValueEditor'
-import type { Folder, KeyValueItem, AuthType } from '@api-client/shared'
-import { JWT_ALGORITHMS } from '@api-client/shared'
+import type { Folder, KeyValueItem, AuthType, AuthConfig } from '@api-client/shared'
+import { JWT_ALGORITHMS, AUTH_TYPES as SHARED_AUTH_TYPES } from '@api-client/shared'
 
 type FolderTab = 'general' | 'headers' | 'params' | 'auth' | 'scripts'
 
 export function FolderSettings() {
   const selectedFolderId = useAppStore((s) => s.selectedFolderId)
+  const activeEnvironmentId = useAppStore((s) => s.activeEnvironmentId)
   const { data: folderData, isLoading } = useFolder(selectedFolderId)
   const updateFolder = useUpdateFolder()
+  const { data: inheritedData } = useFolderInheritedContext(selectedFolderId)
+  const { data: envVarsData } = useEnvironmentVariables(activeEnvironmentId)
   const { t } = useTranslation()
 
+  const variablesForTooltip = useMemo(() => {
+    if (!envVarsData || !Array.isArray(envVarsData)) return []
+    return (envVarsData as Array<{ key: string; teamValue?: string; localValue?: string; status?: string }>).map((v) => ({
+      key: v.key,
+      value: v.localValue ?? v.teamValue ?? '',
+      source: v.status === 'overridden' ? 'local override' : 'environment',
+    }))
+  }, [envVarsData])
+
+  const inherited = inheritedData as {
+    headers: Array<{ key: string; value: string; description?: string; enabled: boolean; sourceFolderName: string; sourceFolderId: string }>
+    queryParams: Array<{ key: string; value: string; description?: string; enabled: boolean; sourceFolderName: string; sourceFolderId: string }>
+    auth: { type: AuthType; config: AuthConfig; sourceFolderName: string; sourceFolderId: string } | null
+  } | null
+
   const [activeTab, setActiveTab] = useState<FolderTab>('general')
+  const [showInherited, setShowInherited] = useState(true)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [baseUrl, setBaseUrl] = useState('')
@@ -236,21 +256,65 @@ export function FolderSettings() {
         )}
 
         {activeTab === 'headers' && (
-          <KeyValueEditor
-            items={headers}
-            onChange={handleHeadersChange}
-            onBlur={handleHeadersBlur}
-            placeholder={t('folder.tabs.headers')}
-          />
+          <div>
+            {inherited?.headers && inherited.headers.length > 0 && (
+              <div className="flex items-center px-4 pt-3">
+                <button
+                  onClick={() => setShowInherited(!showInherited)}
+                  className={clsx(
+                    'flex items-center gap-1.5 px-2 py-1 text-xs rounded border',
+                    showInherited
+                      ? 'text-blue-400 border-blue-500/30 bg-blue-500/10'
+                      : 'text-gray-500 border-gray-700 hover:text-gray-400'
+                  )}
+                  title={showInherited ? t('inherited.hideInherited') : t('inherited.showInherited')}
+                >
+                  {showInherited ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                  {t('inherited.inherited')} ({inherited.headers.length})
+                </button>
+              </div>
+            )}
+            <KeyValueEditor
+              items={headers}
+              onChange={handleHeadersChange}
+              onBlur={handleHeadersBlur}
+              placeholder={t('folder.tabs.headers')}
+              variables={variablesForTooltip}
+              inheritedItems={inherited?.headers}
+              showInherited={showInherited}
+            />
+          </div>
         )}
 
         {activeTab === 'params' && (
-          <KeyValueEditor
-            items={queryParams}
-            onChange={handleParamsChange}
-            onBlur={handleParamsBlur}
-            placeholder={t('folder.tabs.params')}
-          />
+          <div>
+            {inherited?.queryParams && inherited.queryParams.length > 0 && (
+              <div className="flex items-center px-4 pt-3">
+                <button
+                  onClick={() => setShowInherited(!showInherited)}
+                  className={clsx(
+                    'flex items-center gap-1.5 px-2 py-1 text-xs rounded border',
+                    showInherited
+                      ? 'text-blue-400 border-blue-500/30 bg-blue-500/10'
+                      : 'text-gray-500 border-gray-700 hover:text-gray-400'
+                  )}
+                  title={showInherited ? t('inherited.hideInherited') : t('inherited.showInherited')}
+                >
+                  {showInherited ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                  {t('inherited.inherited')} ({inherited.queryParams.length})
+                </button>
+              </div>
+            )}
+            <KeyValueEditor
+              items={queryParams}
+              onChange={handleParamsChange}
+              onBlur={handleParamsBlur}
+              placeholder={t('folder.tabs.params')}
+              variables={variablesForTooltip}
+              inheritedItems={inherited?.queryParams}
+              showInherited={showInherited}
+            />
+          </div>
         )}
 
         {activeTab === 'auth' && (
@@ -449,9 +513,40 @@ export function FolderSettings() {
             )}
 
             {authType === 'inherit' && (
-              <p className="text-sm text-gray-500">
-                {t('folder.inheritAuthHelp')}
-              </p>
+              <div>
+                <p className="text-sm text-gray-500">
+                  {t('folder.inheritAuthHelp')}
+                </p>
+                {inherited?.auth && inherited.auth.type !== 'none' && (
+                  <div className="mt-3 p-3 bg-gray-800/50 border border-gray-700 rounded opacity-60">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-gray-400">
+                        {SHARED_AUTH_TYPES[inherited.auth.type]?.label || inherited.auth.type}
+                      </span>
+                      <span className="px-1.5 py-0.5 text-xs bg-gray-700/60 text-gray-400 rounded">
+                        {inherited.auth.sourceFolderName}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-xs text-gray-500 font-mono">
+                      {inherited.auth.type === 'bearer' && (
+                        <span>Token: {(inherited.auth.config as Record<string, string>).token ? '••••••••' : '(empty)'}</span>
+                      )}
+                      {inherited.auth.type === 'jwt_freefw' && (
+                        <span>JWT id: {(inherited.auth.config as Record<string, string>).token ? '••••••••' : '(empty)'}</span>
+                      )}
+                      {inherited.auth.type === 'basic' && (
+                        <span>{(inherited.auth.config as Record<string, string>).username || '?'} / •••••</span>
+                      )}
+                      {inherited.auth.type === 'apikey' && (
+                        <span>{(inherited.auth.config as Record<string, string>).key || '?'}: •••••••</span>
+                      )}
+                      {inherited.auth.type === 'jwt' && (
+                        <span>{(inherited.auth.config as Record<string, string>).algorithm || 'HS256'} — ••••••</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
 
             {authType === 'none' && (

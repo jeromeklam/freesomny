@@ -247,6 +247,9 @@ export function toCurl(
   } else if (authType === 'basic') {
     const { username, password } = authConfig as { username: string; password: string }
     parts.push('-u', `'${username}:${password}'`)
+  } else if (authType === 'jwt_freefw') {
+    const token = (authConfig as { token: string }).token
+    parts.push('-H', `'Authorization: JWT id="${token}"'`)
   }
 
   // Body

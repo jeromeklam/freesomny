@@ -1,11 +1,18 @@
 import type { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma.js'
 import { createRequestSchema, updateRequestSchema, reorderSchema } from '@api-client/shared'
+import type { KeyValueItem } from '@api-client/shared'
 import { parseHeaders, parseQueryParams, parseAuthConfig, stringifyJson } from '../lib/json.js'
 import { resolveRequest, getResolvedView, getInheritedContext } from '../services/inheritance.js'
+import { extractAuthFromHeaders } from '@api-client/import-export'
 import { executeRequest } from '../services/http-engine.js'
 import { resolveVariables, getActiveEnvironment } from '../services/environment.js'
 import { executeScripts } from '../scripting/sandbox.js'
+
+/** Authorization is always managed by the Auth tab — strip from raw headers */
+function stripAuthHeader(headers: KeyValueItem[]): KeyValueItem[] {
+  return headers.filter(h => h.key.toLowerCase() !== 'authorization')
+}
 
 export async function requestRoutes(fastify: FastifyInstance) {
   // Get single request
@@ -21,7 +28,7 @@ export async function requestRoutes(fastify: FastifyInstance) {
     return {
       data: {
         ...req,
-        headers: parseHeaders(req.headers),
+        headers: stripAuthHeader(parseHeaders(req.headers)),
         queryParams: parseQueryParams(req.queryParams),
         authConfig: parseAuthConfig(req.authConfig),
       },
@@ -98,6 +105,39 @@ export async function requestRoutes(fastify: FastifyInstance) {
     if (data.verifySsl !== undefined) updateData.verifySsl = data.verifySsl
     if (data.proxy !== undefined) updateData.proxy = data.proxy
     if (data.sortOrder !== undefined) updateData.sortOrder = data.sortOrder
+
+    // Auto-sync Authorization header ↔ Auth config
+    if (data.headers && Array.isArray(data.headers)) {
+      const currentAuthType = (data.authType as string) ?? (await prisma.request.findUnique({ where: { id: request.params.id }, select: { authType: true } }))?.authType ?? 'inherit'
+      if (currentAuthType === 'inherit' || currentAuthType === 'none') {
+        // No auth configured — try to detect from Authorization header
+        const extracted = extractAuthFromHeaders(data.headers)
+        if (extracted.authType !== 'none') {
+          updateData.headers = stringifyJson(extracted.headers)
+          updateData.authType = extracted.authType
+          updateData.authConfig = stringifyJson(extracted.authConfig)
+        }
+      } else {
+        // Auth is already configured — always strip Authorization header
+        const headersArr = data.headers as Array<{ key: string; value: string; description?: string; enabled: boolean }>
+        const filtered = headersArr.filter((h) => h.key.toLowerCase() !== 'authorization')
+        if (filtered.length !== headersArr.length) {
+          updateData.headers = stringifyJson(filtered)
+        }
+      }
+    }
+
+    // When auth type is explicitly changed, also strip Authorization from existing headers
+    if (data.authType && data.authType !== 'inherit' && data.authType !== 'none' && !data.headers) {
+      const currentHeaders = JSON.parse(
+        (await prisma.request.findUnique({ where: { id: request.params.id }, select: { headers: true } }))?.headers ?? '[]'
+      )
+      const filtered = (currentHeaders as Array<{ key: string; value: string; description?: string; enabled: boolean }>)
+        .filter((h) => h.key.toLowerCase() !== 'authorization')
+      if (filtered.length !== currentHeaders.length) {
+        updateData.headers = stringifyJson(filtered)
+      }
+    }
 
     const req = await prisma.request.update({
       where: { id: request.params.id },
