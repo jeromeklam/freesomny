@@ -123,6 +123,27 @@ export function useDuplicateRequest() {
   })
 }
 
+export function useFavorites() {
+  return useQuery({
+    queryKey: ['favorites'],
+    queryFn: requestsApi.getFavorites,
+  })
+}
+
+export function useToggleFavorite() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, isFavorite }: { id: string; isFavorite: boolean }) =>
+      requestsApi.update(id, { isFavorite }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['favorites'] })
+      queryClient.invalidateQueries({ queryKey: ['folders'] })
+      queryClient.invalidateQueries({ queryKey: ['request', id] })
+    },
+  })
+}
+
 export function useReorderRequest() {
   const queryClient = useQueryClient()
 

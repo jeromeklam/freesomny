@@ -3,26 +3,15 @@
 # FreeSomnia — Build Deployment Kit
 # ===========================================
 #
-# Creates a self-contained deployment tarball that can be
-# copied to a server and installed with install.sh.
+# Creates a SELF-CONTAINED tarball. The server just
+# copies files and starts. No pnpm, no npm, no prisma
+# needed on the target machine.
 #
-# Usage:
-#   ./scripts/make-kit.sh
+# Uses "pnpm deploy" to create a standalone server
+# with flat node_modules (no symlinks, no workspace).
 #
-# Output:
-#   freesomnia-deploy-{version}-{date}.tar.gz
-#
-# The kit contains:
-#   - web-dist/          Built frontend (static files)
-#   - server-dist/       Built backend (JS)
-#   - prisma/            Prisma schema + migrations
-#   - server-package.json  Server package.json for deps
-#   - pnpm-lock.yaml     Lockfile for reproducible installs
-#   - .env.example       Sample configuration
-#   - freesomnia.service Systemd service file
-#   - install.sh         Deployment/installation script
-#   - migrate-*.sql      PostgreSQL migration scripts
-#   - README-INSTALL.md  Installation instructions
+# Usage:  ./scripts/make-kit.sh
+# Output: freesomnia-deploy-{version}-{date}.tar.gz
 
 set -e
 set -u
@@ -30,33 +19,27 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-# Colors
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
 log_info()    { echo -e "${BLUE}[INFO]${NC} $1"; }
 log_success() { echo -e "${GREEN}[ OK ]${NC} $1"; }
-log_warning() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error()   { echo -e "${RED}[FAIL]${NC} $1"; exit 1; }
 
-# ===========================================
-# Extract version from shared package
-# ===========================================
 get_version() {
-    local version_file="$PROJECT_ROOT/packages/shared/src/version.ts"
-    if [ -f "$version_file" ]; then
-        grep "APP_VERSION" "$version_file" | head -1 | sed "s/.*'\(.*\)'.*/\1/"
-    else
-        echo "0.0.0"
-    fi
+    local f="$PROJECT_ROOT/packages/shared/src/version.ts"
+    [ -f "$f" ] && grep "APP_VERSION" "$f" | head -1 | sed "s/.*'\(.*\)'.*/\1/" || echo "0.0.0"
 }
 
-# ===========================================
-# Main
-# ===========================================
+# Restore original schema on ANY exit (success or failure)
+SCHEMA_ORIG=""
+cleanup() {
+    [ -n "$SCHEMA_ORIG" ] && [ -f "$SCHEMA_ORIG" ] && mv "$SCHEMA_ORIG" "${SCHEMA_ORIG%.orig}"
+}
+trap cleanup EXIT
+
 main() {
     echo ""
     echo "=========================================="
@@ -66,88 +49,109 @@ main() {
 
     cd "$PROJECT_ROOT"
 
-    # 1. Build
+    # ── 1. Build ───────────────────────────────────
     log_info "Building project..."
     pnpm build
     log_success "Build complete"
 
-    # 2. Check build artifacts exist
-    if [ ! -d "apps/web/dist" ]; then
-        log_error "Frontend build not found at apps/web/dist"
-    fi
-    if [ ! -d "apps/server/dist" ]; then
-        log_error "Backend build not found at apps/server/dist"
-    fi
+    [ -d "apps/web/dist" ]    || log_error "Missing apps/web/dist"
+    [ -d "apps/server/dist" ] || log_error "Missing apps/server/dist"
 
-    # 3. Prepare kit directory
+    # ── 2. Kit directory ───────────────────────────
     VERSION=$(get_version)
-    DATE=$(date +%Y%m%d)
-    KIT_NAME="freesomnia-deploy-${VERSION}-${DATE}"
+    KIT_NAME="freesomnia-deploy-${VERSION}-$(date +%Y%m%d)"
     KIT_DIR="/tmp/$KIT_NAME"
-
     rm -rf "$KIT_DIR"
-    mkdir -p "$KIT_DIR"
 
-    log_info "Assembling kit: $KIT_NAME"
+    log_info "Kit: $KIT_NAME"
 
-    # Frontend
-    cp -r apps/web/dist "$KIT_DIR/web-dist"
+    # ── 3. Patch schema BEFORE deploy ────────────
+    # @prisma/client postinstall runs "prisma generate" automatically
+    # when the prisma CLI is available. Patching the source ensures
+    # the generated client targets PostgreSQL.
+    local schema="$PROJECT_ROOT/apps/server/prisma/schema.prisma"
+    SCHEMA_ORIG="${schema}.orig"
+    cp "$schema" "$SCHEMA_ORIG"
+
+    sed -i.bak 's/provider = "sqlite"/provider = "postgresql"/' "$schema"
+    rm -f "${schema}.bak"
+
+    # Cross-platform: add Linux binary targets when building on macOS
+    if [[ "$(uname)" == "Darwin" ]] && ! grep -q "binaryTargets" "$schema"; then
+        log_info "Adding Linux binary targets (cross-platform build)"
+        perl -i -pe 's/(provider = "prisma-client-js")/$1\n  binaryTargets = ["native", "debian-openssl-3.0.x"]/' "$schema"
+    fi
+
+    # ── 4. Deploy server (standalone, flat node_modules) ──
+    log_info "Creating standalone server package..."
+    pnpm --filter @api-client/server deploy --prod "$KIT_DIR/apps/server"
+
+    # Restore original schema (also handled by trap on failure)
+    mv "$SCHEMA_ORIG" "$schema"
+    SCHEMA_ORIG=""
+
+    # Remove source files (not needed in production)
+    rm -rf "$KIT_DIR/apps/server/src" \
+           "$KIT_DIR/apps/server/tsconfig.json" \
+           "$KIT_DIR/apps/server/.env.example"
+    log_success "Server + node_modules ready"
+
+    # ── 5. Ensure Prisma client is generated ───────
+    # @prisma/client postinstall may or may not have generated.
+    # Run explicit generate as insurance using any available prisma CLI.
+    local prisma_bin=""
+    for p in \
+        "$KIT_DIR/apps/server/node_modules/.bin/prisma" \
+        "$PROJECT_ROOT/apps/server/node_modules/.bin/prisma" \
+        "$PROJECT_ROOT/node_modules/.bin/prisma" \
+        ; do
+        [ -x "$p" ] && { prisma_bin="$p"; break; }
+    done
+
+    if [ -n "$prisma_bin" ]; then
+        log_info "Generating Prisma client (PostgreSQL)..."
+        cd "$KIT_DIR/apps/server"
+        "$prisma_bin" generate --schema=prisma/schema.prisma
+        log_success "Prisma client generated"
+    else
+        log_info "Prisma CLI not found — relying on @prisma/client postinstall"
+    fi
+
+    # ── 6. Frontend ────────────────────────────────
+    cd "$PROJECT_ROOT"
+    mkdir -p "$KIT_DIR/apps/web"
+    cp -r apps/web/dist "$KIT_DIR/apps/web/dist"
     log_success "Frontend copied"
 
-    # Backend
-    cp -r apps/server/dist "$KIT_DIR/server-dist"
-    log_success "Backend copied"
-
-    # Prisma schema + migrations
-    cp -r apps/server/prisma "$KIT_DIR/prisma"
-    log_success "Prisma schema copied"
-
-    # Server package.json (for npm install --prod)
-    cp apps/server/package.json "$KIT_DIR/server-package.json"
-
-    # Lockfile
-    if [ -f pnpm-lock.yaml ]; then
-        cp pnpm-lock.yaml "$KIT_DIR/pnpm-lock.yaml"
-    fi
-
-    # .env.example
-    cp apps/server/.env.example "$KIT_DIR/.env.example"
-
-    # Systemd service
-    cp apps/server/freesomnia.service "$KIT_DIR/freesomnia.service"
-
-    # Install script
+    # ── 7. Support files ───────────────────────────
     cp scripts/install.sh "$KIT_DIR/install.sh"
     chmod +x "$KIT_DIR/install.sh"
 
-    # PostgreSQL migration scripts
-    for sql_file in scripts/migrate-postgresql*.sql; do
-        [ -f "$sql_file" ] && cp "$sql_file" "$KIT_DIR/"
+    [ -f apps/server/.env.example ]       && cp apps/server/.env.example "$KIT_DIR/.env.example"
+    [ -f apps/server/freesomnia.service ] && cp apps/server/freesomnia.service "$KIT_DIR/freesomnia.service"
+
+    mkdir -p "$KIT_DIR/scripts"
+    for f in scripts/migrate-postgresql*.sql; do
+        [ -f "$f" ] && cp "$f" "$KIT_DIR/scripts/"
     done
+    [ -f scripts/README-INSTALL.md ] && cp scripts/README-INSTALL.md "$KIT_DIR/README-INSTALL.md"
 
-    # README
-    cp scripts/README-INSTALL.md "$KIT_DIR/README-INSTALL.md" 2>/dev/null || true
-
-    log_success "Kit assembled"
-
-    # 4. Create tarball
+    # ── 8. Tarball ─────────────────────────────────
     TARBALL="$PROJECT_ROOT/$KIT_NAME.tar.gz"
     cd /tmp
     tar -czf "$TARBALL" "$KIT_NAME"
     rm -rf "$KIT_DIR"
 
     SIZE=$(du -h "$TARBALL" | cut -f1)
-
     echo ""
-    log_success "Kit created: $KIT_NAME.tar.gz ($SIZE)"
+    log_success "Kit: $KIT_NAME.tar.gz ($SIZE)"
     echo ""
-    echo "  To deploy:"
-    echo "    1. scp $KIT_NAME.tar.gz server:/tmp/"
-    echo "    2. ssh server"
-    echo "    3. cd /tmp && tar xzf $KIT_NAME.tar.gz"
-    echo "    4. cd $KIT_NAME"
-    echo "    5. sudo ./install.sh install   # first time"
-    echo "       sudo ./install.sh deploy    # updates"
+    echo "  Deploy:"
+    echo "    scp $KIT_NAME.tar.gz server:/tmp/"
+    echo "    ssh server"
+    echo "    cd /tmp && tar xzf $KIT_NAME.tar.gz && cd $KIT_NAME"
+    echo "    sudo ./install.sh install   # first time"
+    echo "    sudo ./install.sh deploy    # updates"
     echo ""
 }
 

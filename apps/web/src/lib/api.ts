@@ -62,8 +62,18 @@ export const foldersApi = {
 }
 
 // Requests
+export interface FavoriteRequest {
+  id: string
+  name: string
+  method: string
+  isFavorite: boolean
+  folderId: string
+  folderName: string
+}
+
 export const requestsApi = {
   get: (id: string) => request<unknown>(`/requests/${id}`),
+  getFavorites: () => request<FavoriteRequest[]>('/requests/favorites'),
   create: (data: unknown) =>
     request<unknown>('/requests', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: string, data: unknown) =>

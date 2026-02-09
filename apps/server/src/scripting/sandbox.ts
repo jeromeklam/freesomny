@@ -1,5 +1,20 @@
-import ivm from 'isolated-vm'
 import type { ResolvedRequest, HttpResponse } from '@api-client/shared'
+
+// Lazy import: isolated-vm is a native C++ module that may not be
+// available on cross-platform deployments (built on macOS, deployed on Linux).
+// We load it on first use so the server can start without it.
+let _ivm: any = null
+
+async function getIvm() {
+  if (_ivm) return _ivm
+  try {
+    const mod = await import('isolated-vm')
+    _ivm = mod.default ?? mod
+    return _ivm
+  } catch {
+    throw new Error('Script sandboxing not available (isolated-vm not loaded)')
+  }
+}
 
 interface ScriptContext {
   env: Map<string, string>
@@ -259,6 +274,7 @@ export async function runPreRequestScript(
   script: string,
   context: ScriptContext
 ): Promise<ScriptResult> {
+  const ivm = await getIvm()
   const isolate = new ivm.Isolate({ memoryLimit: 8 })
 
   try {
@@ -324,6 +340,7 @@ export async function runPostResponseScript(
   script: string,
   context: ScriptContext
 ): Promise<ScriptResult> {
+  const ivm = await getIvm()
   const isolate = new ivm.Isolate({ memoryLimit: 8 })
 
   try {

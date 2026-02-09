@@ -56,7 +56,12 @@ freesomnia/
 │   ├── shared/               # Types, validation (zod)
 │   ├── import-export/        # Postman/Hoppscotch/cURL importers
 │   └── agent/                # Local proxy agent CLI (@api-client/agent)
-├── scripts/deploy.sh         # Deployment script
+├── scripts/
+│   ├── make-kit.sh           # Build self-contained deployment tarball
+│   ├── install.sh            # Server install/deploy/migrate script
+│   ├── deploy.sh             # CI/CD deployment
+│   ├── README-INSTALL.md     # Installation guide (included in kit)
+│   └── migrate-postgresql*.sql  # PostgreSQL migration scripts
 ├── Jenkinsfile               # CI/CD pipeline
 ├── DEPLOYMENT.md             # Deployment guide
 └── CLAUDE.md
@@ -73,6 +78,16 @@ freesomnia/
 - **EnvironmentVariable** - key/value with type (string/secret)
 
 ## Core features
+
+### Favorite requests
+- `isFavorite` boolean field on Request model (Prisma)
+- Star icon on each request in sidebar: yellow filled = favorited, gray outline on hover = not favorited
+- Context menu: "Add to Favorites" / "Remove from Favorites"
+- Collapsible "FAVORITES" section at top of sidebar (above COLLECTIONS)
+- Shows flat list: method badge + name + collection name + unstar button on hover
+- `GET /api/requests/favorites` endpoint returns favorited requests with folder name
+- Collapse state persisted in localStorage via Zustand
+- Toggle via `useToggleFavorite()` hook → `PUT /api/requests/:id` with `{ isFavorite }`
 
 ### Collection search
 - Search bar in sidebar header: toggleable via Search icon, filters collections and requests by name
@@ -141,6 +156,54 @@ Key files:
 - Includes inherited headers from parent folders and auth-generated Authorization
 - Supports all auth types: bearer, basic, apikey, jwt_freefw, oauth2, openid
 - `buildMergedRequest()` merges inherited + request headers and resolves inherited auth
+
+### Deployment kit (`scripts/make-kit.sh` + `scripts/install.sh`)
+Self-contained tarball — NO pnpm, npm, or prisma needed on the target server.
+
+**Build process (`make-kit.sh`):**
+1. `pnpm build` — compiles TypeScript (server + shared + import-export) and Vite (frontend)
+2. Patches `schema.prisma`: `sqlite` → `postgresql`, adds `binaryTargets = ["native", "debian-openssl-3.0.x"]` on macOS
+3. `pnpm --filter @api-client/server deploy --prod $KIT_DIR/apps/server` — creates standalone server with flat `node_modules` (no symlinks, no workspace)
+4. Restores original schema (trap on EXIT for safety)
+5. Explicit `prisma generate` as insurance (searches kit → project server → project root for prisma CLI)
+6. Copies `apps/web/dist`, `install.sh`, `.env.example`, `freesomnia.service`, migration SQL scripts
+7. Creates `freesomnia-deploy-{version}-{date}.tar.gz`
+
+**Deploy process (`install.sh`):**
+- Commands: `install` (first time), `deploy` (updates), `migrate` (DB only), `status`
+- ZERO package manager commands — just copies files and starts service
+- `deploy_files()`: backs up `.env`, copies `apps/` to `/opt/freesomnia/apps/`, restores `.env`
+- `run_migrations()`: applies `migrate-postgresql*.sql` via `psql`, tracks in `_prisma_migrations` table via direct SQL INSERT
+- `setup_service()`: creates `freesomnia` user, installs systemd service
+- `ensure_node()`: finds Node.js (nvm dirs, PATH) and copies to `/usr/local/bin/node`
+
+**Kit structure (deployed to `/opt/freesomnia/`):**
+```
+/opt/freesomnia/
+├── apps/
+│   ├── web/dist/              # Frontend (Vite build)
+│   └── server/
+│       ├── dist/index.js      # Compiled backend entry point
+│       ├── prisma/            # Schema (postgresql) + migrations
+│       ├── node_modules/      # All prod deps (flat, from pnpm deploy)
+│       └── package.json
+├── scripts/
+│   ├── install.sh
+│   └── migrate-postgresql*.sql
+├── .env                       # Server configuration
+└── freesomnia.service         # Systemd unit file
+```
+
+**Cross-platform notes:**
+- `isolated-vm` (C++ native addon): uses lazy dynamic import in `sandbox.ts` — server starts even if module can't load on target platform
+- Prisma binary targets: macOS builds include both `native` (macOS) and `debian-openssl-3.0.x` (Linux) query engines
+- Schema patching happens BEFORE `pnpm deploy` so `@prisma/client` postinstall generates the correct PostgreSQL client
+
+**Adding new PostgreSQL migrations:**
+1. Create `scripts/migrate-postgresql-{feature}.sql` with header: `-- Migration: {prisma_migration_name}`
+2. Use `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` for idempotent SQL
+3. The migration name must match the Prisma migration directory name exactly
+4. `install.sh` will auto-apply and track it in `_prisma_migrations`
 
 ## API routes
 
@@ -232,34 +295,34 @@ pnpm db:migrate      # Initialize SQLite database
 pnpm dev             # Start dev servers (frontend :5173 + backend :3000)
 ```
 
-### Production (Debian/Ubuntu)
-1. [ ] Install Node.js 22: `curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash - && sudo apt install -y nodejs`
-2. [ ] Install pnpm: `npm install -g pnpm`
-3. [ ] Clone: `sudo mkdir -p /opt/freesomnia && cd /opt/freesomnia && git clone <repo> .`
-4. [ ] Install deps: `pnpm install`
-5. [ ] Configure: `cp apps/server/.env.example apps/server/.env && nano apps/server/.env`
-   - Set `DATABASE_URL` (SQLite or PostgreSQL)
-   - Set `NODE_ENV=production`
-   - Set `JWT_SECRET` (generate: `openssl rand -base64 32`)
-   - Set `AUTH_REQUIRED=true`
-   - Set `CORS_ORIGINS=https://yourdomain.com`
-   - (Optional) Set SMTP vars for password reset emails
-6. [ ] Build: `pnpm build`
-7. [ ] Run migrations: `pnpm --filter @api-client/server prisma migrate deploy`
-8. [ ] Create service user: `sudo useradd -r -s /bin/false freesomnia`
-9. [ ] Set ownership: `sudo chown -R freesomnia:freesomnia /opt/freesomnia`
-10. [ ] Copy env: `sudo cp apps/server/.env /opt/freesomnia/.env && sudo chmod 600 /opt/freesomnia/.env`
-11. [ ] Install systemd: `sudo cp apps/server/freesomnia.service /etc/systemd/system/`
-12. [ ] Enable & start: `sudo systemctl daemon-reload && sudo systemctl enable freesomnia && sudo systemctl start freesomnia`
-13. [ ] (Optional) Set up Nginx reverse proxy + Let's Encrypt SSL (see DEPLOYMENT.md)
-14. [ ] (Optional, one-time) Cleanup stale auth headers: `curl -X POST http://localhost:3000/api/cleanup/auth-headers`
-
-### Automated deployment
+### Production (Recommended: Deployment Kit)
 ```bash
-./scripts/deploy.sh dev        # Local development
-DEPLOY_HOST=server ./scripts/deploy.sh staging  # Remote staging
-DEPLOY_HOST=server ./scripts/deploy.sh prod     # Remote production (with confirmation)
+# On dev machine: build the self-contained kit
+./scripts/make-kit.sh
+
+# Copy to server
+scp freesomnia-deploy-*.tar.gz server:/tmp/
+
+# On server: extract and install
+cd /tmp && tar xzf freesomnia-deploy-*.tar.gz && cd freesomnia-deploy-*
+sudo ./install.sh install    # First time (creates user, service, .env)
+sudo ./install.sh deploy     # Updates (preserves .env, runs migrations)
 ```
+
+After first install, edit `/opt/freesomnia/.env`:
+- `DATABASE_URL=postgresql://user:pass@localhost:5432/freesomnia`
+- `JWT_SECRET=$(openssl rand -base64 32)`
+- `AUTH_REQUIRED=true`
+- `NODE_ENV=production`
+- `CORS_ORIGINS=https://yourdomain.com`
+- (Optional) SMTP vars for password reset emails
+
+### Production (Alternative: From Source)
+1. [ ] Install Node.js 22 + pnpm on the server
+2. [ ] Clone, `pnpm install`, `pnpm build`
+3. [ ] Configure `.env`, run Prisma migrations
+4. [ ] Set up systemd service
+5. [ ] See [DEPLOYMENT.md](DEPLOYMENT.md) for full instructions
 
 ## Coding conventions
 

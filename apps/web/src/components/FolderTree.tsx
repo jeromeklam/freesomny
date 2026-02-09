@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
-import { ChevronRight, ChevronDown, Folder, FolderOpen, FileJson, Plus, MoreVertical, Trash2, Edit2, Pencil, GripVertical, Copy, ArrowUpFromLine, ArrowDownFromLine, Users, Search, X } from 'lucide-react'
+import { ChevronRight, ChevronDown, Folder, FolderOpen, FileJson, Plus, MoreVertical, Trash2, Edit2, Pencil, GripVertical, Copy, ArrowUpFromLine, ArrowDownFromLine, Users, Search, X, Star } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
-import { useCreateFolder, useCreateRequest, useDeleteFolder, useDeleteRequest, useDuplicateRequest, useUpdateRequest, useReorderFolder, useReorderRequest } from '../hooks/useApi'
+import { useCreateFolder, useCreateRequest, useDeleteFolder, useDeleteRequest, useDuplicateRequest, useUpdateRequest, useReorderFolder, useReorderRequest, useFavorites, useToggleFavorite } from '../hooks/useApi'
 import { useTranslation } from '../hooks/useTranslation'
 
 interface FolderNode {
@@ -16,6 +16,7 @@ interface FolderNode {
     name: string
     method: string
     sortOrder: number
+    isFavorite?: boolean
   }>
 }
 
@@ -440,6 +441,7 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
   const duplicateRequest = useDuplicateRequest()
   const updateRequest = useUpdateRequest()
   const reorderRequest = useReorderRequest()
+  const toggleFavorite = useToggleFavorite()
   const { t } = useTranslation()
 
   useEffect(() => {
@@ -604,6 +606,22 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
           <span className="flex-1 truncate text-sm" onDoubleClick={(e) => { e.stopPropagation(); startRename() }}>{request.name}</span>
         )}
 
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            toggleFavorite.mutate({ id: request.id, isFavorite: !request.isFavorite })
+          }}
+          className={clsx(
+            'p-0.5 rounded transition-opacity',
+            request.isFavorite
+              ? 'text-yellow-400 opacity-100'
+              : 'text-gray-500 opacity-0 group-hover:opacity-100 hover:text-yellow-400'
+          )}
+          title={request.isFavorite ? t('sidebar.removeFromFavorites') : t('sidebar.addToFavorites')}
+        >
+          <Star className={clsx('w-3.5 h-3.5', request.isFavorite && 'fill-current')} />
+        </button>
+
         <div className="relative opacity-0 group-hover:opacity-100">
           <button
             onClick={(e) => {
@@ -648,6 +666,17 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
               >
                 <Copy className="w-4 h-4" /> {t('sidebar.duplicate')}
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowMenu(false)
+                  toggleFavorite.mutate({ id: request.id, isFavorite: !request.isFavorite })
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
+              >
+                <Star className={clsx('w-4 h-4', request.isFavorite && 'fill-current text-yellow-400')} />
+                {request.isFavorite ? t('sidebar.removeFromFavorites') : t('sidebar.addToFavorites')}
               </button>
               <hr className="border-gray-700" />
               <button
@@ -719,7 +748,15 @@ function collectFolderIds(folders: FolderNode[]): Set<string> {
 
 export function FolderTree() {
   const folders = useAppStore((s) => s.folders)
+  const selectedRequestId = useAppStore((s) => s.selectedRequestId)
+  const setSelectedFolderId = useAppStore((s) => s.setSelectedFolderId)
+  const setCurrentRequest = useAppStore((s) => s.setCurrentRequest)
+  const openRequestTab = useAppStore((s) => s.openRequestTab)
+  const favoritesExpanded = useAppStore((s) => s.favoritesExpanded)
+  const setFavoritesExpanded = useAppStore((s) => s.setFavoritesExpanded)
   const createFolder = useCreateFolder()
+  const { data: favorites = [] } = useFavorites()
+  const toggleFavorite = useToggleFavorite()
   const [dragItem, setDragItem] = useState<DragItem | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [showSearch, setShowSearch] = useState(false)
@@ -804,6 +841,63 @@ export function FolderTree() {
       )}
 
       <div className="flex-1 overflow-auto py-2">
+        {/* FAVORITES section */}
+        {favorites.length > 0 && (
+          <div className="mb-1">
+            <div
+              className="flex items-center gap-1 px-3 py-1 cursor-pointer hover:bg-gray-800/50"
+              onClick={() => setFavoritesExpanded(!favoritesExpanded)}
+            >
+              {favoritesExpanded ? (
+                <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+              ) : (
+                <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
+              )}
+              <Star className="w-3.5 h-3.5 text-yellow-400 fill-current" />
+              <span className="text-xs font-medium text-gray-400">{t('sidebar.favorites')}</span>
+              <span className="text-[10px] text-gray-600 ml-1">{favorites.length}</span>
+            </div>
+
+            {favoritesExpanded && (
+              <div className="mt-0.5">
+                {favorites.map((fav) => (
+                  <div
+                    key={fav.id}
+                    className={clsx(
+                      'flex items-center gap-2 px-2 py-1 cursor-pointer hover:bg-gray-800 rounded group',
+                      selectedRequestId === fav.id && 'bg-gray-800'
+                    )}
+                    style={{ paddingLeft: '24px' }}
+                    onClick={() => {
+                      openRequestTab(fav.id, fav.name, fav.method)
+                      setSelectedFolderId(null)
+                      setCurrentRequest(null)
+                    }}
+                  >
+                    <MethodBadge method={fav.method} />
+                    <span className="flex-1 truncate text-sm">{fav.name}</span>
+                    <span className="text-[10px] text-gray-600 truncate max-w-[80px]" title={fav.folderName}>
+                      {fav.folderName}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleFavorite.mutate({ id: fav.id, isFavorite: false })
+                      }}
+                      className="p-0.5 text-yellow-400 opacity-0 group-hover:opacity-100 hover:text-yellow-500 rounded transition-opacity"
+                      title={t('sidebar.removeFromFavorites')}
+                    >
+                      <Star className="w-3 h-3 fill-current" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="mx-3 my-1 border-b border-gray-700/50" />
+          </div>
+        )}
+
         {folders.length === 0 ? (
           <div className="px-4 py-8 text-center text-gray-500 text-sm">
             <p>{t('sidebar.noCollections')}</p>

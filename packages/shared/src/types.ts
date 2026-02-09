@@ -166,6 +166,7 @@ export interface Request {
   followRedirects: 'inherit' | 'true' | 'false'
   verifySsl: 'inherit' | 'true' | 'false'
   proxy: string | null
+  isFavorite?: boolean
   folderId: string
   sortOrder: number
   createdAt: Date

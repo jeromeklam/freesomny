@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.4.1'
+export const APP_VERSION = '0.5.2'
 
 export interface ChangelogEntry {
   version: string
@@ -7,6 +7,36 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.5.2',
+    date: '2026-02-09',
+    changes: [
+      'Kit de déploiement autonome : tarball sans pnpm/npm/prisma sur le serveur cible',
+      'Utilisation de `pnpm deploy --prod` pour un node_modules complet et plat',
+      'Patch automatique du schéma Prisma (SQLite → PostgreSQL + binaryTargets Linux)',
+      'Import paresseux de isolated-vm pour compatibilité multi-plateforme',
+      'Migrations PostgreSQL via psql direct (plus besoin de prisma CLI en production)',
+    ],
+  },
+  {
+    version: '0.5.1',
+    date: '2026-02-09',
+    changes: [
+      'Correction du déploiement : utilisation de Prisma local (5.x) au lieu de npx (7.x) dans install.sh',
+      'Ajout du script de migration PostgreSQL pour les favoris (migrate-postgresql-favorites.sql)',
+    ],
+  },
+  {
+    version: '0.5.0',
+    date: '2026-02-09',
+    changes: [
+      'Favoris : marquer les requêtes comme favorites avec une étoile',
+      'Section « FAVORIS » repliable dans le panneau latéral au-dessus des collections',
+      'Ajout/retrait des favoris via l\'icône étoile ou le menu contextuel',
+      'Nom de la collection affiché à côté de chaque favori',
+      'Nettoyage automatique des lignes vides dans les en-têtes et paramètres',
+    ],
+  },
   {
     version: '0.4.1',
     date: '2026-02-09',

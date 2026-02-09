@@ -73,6 +73,7 @@ export async function folderRoutes(fastify: FastifyInstance) {
       authConfig: parseAuthConfig(f.authConfig),
       requests: f.requests.map(r => ({
         ...r,
+        isFavorite: 'isFavorite' in r ? r.isFavorite : false,
         headers: stripAuthHeader(parseHeaders(r.headers), r.authType),
         queryParams: parseQueryParams(r.queryParams),
         authConfig: parseAuthConfig(r.authConfig),

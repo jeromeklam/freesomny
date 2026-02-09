@@ -25,7 +25,10 @@
     "search": "Rechercher",
     "searchPlaceholder": "Filtrer collections / requêtes...",
     "clearSearch": "Effacer la recherche",
-    "noResults": "Aucune collection ou requête correspondante."
+    "noResults": "Aucune collection ou requête correspondante.",
+    "favorites": "FAVORIS",
+    "addToFavorites": "Ajouter aux favoris",
+    "removeFromFavorites": "Retirer des favoris"
   },
   "request": {
     "selectRequest": "Sélectionnez une requête dans la barre latérale pour commencer",

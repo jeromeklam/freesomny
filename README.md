@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.4.1-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-0.5.2-blue" alt="Version" />
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License" />
   <img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen" alt="Node" />
   <img src="https://img.shields.io/badge/typescript-strict-blue" alt="TypeScript" />
@@ -35,6 +35,7 @@ Can be deployed as a **shared team server** (Node.js + PostgreSQL) or run **stan
 
 **Core**
 - Collections with nested folders and drag & drop reordering
+- **Favorites**: star requests to pin them in a collapsible "FAVORITES" section at the top of the sidebar
 - **Search bar**: filter collections and requests by name — toggle with search icon, auto-expands matches
 - Full HTTP client: all methods, headers, params, body (JSON, form-data, raw, JSON:API)
 - Environment variables with `{{variable}}` interpolation and syntax highlighting

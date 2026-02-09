@@ -25,7 +25,10 @@
     "search": "Search",
     "searchPlaceholder": "Filter collections / requests...",
     "clearSearch": "Clear search",
-    "noResults": "No matching collections or requests."
+    "noResults": "No matching collections or requests.",
+    "favorites": "FAVORITES",
+    "addToFavorites": "Add to Favorites",
+    "removeFromFavorites": "Remove from Favorites"
   },
   "request": {
     "selectRequest": "Select a request from the sidebar to get started",

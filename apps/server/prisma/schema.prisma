@@ -163,6 +163,8 @@ model Request {
   verifySsl       String   @default("inherit")
   proxy           String?
 
+  isFavorite Boolean  @default(false)
+
   folderId  String
   folder    Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
   sortOrder Int      @default(0)

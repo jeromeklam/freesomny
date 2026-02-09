@@ -16,6 +16,36 @@ function stripAuthHeader(headers: KeyValueItem[], authType: string): KeyValueIte
 }
 
 export async function requestRoutes(fastify: FastifyInstance) {
+  // Get favorite requests (must be before :id route)
+  fastify.get('/api/requests/favorites', async () => {
+    try {
+      const favorites = await prisma.request.findMany({
+        where: { isFavorite: true },
+        orderBy: { updatedAt: 'desc' },
+        include: {
+          folder: {
+            select: { id: true, name: true },
+          },
+        },
+      })
+
+      return {
+        data: favorites.map(r => ({
+          id: r.id,
+          name: r.name,
+          method: r.method,
+          isFavorite: true,
+          folderId: r.folderId,
+          folderName: r.folder?.name ?? '',
+        })),
+      }
+    } catch (err) {
+      // Backwards-compat: if isFavorite column doesn't exist yet
+      fastify.log.warn({ err }, 'Failed to fetch favorites (isFavorite column may not exist)')
+      return { data: [] }
+    }
+  })
+
   // Get single request
   fastify.get<{ Params: { id: string } }>('/api/requests/:id', async (request) => {
     const req = await prisma.request.findUnique({
@@ -63,6 +93,7 @@ export async function requestRoutes(fastify: FastifyInstance) {
         followRedirects: data.followRedirects,
         verifySsl: data.verifySsl,
         proxy: data.proxy,
+        isFavorite: data.isFavorite,
         folderId: data.folderId,
         sortOrder: data.sortOrder,
       },
@@ -106,6 +137,7 @@ export async function requestRoutes(fastify: FastifyInstance) {
     if (data.verifySsl !== undefined) updateData.verifySsl = data.verifySsl
     if (data.proxy !== undefined) updateData.proxy = data.proxy
     if (data.sortOrder !== undefined) updateData.sortOrder = data.sortOrder
+    if (data.isFavorite !== undefined) updateData.isFavorite = data.isFavorite
 
     // Auto-sync Authorization header ↔ Auth config
     if (data.headers && Array.isArray(data.headers)) {

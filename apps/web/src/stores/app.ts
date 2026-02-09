@@ -85,6 +85,8 @@ interface AppState {
   setResponseTab: (tab: AppState['responseTab']) => void
   sidebarWidth: number
   setSidebarWidth: (width: number) => void
+  favoritesExpanded: boolean
+  setFavoritesExpanded: (expanded: boolean) => void
   showHistory: boolean
   setShowHistory: (show: boolean) => void
   showSettings: boolean
@@ -259,6 +261,8 @@ export const useAppStore = create<AppState>()(
       setResponseTab: (tab) => set({ responseTab: tab }),
       sidebarWidth: 280,
       setSidebarWidth: (width) => set({ sidebarWidth: width }),
+      favoritesExpanded: true,
+      setFavoritesExpanded: (expanded) => set({ favoritesExpanded: expanded }),
       showHistory: false,
       setShowHistory: (show) => set({ showHistory: show }),
       showSettings: false,
@@ -285,6 +289,7 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         language: state.language,
         sidebarWidth: state.sidebarWidth,
+        favoritesExpanded: state.favoritesExpanded,
         sendMode: state.sendMode,
         selectedAgentId: state.selectedAgentId,
       }),

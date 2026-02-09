@@ -319,7 +319,14 @@ export function RequestBuilder() {
     saveTimerRef.current = setTimeout(() => {
       const current = localRequestRef.current
       if (!current || !selectedRequestId) return
-      updateRequest.mutate({ id: selectedRequestId, data: current })
+      // Strip empty key-value items before saving
+      const cleaned = {
+        ...current,
+        headers: current.headers?.filter((h: { key: string; value: string }) => h.key || h.value),
+        queryParams: current.queryParams?.filter((p: { key: string; value: string }) => p.key || p.value),
+      }
+      localRequestRef.current = cleaned
+      updateRequest.mutate({ id: selectedRequestId, data: cleaned })
     }, 0)
   }, [selectedRequestId, updateRequest])
 

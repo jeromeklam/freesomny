@@ -170,6 +170,7 @@ export const createRequestSchema = z.object({
   followRedirects: inheritBoolSchema,
   verifySsl: inheritBoolSchema,
   proxy: z.string().nullable().default(null),
+  isFavorite: z.boolean().default(false),
   folderId: z.string(),
   sortOrder: z.number().default(0),
 })
