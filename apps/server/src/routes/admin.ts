@@ -274,6 +274,10 @@ export async function adminRoutes(fastify: FastifyInstance) {
           where: { parentId: null },
           orderBy: { name: 'asc' },
         },
+        environments: {
+          select: { id: true, name: true },
+          orderBy: { name: 'asc' },
+        },
         _count: {
           select: { folders: true, environments: true },
         },
@@ -448,6 +452,33 @@ export async function adminRoutes(fastify: FastifyInstance) {
 
       await logAudit('group.folder_removed', currentUser?.id || null, request.params.id, {
         folderName: folder.name,
+      })
+
+      return { data: { success: true } }
+    }
+  )
+
+  // Remove environment from group (admin)
+  fastify.delete<{ Params: { id: string; environmentId: string } }>(
+    '/api/admin/groups/:id/environments/:environmentId',
+    async (request, reply) => {
+      const environment = await prisma.environment.findUnique({
+        where: { id: request.params.environmentId },
+      })
+
+      if (!environment || environment.groupId !== request.params.id) {
+        return reply.status(404).send({ error: 'Environment not found in this group' })
+      }
+
+      const currentUser = getCurrentUser(request)
+
+      await prisma.environment.update({
+        where: { id: request.params.environmentId },
+        data: { groupId: null, userId: currentUser?.id || environment.userId },
+      })
+
+      await logAudit('group.environment_removed', currentUser?.id || null, request.params.id, {
+        environmentName: environment.name,
       })
 
       return { data: { success: true } }

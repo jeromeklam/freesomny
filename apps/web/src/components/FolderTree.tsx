@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react'
-import { ChevronRight, ChevronDown, Folder, FolderOpen, FileJson, Plus, MoreVertical, Trash2, Edit2, GripVertical, Copy, ArrowUpFromLine, ArrowDownFromLine, Users } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { ChevronRight, ChevronDown, Folder, FolderOpen, FileJson, Plus, MoreVertical, Trash2, Edit2, Pencil, GripVertical, Copy, ArrowUpFromLine, ArrowDownFromLine, Users } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
-import { useCreateFolder, useCreateRequest, useDeleteFolder, useDeleteRequest, useDuplicateRequest, useReorderFolder, useReorderRequest } from '../hooks/useApi'
+import { useCreateFolder, useCreateRequest, useDeleteFolder, useDeleteRequest, useDuplicateRequest, useUpdateRequest, useReorderFolder, useReorderRequest } from '../hooks/useApi'
 import { useTranslation } from '../hooks/useTranslation'
 
 interface FolderNode {
@@ -421,19 +421,31 @@ interface RequestItemProps {
 
 function RequestItem({ request, folderId, level, siblingRequests = [], onDragStart, onDragEnd, dragItem }: RequestItemProps) {
   const [showMenu, setShowMenu] = useState(false)
+  const [isRenaming, setIsRenaming] = useState(false)
+  const [renameName, setRenameName] = useState(request.name)
   const [dropTarget, setDropTarget] = useState<'above' | 'below' | null>(null)
   const requestRef = useRef<HTMLDivElement>(null)
+  const renameInputRef = useRef<HTMLInputElement>(null)
 
   const selectedRequestId = useAppStore((s) => s.selectedRequestId)
   const setSelectedFolderId = useAppStore((s) => s.setSelectedFolderId)
   const setCurrentRequest = useAppStore((s) => s.setCurrentRequest)
   const openRequestTab = useAppStore((s) => s.openRequestTab)
+  const updateRequestTabInfo = useAppStore((s) => s.updateRequestTabInfo)
 
   const createRequest = useCreateRequest()
   const deleteRequest = useDeleteRequest()
   const duplicateRequest = useDuplicateRequest()
+  const updateRequest = useUpdateRequest()
   const reorderRequest = useReorderRequest()
   const { t } = useTranslation()
+
+  useEffect(() => {
+    if (isRenaming && renameInputRef.current) {
+      renameInputRef.current.focus()
+      renameInputRef.current.select()
+    }
+  }, [isRenaming])
 
   const handleInsertBefore = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -459,6 +471,29 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
     openRequestTab(request.id, request.name, request.method)
     setSelectedFolderId(null)
     setCurrentRequest(request as unknown as ReturnType<typeof useAppStore.getState>['currentRequest'])
+  }
+
+  const startRename = () => {
+    setRenameName(request.name)
+    setIsRenaming(true)
+    setShowMenu(false)
+  }
+
+  const handleRenameConfirm = () => {
+    const trimmed = renameName.trim()
+    if (trimmed && trimmed !== request.name) {
+      updateRequestTabInfo(request.id, trimmed, request.method)
+      updateRequest.mutate({ id: request.id, data: { name: trimmed } })
+    }
+    setIsRenaming(false)
+  }
+
+  const handleRenameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleRenameConfirm()
+    } else if (e.key === 'Escape') {
+      setIsRenaming(false)
+    }
   }
 
   const handleDragStart = (e: React.DragEvent) => {
@@ -553,7 +588,19 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
         </div>
 
         <MethodBadge method={request.method} />
-        <span className="flex-1 truncate text-sm">{request.name}</span>
+        {isRenaming ? (
+          <input
+            ref={renameInputRef}
+            value={renameName}
+            onChange={(e) => setRenameName(e.target.value)}
+            onBlur={handleRenameConfirm}
+            onKeyDown={handleRenameKeyDown}
+            onClick={(e) => e.stopPropagation()}
+            className="flex-1 min-w-0 text-sm bg-gray-700 border border-blue-500 rounded px-1 py-0 outline-none text-gray-200"
+          />
+        ) : (
+          <span className="flex-1 truncate text-sm" onDoubleClick={(e) => { e.stopPropagation(); startRename() }}>{request.name}</span>
+        )}
 
         <div className="relative opacity-0 group-hover:opacity-100">
           <button
@@ -581,6 +628,15 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
                 <ArrowDownFromLine className="w-4 h-4" /> {t('sidebar.insertAfter')}
               </button>
               <hr className="border-gray-700" />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  startRename()
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
+              >
+                <Pencil className="w-4 h-4" /> {t('sidebar.rename')}
+              </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation()

@@ -261,6 +261,7 @@ export interface AdminGroup {
   _count: { members: number; folders: number; environments: number }
   members?: { id: string; role: string; user: { id: string; email: string; name: string } }[]
   folders?: { id: string; name: string }[]
+  environments?: { id: string; name: string }[]
 }
 
 export interface AuditEntry {
@@ -355,6 +356,10 @@ export const adminApi = {
     }),
   removeGroupFolder: (groupId: string, folderId: string) =>
     request<{ success: boolean }>(`/admin/groups/${groupId}/folders/${folderId}`, {
+      method: 'DELETE',
+    }),
+  removeGroupEnvironment: (groupId: string, environmentId: string) =>
+    request<{ success: boolean }>(`/admin/groups/${groupId}/environments/${environmentId}`, {
       method: 'DELETE',
     }),
 

@@ -15,7 +15,8 @@ A local-first, self-hostable API client for teams. Replaces Postman (paid) and H
 ## TODO — Next Steps
 
 ### Medium Priority
-- [ ] Add request/folder rename inline editing
+- [x] Add request rename inline editing (double-click on tab/sidebar + context menu)
+- [ ] Add folder rename inline editing
 - [ ] Implement drag & drop reordering for folders/requests
 - [ ] Add keyboard shortcuts (Ctrl+Enter to send, Ctrl+S to save, etc.)
 
@@ -24,11 +25,11 @@ A local-first, self-hostable API client for teams. Replaces Postman (paid) and H
 - [ ] Role-based permissions
 
 ### Low Priority / Phase 3
+- [ ] **Tauri integration** — native desktop app for standalone experience
 - [ ] Collection runner (run all requests in sequence)
 - [ ] Visual request chaining + conditional branching
 - [ ] WebSocket support
 - [ ] GraphQL support
-- [ ] Code generation (cURL, Python, JS, Go, etc.)
 - [ ] Command palette (Ctrl+K)
 - [ ] Add export functionality UI (OpenAPI, cURL export buttons)
 
@@ -122,10 +123,11 @@ Key files:
 - **UI**: FolderSettings General tab and EnvironmentModal Settings tab have group assignment dropdowns
 - **FolderTree**: purple badge with Users icon shows group name on group-owned folders
 - **Inherited group**: subfolders of group-owned collections show a dimmer purple badge (inherited); FolderSettings shows inherited group as read-only
-- **Admin Groups tab**: shows Members section + Collections section (list of assigned root folders with remove button)
+- **Admin Groups tab**: shows Members, Collections, and Environments sections (list with remove buttons)
 - **Backend**: `POST /api/groups/:id/folders` (assign), `DELETE /api/groups/:id/folders/:folderId` (unassign)
 - **Backend**: `POST /api/groups/:id/environments` (assign), `DELETE /api/groups/:id/environments/:envId` (unassign)
 - **Admin backend**: `DELETE /api/admin/groups/:id/folders/:folderId` (admin remove folder from group)
+- **Admin backend**: `DELETE /api/admin/groups/:id/environments/:environmentId` (admin remove env from group)
 
 ### Code generation
 - CodeGeneratorModal: cURL, PHP, Python code generation

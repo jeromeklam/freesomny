@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.3.1'
+export const APP_VERSION = '0.4.0'
 
 export interface ChangelogEntry {
   version: string
@@ -7,6 +7,18 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.4.0',
+    date: '2026-02-09',
+    changes: [
+      'Renommage des requêtes : double-clic sur l\'onglet ou dans le panneau latéral',
+      'Option « Renommer » dans le menu contextuel des requêtes',
+      'Administration : gestion des environnements dans l\'onglet Groupes (ajout/retrait)',
+      'Badge groupe hérité (violet atténué) sur les sous-dossiers d\'une collection de groupe',
+      'Administration : gestion des collections dans l\'onglet Groupes (ajout/retrait)',
+      'Support SMTP non authentifié (port 25, relais interne) pour l\'envoi d\'emails',
+    ],
+  },
   {
     version: '0.3.1',
     date: '2026-02-09',

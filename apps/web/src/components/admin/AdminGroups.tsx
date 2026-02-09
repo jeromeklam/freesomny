@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Plus, Trash2, UserPlus, UserMinus, FolderOpen, X, ChevronDown, ChevronRight } from 'lucide-react'
+import { Plus, Trash2, UserPlus, UserMinus, FolderOpen, Globe, X, ChevronDown, ChevronRight } from 'lucide-react'
 import { clsx } from 'clsx'
 import { adminApi, type AdminGroup } from '../../lib/api'
 import { useTranslation } from '../../hooks/useTranslation'
@@ -92,6 +92,13 @@ export function AdminGroups() {
     loadGroups()
   }
 
+  const handleRemoveEnvironment = async (groupId: string, environmentId: string, envName: string) => {
+    if (!window.confirm(t('admin.groups.confirmRemoveEnvironment').replace('{name}', envName))) return
+    await adminApi.removeGroupEnvironment(groupId, environmentId)
+    loadGroupDetails(groupId)
+    loadGroups()
+  }
+
   if (isLoading) {
     return <div className="p-6 text-center text-gray-400">{t('common.loading')}</div>
   }
@@ -174,6 +181,9 @@ export function AdminGroups() {
                   </span>
                   <span className="text-xs text-gray-500">
                     {group._count.folders} {t('admin.groups.folders').toLowerCase()}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {group._count.environments} {t('admin.groups.environments').toLowerCase()}
                   </span>
                   <button
                     onClick={(e) => {
@@ -280,6 +290,33 @@ export function AdminGroups() {
                       ))
                     ) : (
                       <div className="text-xs text-gray-500 italic">{t('admin.groups.noCollections')}</div>
+                    )}
+                  </div>
+
+                  {/* Environments */}
+                  <div className="mt-3 pt-3 border-t border-gray-700">
+                    <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+                      {t('admin.groups.environments')}
+                    </div>
+
+                    {expandedGroup.environments && expandedGroup.environments.length > 0 ? (
+                      expandedGroup.environments.map((env) => (
+                        <div key={env.id} className="flex items-center justify-between py-1 group/env">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Globe className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                            <span className="text-sm text-gray-300 truncate">{env.name}</span>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveEnvironment(group.id, env.id, env.name)}
+                            className="p-1 text-gray-500 hover:text-red-400 opacity-0 group-hover/env:opacity-100"
+                            title={t('admin.groups.removeEnvironment')}
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-xs text-gray-500 italic">{t('admin.groups.noEnvironments')}</div>
                     )}
                   </div>
                 </div>

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.3.1-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-0.4.0-blue" alt="Version" />
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License" />
   <img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen" alt="Node" />
   <img src="https://img.shields.io/badge/typescript-strict-blue" alt="TypeScript" />
@@ -12,6 +12,8 @@
 
 FreeSomnia is a modern alternative to Postman and Hoppscotch, designed for developers who want full control over their API testing workflows. It runs on your own infrastructure — no cloud dependency, no subscription, no telemetry.
 
+Can be deployed as a **shared team server** (Node.js + PostgreSQL) or run **standalone** on a single machine with SQLite (zero configuration).
+
 ---
 
 ## Why FreeSomnia?
@@ -19,6 +21,7 @@ FreeSomnia is a modern alternative to Postman and Hoppscotch, designed for devel
 | | Postman | Hoppscotch | **FreeSomnia** |
 |---|---------|------------|----------------|
 | Self-hosted | Cloud-first | Partial | **Yes, fully** |
+| Standalone mode | No | No | **Yes (SQLite, no setup)** |
 | Team collaboration | Paid plans | Limited | **Built-in groups** |
 | No account required | No | No | **Yes (single-user mode)** |
 | Import from others | - | - | **Postman, Hoppscotch, cURL, OpenAPI** |
@@ -31,9 +34,10 @@ FreeSomnia is a modern alternative to Postman and Hoppscotch, designed for devel
 ## Features
 
 **Core**
-- Collections with nested folders and drag & drop
+- Collections with nested folders and drag & drop reordering
 - Full HTTP client: all methods, headers, params, body (JSON, form-data, raw, JSON:API)
 - Environment variables with `{{variable}}` interpolation and syntax highlighting
+- Inline request rename: double-click on tab or sidebar, or use the context menu
 - Request history and response viewer with syntax highlighting
 
 **Authentication**
@@ -44,8 +48,9 @@ FreeSomnia is a modern alternative to Postman and Hoppscotch, designed for devel
 **Team Collaboration**
 - Groups with roles (owner, admin, member)
 - Shared collections and environments
+- Admin dashboard: manage members, collections, environments per group
 - User registration with email verification + admin approval
-- Admin dashboard with audit log
+- Audit log for tracking all actions
 
 **Developer Experience**
 - Code generation: cURL, PHP, Python (with inherited headers & auth)
@@ -55,9 +60,10 @@ FreeSomnia is a modern alternative to Postman and Hoppscotch, designed for devel
 - Folder inheritance: headers, params, auth, base URL cascade from parent to child
 
 **Deployment**
+- **Standalone**: run with SQLite, zero configuration, single binary-like experience
+- **Team server**: Node.js + PostgreSQL with systemd service
 - Single `tar.gz` deployment kit (~900KB)
-- Systemd service + Nginx reverse proxy ready
-- SQLite (single-user) or PostgreSQL (team mode)
+- Nginx reverse proxy ready + Let's Encrypt SSL
 - Automated install script with PostgreSQL migration support
 
 ---
@@ -66,8 +72,8 @@ FreeSomnia is a modern alternative to Postman and Hoppscotch, designed for devel
 
 ```bash
 # Clone and install
-git clone https://github.com/user/freesomnia.git
-cd freesomnia
+git clone https://github.com/jeromeklam/freesomny.git
+cd freesomny
 pnpm install
 
 # Configure
@@ -88,7 +94,7 @@ Open [http://localhost:5173](http://localhost:5173)
 |-------|-----------|
 | Frontend | React 19, Vite, Tailwind CSS 4 |
 | Backend | Node.js, Fastify, Prisma |
-| Database | SQLite (dev) / PostgreSQL (prod) |
+| Database | SQLite (standalone) / PostgreSQL (team) |
 | Auth | JWT, bcryptjs |
 | Language | TypeScript (strict mode) |
 | Monorepo | pnpm workspaces + Turborepo |
@@ -180,6 +186,16 @@ npx freesomnia-agent --server https://freesomnia.yourdomain.com \
 ```
 
 The agent appears in the send mode dropdown and all requests are executed locally.
+
+---
+
+## Roadmap
+
+- [ ] **Tauri integration** — native desktop app (macOS, Linux, Windows) with embedded backend for true standalone experience
+- [ ] Collection runner (run all requests in sequence)
+- [ ] WebSocket & GraphQL support
+- [ ] Visual request chaining + conditional branching
+- [ ] Command palette (Ctrl+K)
 
 ---
 
