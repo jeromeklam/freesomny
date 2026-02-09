@@ -74,6 +74,13 @@ freesomnia/
 
 ## Core features
 
+### Collection search
+- Search bar in sidebar header: toggleable via Search icon, filters collections and requests by name
+- Recursive filter: shows matching folders/requests and their parent chain
+- Auto-expands all folders that contain matches when search is active
+- Clear button (X) to reset and show full tree again
+- Escape key also clears and hides the search bar
+
 ### Folder inheritance
 Settings merge from root → leaf → request:
 - headers/queryParams: deep merge by key

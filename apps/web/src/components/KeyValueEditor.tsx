@@ -57,7 +57,7 @@ export interface InheritedKeyValueItem {
 interface KeyValueEditorProps {
   items: KeyValueItem[]
   onChange: (items: KeyValueItem[]) => void
-  onBlur?: () => void
+  onBlur?: (items?: KeyValueItem[]) => void
   placeholder?: string
   showDescription?: boolean
   variables?: VariableInfo[]
@@ -170,8 +170,9 @@ export function KeyValueEditor({
   }
 
   const handleRemove = (index: number) => {
-    onChange(items.filter((_, i) => i !== index))
-    onBlur?.()
+    const newItems = items.filter((_, i) => i !== index)
+    onChange(newItems)
+    onBlur?.(newItems)
   }
 
   const handleChange = (index: number, field: keyof KeyValueItem, value: string | boolean) => {
@@ -363,7 +364,7 @@ export function KeyValueEditor({
                       const newItems = [...items]
                       newItems[index] = { ...newItems[index], singleKey: !newItems[index].singleKey }
                       onChange(newItems)
-                      onBlur?.()
+                      onBlur?.(newItems)
                     }}
                     className={clsx(
                       'p-1 text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity',
@@ -377,7 +378,7 @@ export function KeyValueEditor({
                   </button>
                   <button
                     onClick={() => handleRemove(index)}
-                    className="p-1 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100"
+                    className="p-1 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

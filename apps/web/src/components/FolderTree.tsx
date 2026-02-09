@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
-import { ChevronRight, ChevronDown, Folder, FolderOpen, FileJson, Plus, MoreVertical, Trash2, Edit2, Pencil, GripVertical, Copy, ArrowUpFromLine, ArrowDownFromLine, Users } from 'lucide-react'
+import { useState, useRef, useEffect, useMemo } from 'react'
+import { ChevronRight, ChevronDown, Folder, FolderOpen, FileJson, Plus, MoreVertical, Trash2, Edit2, Pencil, GripVertical, Copy, ArrowUpFromLine, ArrowDownFromLine, Users, Search, X } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
 import { useCreateFolder, useCreateRequest, useDeleteFolder, useDeleteRequest, useDuplicateRequest, useUpdateRequest, useReorderFolder, useReorderRequest } from '../hooks/useApi'
@@ -52,9 +52,10 @@ interface FolderItemProps {
   onDragStart: (item: DragItem) => void
   onDragEnd: () => void
   dragItem: DragItem | null
+  searchExpandedIds?: Set<string> | null
 }
 
-function FolderItem({ folder, level = 0, parentId, siblingFolders = [], inheritedGroup, onDragStart, onDragEnd, dragItem }: FolderItemProps) {
+function FolderItem({ folder, level = 0, parentId, siblingFolders = [], inheritedGroup, onDragStart, onDragEnd, dragItem, searchExpandedIds }: FolderItemProps) {
   const [showMenu, setShowMenu] = useState(false)
   const [dropTarget, setDropTarget] = useState<'above' | 'inside' | 'below' | null>(null)
   const folderRef = useRef<HTMLDivElement>(null)
@@ -75,7 +76,7 @@ function FolderItem({ folder, level = 0, parentId, siblingFolders = [], inherite
   const reorderRequest = useReorderRequest()
   const { t } = useTranslation()
 
-  const isExpanded = expandedFolders.has(folder.id)
+  const isExpanded = searchExpandedIds ? searchExpandedIds.has(folder.id) : expandedFolders.has(folder.id)
   const isSelected = selectedFolderId === folder.id
   const isDragging = dragItem?.type === 'folder' && dragItem.id === folder.id
 
@@ -388,6 +389,7 @@ function FolderItem({ folder, level = 0, parentId, siblingFolders = [], inherite
               onDragStart={onDragStart}
               onDragEnd={onDragEnd}
               dragItem={dragItem}
+              searchExpandedIds={searchExpandedIds}
             />
           ))}
 
@@ -676,10 +678,52 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
   )
 }
 
+// Recursively filter folder tree: keep folders/requests whose name matches the search term,
+// and keep any parent folder that has matching descendants
+function filterFolderTree(folders: FolderNode[], term: string): FolderNode[] {
+  const lower = term.toLowerCase()
+
+  function filterNode(folder: FolderNode): FolderNode | null {
+    const nameMatch = folder.name.toLowerCase().includes(lower)
+    const filteredChildren = folder.children
+      .map(filterNode)
+      .filter((c): c is FolderNode => c !== null)
+    const filteredRequests = folder.requests.filter((r) =>
+      r.name.toLowerCase().includes(lower)
+    )
+
+    // Keep folder if its name matches, or if it has matching children/requests
+    if (nameMatch || filteredChildren.length > 0 || filteredRequests.length > 0) {
+      return {
+        ...folder,
+        children: nameMatch ? folder.children : filteredChildren,
+        requests: nameMatch ? folder.requests : filteredRequests,
+      }
+    }
+    return null
+  }
+
+  return folders.map(filterNode).filter((f): f is FolderNode => f !== null)
+}
+
+// Collect all folder IDs in a tree (for auto-expand when searching)
+function collectFolderIds(folders: FolderNode[]): Set<string> {
+  const ids = new Set<string>()
+  function walk(folder: FolderNode) {
+    ids.add(folder.id)
+    folder.children.forEach(walk)
+  }
+  folders.forEach(walk)
+  return ids
+}
+
 export function FolderTree() {
   const folders = useAppStore((s) => s.folders)
   const createFolder = useCreateFolder()
   const [dragItem, setDragItem] = useState<DragItem | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [showSearch, setShowSearch] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const { t } = useTranslation()
 
   const handleDragStart = (item: DragItem) => {
@@ -690,18 +734,74 @@ export function FolderTree() {
     setDragItem(null)
   }
 
+  // Filter folders when searching
+  const filteredFolders = useMemo(() => {
+    if (!searchTerm.trim()) return folders as unknown as FolderNode[]
+    return filterFolderTree(folders as unknown as FolderNode[], searchTerm.trim())
+  }, [folders, searchTerm])
+
+  // Auto-expand all filtered folders when searching
+  const searchExpandedIds = useMemo(() => {
+    if (!searchTerm.trim()) return null
+    return collectFolderIds(filteredFolders)
+  }, [filteredFolders, searchTerm])
+
+  useEffect(() => {
+    if (showSearch && searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+  }, [showSearch])
+
+  const handleClearSearch = () => {
+    setSearchTerm('')
+    setShowSearch(false)
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-3 py-2 border-b border-gray-700">
         <span className="text-sm font-medium text-gray-400">{t('sidebar.collections')}</span>
-        <button
-          onClick={() => createFolder.mutate({ name: 'New Collection', parentId: null })}
-          className="p-1 hover:bg-gray-700 rounded"
-          title={t('sidebar.newCollection')}
-        >
-          <Plus className="w-4 h-4 text-gray-400" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setShowSearch(!showSearch)}
+            className={clsx('p-1 hover:bg-gray-700 rounded', showSearch && 'bg-gray-700')}
+            title={t('sidebar.search')}
+          >
+            <Search className="w-4 h-4 text-gray-400" />
+          </button>
+          <button
+            onClick={() => createFolder.mutate({ name: 'New Collection', parentId: null })}
+            className="p-1 hover:bg-gray-700 rounded"
+            title={t('sidebar.newCollection')}
+          >
+            <Plus className="w-4 h-4 text-gray-400" />
+          </button>
+        </div>
       </div>
+
+      {showSearch && (
+        <div className="flex items-center gap-1 px-2 py-1.5 border-b border-gray-700">
+          <Search className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape') handleClearSearch() }}
+            placeholder={t('sidebar.searchPlaceholder')}
+            className="flex-1 min-w-0 bg-transparent text-sm text-gray-200 placeholder-gray-500 outline-none"
+          />
+          {searchTerm && (
+            <button
+              onClick={handleClearSearch}
+              className="p-0.5 hover:bg-gray-700 rounded"
+              title={t('sidebar.clearSearch')}
+            >
+              <X className="w-3.5 h-3.5 text-gray-400" />
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="flex-1 overflow-auto py-2">
         {folders.length === 0 ? (
@@ -714,16 +814,21 @@ export function FolderTree() {
               {t('sidebar.createFirst')}
             </button>
           </div>
+        ) : filteredFolders.length === 0 ? (
+          <div className="px-4 py-4 text-center text-gray-500 text-sm">
+            {t('sidebar.noResults')}
+          </div>
         ) : (
-          folders.map((folder) => (
+          filteredFolders.map((folder) => (
             <FolderItem
               key={folder.id}
               folder={folder as unknown as FolderNode}
               parentId={null}
-              siblingFolders={folders as unknown as FolderNode[]}
+              siblingFolders={filteredFolders as unknown as FolderNode[]}
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
               dragItem={dragItem}
+              searchExpandedIds={searchExpandedIds}
             />
           ))
         )}

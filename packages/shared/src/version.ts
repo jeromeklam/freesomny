@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.4.0'
+export const APP_VERSION = '0.4.1'
 
 export interface ChangelogEntry {
   version: string
@@ -7,6 +7,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.4.1',
+    date: '2026-02-09',
+    changes: [
+      'Barre de recherche dans le panneau latéral : filtrage des collections et requêtes par nom',
+      'Correction de la suppression des en-têtes dans les paramètres de dossier (race condition)',
+      'Correction de la visibilité du bouton poubelle sur les en-têtes',
+    ],
+  },
   {
     version: '0.4.0',
     date: '2026-02-09',

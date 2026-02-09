@@ -203,16 +203,16 @@ export function FolderSettings() {
     setHeaders(newHeaders)
   }
 
-  const handleHeadersBlur = () => {
-    handleSave('headers', headers)
+  const handleHeadersBlur = (updatedHeaders?: KeyValueItem[]) => {
+    handleSave('headers', updatedHeaders ?? headers)
   }
 
   const handleParamsChange = (newParams: KeyValueItem[]) => {
     setQueryParams(newParams)
   }
 
-  const handleParamsBlur = () => {
-    handleSave('queryParams', queryParams)
+  const handleParamsBlur = (updatedParams?: KeyValueItem[]) => {
+    handleSave('queryParams', updatedParams ?? queryParams)
   }
 
   const handleAuthTypeChange = (newType: AuthType) => {

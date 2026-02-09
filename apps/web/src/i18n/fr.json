@@ -21,7 +21,11 @@
     "insertAfter": "Insérer après",
     "delete": "Supprimer",
     "confirmDeleteFolder": "Supprimer le dossier « {name} » et tout son contenu ?",
-    "confirmDeleteRequest": "Supprimer la requête « {name} » ?"
+    "confirmDeleteRequest": "Supprimer la requête « {name} » ?",
+    "search": "Rechercher",
+    "searchPlaceholder": "Filtrer collections / requêtes...",
+    "clearSearch": "Effacer la recherche",
+    "noResults": "Aucune collection ou requête correspondante."
   },
   "request": {
     "selectRequest": "Sélectionnez une requête dans la barre latérale pour commencer",

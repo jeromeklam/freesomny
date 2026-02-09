@@ -21,7 +21,11 @@
     "insertAfter": "Insert After",
     "delete": "Delete",
     "confirmDeleteFolder": "Delete folder \"{name}\" and all its contents?",
-    "confirmDeleteRequest": "Delete request \"{name}\"?"
+    "confirmDeleteRequest": "Delete request \"{name}\"?",
+    "search": "Search",
+    "searchPlaceholder": "Filter collections / requests...",
+    "clearSearch": "Clear search",
+    "noResults": "No matching collections or requests."
   },
   "request": {
     "selectRequest": "Select a request from the sidebar to get started",
