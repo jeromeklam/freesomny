@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Trash2, AlertTriangle } from 'lucide-react'
+import { Plus, Trash2, AlertTriangle, ArrowDown } from 'lucide-react'
 import { clsx } from 'clsx'
 import type { KeyValueItem } from '@api-client/shared'
 import { useTranslation } from '../hooks/useTranslation'
@@ -42,6 +42,7 @@ interface VariableInfo {
   key: string
   value: string
   source?: string
+  isSecret?: boolean
 }
 
 export interface InheritedKeyValueItem {
@@ -79,7 +80,7 @@ function resolveText(text: string, variables: VariableInfo[]): { hasVars: boolea
     }
     const varName = match[1].trim()
     const found = variables.find((v) => v.key === varName)
-    const isSecret = /secret|password|token|key/i.test(varName)
+    const isSecret = found?.isSecret || /secret|password|token|key/i.test(varName)
     if (found) {
       segments.push({ text: isSecret ? '••••••••' : (found.value || '<empty>'), type: 'resolved', source: found.source })
     } else {
@@ -131,6 +132,20 @@ export function KeyValueEditor({
   showInherited = false,
 }: KeyValueEditorProps) {
   const { t } = useTranslation()
+
+  // Detect which inherited keys are overridden by local items
+  const overriddenKeys = new Set(
+    items.filter(i => i.key).map(i => i.key.toLowerCase())
+  )
+
+  // Detect which local items override an inherited one
+  const inheritedKeyMap = new Map(
+    inheritedItems.map(i => [i.key.toLowerCase(), i])
+  )
+
+  const handleOverride = (inheritedItem: InheritedKeyValueItem) => {
+    onChange([...items, { key: inheritedItem.key, value: inheritedItem.value, description: '', enabled: true }])
+  }
 
   // Compute duplicate key warnings: keys marked singleKey that appear more than once
   const duplicateKeys = new Set<string>()
@@ -184,8 +199,11 @@ export function KeyValueEditor({
               {inheritedItems.map((item, index) => {
                 const isAuthGenerated = item.sourceFolderName.startsWith('auth:')
                 const displaySource = isAuthGenerated ? item.sourceFolderName.slice(5) : item.sourceFolderName
+                const isOverridden = overriddenKeys.has(item.key.toLowerCase())
                 return (
-                  <tr key={`inherited-${index}`} className={isAuthGenerated ? 'opacity-70' : 'opacity-50'}>
+                  <tr key={`inherited-${index}`} className={clsx(
+                    isOverridden ? 'opacity-30' : isAuthGenerated ? 'opacity-70' : 'opacity-50'
+                  )}>
                     <td className="py-1 pr-2">
                       <input
                         type="checkbox"
@@ -201,11 +219,13 @@ export function KeyValueEditor({
                         disabled
                         className={clsx(
                           'w-full px-2 py-1.5 rounded text-sm cursor-not-allowed',
+                          isOverridden && 'line-through',
                           isAuthGenerated
                             ? 'bg-blue-900/20 border border-blue-700/30 text-blue-400'
                             : 'bg-gray-800/50 border border-gray-700/50 text-gray-500'
                         )}
                       />
+                      {variables.length > 0 && <VariablePreview text={item.key} variables={variables} />}
                     </td>
                     <td className="py-1 pr-2">
                       <input
@@ -214,26 +234,43 @@ export function KeyValueEditor({
                         disabled
                         className={clsx(
                           'w-full px-2 py-1.5 rounded text-sm font-mono cursor-not-allowed',
+                          isOverridden && 'line-through',
                           isAuthGenerated
                             ? 'bg-blue-900/20 border border-blue-700/30 text-blue-400'
                             : 'bg-gray-800/50 border border-gray-700/50 text-gray-500'
                         )}
                       />
+                      {variables.length > 0 && <VariablePreview text={item.value} variables={variables} />}
                     </td>
                     {showDescription && (
                       <td className="py-1 pr-2">
-                        <span className={clsx(
-                          'inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded',
-                          isAuthGenerated
-                            ? 'bg-blue-900/40 text-blue-400 border border-blue-700/50'
-                            : 'bg-gray-700/60 text-gray-400'
-                        )}>
-                          {displaySource}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <span className={clsx(
+                            'inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded',
+                            isAuthGenerated
+                              ? 'bg-blue-900/40 text-blue-400 border border-blue-700/50'
+                              : 'bg-gray-700/60 text-gray-400'
+                          )}>
+                            {displaySource}
+                          </span>
+                          {isOverridden && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded bg-orange-900/40 text-orange-400 border border-orange-700/50">
+                              {t('keyValue.overridden')}
+                            </span>
+                          )}
+                        </div>
                       </td>
                     )}
                     <td className="py-1">
-                      {/* No delete button for inherited items */}
+                      {!isAuthGenerated && !isOverridden && (
+                        <button
+                          onClick={() => handleOverride(item)}
+                          className="p-1 text-gray-500 hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title={t('keyValue.override')}
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 )
@@ -247,8 +284,11 @@ export function KeyValueEditor({
           )}
 
           {/* Editable items */}
-          {items.map((item, index) => (
-            <tr key={index} className="group">
+          {items.map((item, index) => {
+            const overridesInherited = item.key && inheritedKeyMap.has(item.key.toLowerCase())
+            const inheritedSource = overridesInherited ? inheritedKeyMap.get(item.key.toLowerCase()) : null
+            return (
+            <tr key={index} className={clsx('group', overridesInherited && 'border-l-2 border-l-orange-500')}>
               <td className="py-1 pr-2">
                 <input
                   type="checkbox"
@@ -304,6 +344,11 @@ export function KeyValueEditor({
                       !item.enabled && 'opacity-50'
                     )}
                   />
+                  {overridesInherited && inheritedSource && (
+                    <span className="inline-flex items-center mt-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded bg-orange-900/30 text-orange-400 border border-orange-700/50">
+                      {t('keyValue.overrides')}: {inheritedSource.sourceFolderName}
+                    </span>
+                  )}
                 </td>
               )}
               <td className="py-1">
@@ -339,7 +384,7 @@ export function KeyValueEditor({
                 </div>
               </td>
             </tr>
-          ))}
+          )})}
         </tbody>
       </table>
 

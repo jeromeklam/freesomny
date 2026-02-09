@@ -1,6 +1,7 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import fastifyJwt from '@fastify/jwt'
+import fastifyWebsocket from '@fastify/websocket'
 import fastifyStatic from '@fastify/static'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
@@ -16,6 +17,7 @@ import { settingsRoutes } from './routes/settings.js'
 import { importRoutes } from './routes/import.js'
 import { groupRoutes } from './routes/groups.js'
 import { adminRoutes } from './routes/admin.js'
+import { agentRoutes } from './routes/agents.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -40,6 +42,9 @@ async function main() {
     },
   })
 
+  // WebSocket support (for agent connections)
+  await fastify.register(fastifyWebsocket)
+
   // API routes
   await fastify.register(authRoutes)
   await fastify.register(folderRoutes)
@@ -51,6 +56,7 @@ async function main() {
   await fastify.register(importRoutes)
   await fastify.register(groupRoutes)
   await fastify.register(adminRoutes)
+  await fastify.register(agentRoutes)
 
   // Serve static files in production
   const webDistPath = join(__dirname, '../../web/dist')

@@ -1,11 +1,11 @@
 import type { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma.js'
 import { createRequestSchema, updateRequestSchema, reorderSchema } from '@api-client/shared'
-import type { KeyValueItem } from '@api-client/shared'
+import type { KeyValueItem, HttpResponse } from '@api-client/shared'
 import { parseHeaders, parseQueryParams, parseAuthConfig, stringifyJson } from '../lib/json.js'
 import { resolveRequest, getResolvedView, getInheritedContext } from '../services/inheritance.js'
 import { extractAuthFromHeaders } from '@api-client/import-export'
-import { executeRequest } from '../services/http-engine.js'
+import { executeRequest, prepareRequest } from '../services/http-engine.js'
 import { resolveVariables, getActiveEnvironment } from '../services/environment.js'
 import { executeScripts } from '../scripting/sandbox.js'
 
@@ -271,7 +271,7 @@ export async function requestRoutes(fastify: FastifyInstance) {
   )
 
   // Send request
-  fastify.post<{ Params: { id: string }; Querystring: { environmentId?: string } }>(
+  fastify.post<{ Params: { id: string }; Querystring: { environmentId?: string; via?: string; agentId?: string } }>(
     '/api/requests/:id/send',
     async (request) => {
       try {
@@ -333,17 +333,42 @@ export async function requestRoutes(fastify: FastifyInstance) {
           if (mods.body !== undefined) currentRequest.body = mods.body
         }
 
-        // Execute HTTP request
-        const httpResponse = await executeRequest(
-          {
-            ...resolved,
-            url: currentRequest.url,
-            method: currentRequest.method,
-            headers: currentRequest.headers,
-            body: currentRequest.body,
-          },
-          { environmentId }
-        )
+        // Execute HTTP request (via agent or server)
+        let httpResponse
+        if (request.query.via === 'agent' && request.query.agentId) {
+          const { agentManager } = await import('../services/agent-manager.js')
+          // Prepare the request (interpolate vars, apply auth) then send to agent
+          const prepared = await prepareRequest(
+            {
+              ...resolved,
+              url: currentRequest.url,
+              method: currentRequest.method,
+              headers: currentRequest.headers,
+              body: currentRequest.body,
+            },
+            { environmentId }
+          )
+          httpResponse = await agentManager.sendRequest(request.query.agentId, {
+            method: prepared.method,
+            url: prepared.url,
+            headers: prepared.headers,
+            body: prepared.body,
+            timeout: resolved.timeout,
+            followRedirects: resolved.followRedirects,
+            verifySsl: resolved.verifySsl,
+          })
+        } else {
+          httpResponse = await executeRequest(
+            {
+              ...resolved,
+              url: currentRequest.url,
+              method: currentRequest.method,
+              headers: currentRequest.headers,
+              body: currentRequest.body,
+            },
+            { environmentId }
+          )
+        }
 
         // Run post-response scripts
         const postScriptResult = await executeScripts(
@@ -425,6 +450,234 @@ export async function requestRoutes(fastify: FastifyInstance) {
         }
       } catch (error) {
         return { error: error instanceof Error ? error.message : 'Failed to send request' }
+      }
+    }
+  )
+
+  // Prepare request for browser-side or agent execution (resolve + pre-scripts, no HTTP execution)
+  fastify.post<{ Params: { id: string }; Querystring: { environmentId?: string } }>(
+    '/api/requests/:id/prepare',
+    async (request) => {
+      try {
+        const resolved = await resolveRequest(request.params.id)
+
+        let environmentId = request.query.environmentId
+        if (!environmentId) {
+          const activeEnv = await getActiveEnvironment()
+          environmentId = activeEnv?.id
+        }
+
+        const envVars = environmentId
+          ? await resolveVariables(environmentId)
+          : new Map<string, { key: string; value: string; source: 'team' | 'local' | 'dynamic'; isSecret: boolean }>()
+
+        const envMap = new Map<string, string>()
+        for (const [key, { value }] of envVars) {
+          envMap.set(key, value)
+        }
+
+        // Run pre-request scripts
+        let currentRequest = {
+          url: resolved.url,
+          method: resolved.method,
+          headers: { ...resolved.headers },
+          body: resolved.body,
+        }
+
+        const preScriptResult = await executeScripts(
+          resolved.preScripts,
+          { env: envMap, request: currentRequest },
+          true
+        )
+
+        if (preScriptResult.skip) {
+          return {
+            data: {
+              skipped: true,
+              method: currentRequest.method,
+              url: '',
+              headers: {},
+              body: null,
+              requestMeta: {
+                requestId: request.params.id,
+                environmentId: environmentId || null,
+                originalUrl: resolved.url,
+                originalMethod: resolved.method,
+              },
+              scripts: {
+                pre: {
+                  logs: preScriptResult.logs,
+                  errors: preScriptResult.errors,
+                },
+              },
+            },
+          }
+        }
+
+        // Apply script modifications
+        if (preScriptResult.requestModifications) {
+          const mods = preScriptResult.requestModifications
+          if (mods.url) currentRequest.url = mods.url
+          if (mods.method) currentRequest.method = mods.method
+          if (mods.headers) currentRequest.headers = { ...currentRequest.headers, ...mods.headers }
+          if (mods.body !== undefined) currentRequest.body = mods.body
+        }
+
+        // Apply env updates from pre-scripts
+        if (environmentId) {
+          for (const [key, value] of preScriptResult.envUpdates) {
+            if (value === null) {
+              await prisma.localOverride.deleteMany({
+                where: { environmentId, key, userId: 'local' },
+              })
+            } else {
+              await prisma.localOverride.upsert({
+                where: { environmentId_key_userId: { environmentId, key, userId: 'local' } },
+                create: { environmentId, key, value, userId: 'local' },
+                update: { value },
+              })
+            }
+          }
+        }
+
+        // Prepare the request (interpolate, apply auth, build URL)
+        const prepared = await prepareRequest(
+          {
+            ...resolved,
+            url: currentRequest.url,
+            method: currentRequest.method,
+            headers: currentRequest.headers,
+            body: currentRequest.body,
+          },
+          { environmentId }
+        )
+
+        return {
+          data: {
+            method: prepared.method,
+            url: prepared.url,
+            headers: prepared.headers,
+            body: prepared.body,
+            requestMeta: {
+              requestId: request.params.id,
+              environmentId: environmentId || null,
+              originalUrl: resolved.url,
+              originalMethod: resolved.method,
+            },
+            scripts: {
+              pre: {
+                logs: preScriptResult.logs,
+                errors: preScriptResult.errors,
+              },
+            },
+          },
+        }
+      } catch (error) {
+        return { error: error instanceof Error ? error.message : 'Failed to prepare request' }
+      }
+    }
+  )
+
+  // Report browser-side fetch result (post-scripts + history saving)
+  fastify.post<{
+    Params: { id: string }
+    Body: {
+      requestMeta: {
+        requestId: string
+        environmentId: string | null
+        originalUrl: string
+        originalMethod: string
+      }
+      response: HttpResponse
+      preScriptLogs?: Array<{ source: string; message: string }>
+      preScriptErrors?: Array<{ source: string; message: string }>
+    }
+  }>(
+    '/api/requests/:id/report',
+    async (request) => {
+      try {
+        const { requestMeta, response: httpResponse, preScriptLogs, preScriptErrors } = request.body
+
+        // Re-resolve to get post-scripts
+        const resolved = await resolveRequest(request.params.id)
+
+        const environmentId = requestMeta.environmentId
+        const envVars = environmentId
+          ? await resolveVariables(environmentId)
+          : new Map<string, { key: string; value: string; source: 'team' | 'local' | 'dynamic'; isSecret: boolean }>()
+
+        const envMap = new Map<string, string>()
+        for (const [key, { value }] of envVars) {
+          envMap.set(key, value)
+        }
+
+        // Run post-response scripts
+        const postScriptResult = await executeScripts(
+          resolved.postScripts,
+          {
+            env: envMap,
+            response: {
+              status: httpResponse.status,
+              statusText: httpResponse.statusText,
+              headers: httpResponse.headers,
+              body: httpResponse.body,
+              time: httpResponse.time,
+              size: httpResponse.size,
+            },
+          },
+          false
+        )
+
+        // Apply env updates from post-scripts
+        if (environmentId) {
+          for (const [key, value] of postScriptResult.envUpdates) {
+            if (value === null) {
+              await prisma.localOverride.deleteMany({
+                where: { environmentId, key, userId: 'local' },
+              })
+            } else {
+              await prisma.localOverride.upsert({
+                where: { environmentId_key_userId: { environmentId, key, userId: 'local' } },
+                create: { environmentId, key, value, userId: 'local' },
+                update: { value },
+              })
+            }
+          }
+        }
+
+        // Save to history
+        await prisma.historyEntry.create({
+          data: {
+            method: requestMeta.originalMethod,
+            url: requestMeta.originalUrl,
+            requestHeaders: '{}',
+            requestBody: null,
+            responseStatus: httpResponse.status,
+            responseHeaders: stringifyJson(httpResponse.headers),
+            responseBody: httpResponse.body,
+            responseTime: httpResponse.time,
+            responseSize: httpResponse.size,
+          },
+        })
+
+        return {
+          data: {
+            response: httpResponse,
+            scripts: {
+              pre: {
+                logs: preScriptLogs || [],
+                errors: preScriptErrors || [],
+              },
+              post: {
+                logs: postScriptResult.logs,
+                errors: postScriptResult.errors,
+                tests: postScriptResult.tests,
+              },
+            },
+          },
+        }
+      } catch (error) {
+        return { error: error instanceof Error ? error.message : 'Failed to report request result' }
       }
     }
   )

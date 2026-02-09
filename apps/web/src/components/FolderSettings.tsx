@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { Eye, EyeOff, Users } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
-import { useFolder, useUpdateFolder, useFolderInheritedContext, useEnvironmentVariables } from '../hooks/useApi'
+import type { Folder as FolderType } from '@api-client/shared'
+import { useFolder, useUpdateFolder, useFolderInheritedContext, useEnvironmentVariables, useGroups, useAssignFolderToGroup, useUnassignFolderFromGroup } from '../hooks/useApi'
 import { useTranslation } from '../hooks/useTranslation'
 import { KeyValueEditor } from './KeyValueEditor'
 import type { Folder, KeyValueItem, AuthType, AuthConfig, AuthBearer, AuthBasic, AuthApiKey, AuthJwtFreefw, AuthOAuth2, AuthOpenId } from '@api-client/shared'
@@ -63,14 +64,39 @@ export function FolderSettings() {
   const updateFolder = useUpdateFolder()
   const { data: inheritedData } = useFolderInheritedContext(selectedFolderId)
   const { data: envVarsData } = useEnvironmentVariables(activeEnvironmentId)
+  const folders = useAppStore((s) => s.folders)
+  const { data: groupsData } = useGroups()
+  const assignToGroup = useAssignFolderToGroup()
+  const unassignFromGroup = useUnassignFolderFromGroup()
   const { t } = useTranslation()
+
+  // Walk up the folder tree to find inherited group from ancestors
+  const findInheritedGroup = useCallback((folderId: string | null): { id: string; name: string } | null => {
+    if (!folderId) return null
+    type FNode = FolderType & { children?: FNode[] }
+    const findParentGroup = (nodes: FNode[], targetId: string, parentGroup: { id: string; name: string } | null): { id: string; name: string } | null => {
+      for (const node of nodes) {
+        if (node.id === targetId) return parentGroup
+        const effectiveGroup = node.group || parentGroup
+        if (node.children) {
+          const found = findParentGroup(node.children, targetId, effectiveGroup)
+          if (found !== undefined) return found
+        }
+      }
+      return null
+    }
+    return findParentGroup(folders as unknown as FNode[], folderId, null)
+  }, [folders])
+
+  const inheritedGroup = useMemo(() => findInheritedGroup(selectedFolderId), [findInheritedGroup, selectedFolderId])
 
   const variablesForTooltip = useMemo(() => {
     if (!envVarsData || !Array.isArray(envVarsData)) return []
-    return (envVarsData as Array<{ key: string; teamValue?: string; localValue?: string; status?: string }>).map((v) => ({
+    return (envVarsData as Array<{ key: string; teamValue?: string; localValue?: string; status?: string; isSecret?: boolean }>).map((v) => ({
       key: v.key,
       value: v.localValue ?? v.teamValue ?? '',
       source: v.status === 'overridden' ? 'local override' : 'environment',
+      isSecret: v.isSecret,
     }))
   }, [envVarsData])
 
@@ -324,6 +350,64 @@ export function FolderSettings() {
               <p className="mt-1 text-xs text-gray-500">
                 {t('folder.baseUrlHelp')}
               </p>
+            </div>
+
+            {/* Group assignment */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                {t('group.assignment')}
+              </label>
+              {folder.group ? (
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm bg-purple-900/30 text-purple-400 border border-purple-700/50 rounded">
+                    <Users className="w-3.5 h-3.5" />
+                    {folder.group.name}
+                  </span>
+                  <button
+                    onClick={() => {
+                      if (confirm(t('group.confirmUnassign'))) {
+                        unassignFromGroup.mutate({ groupId: folder.group!.id, folderId: folder.id })
+                      }
+                    }}
+                    disabled={unassignFromGroup.isPending}
+                    className="px-2 py-1.5 text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20 border border-red-700/50 rounded"
+                  >
+                    {t('group.unassign')}
+                  </button>
+                </div>
+              ) : inheritedGroup ? (
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm bg-purple-900/15 text-purple-500/50 border border-purple-700/25 rounded opacity-60">
+                    <Users className="w-3.5 h-3.5" />
+                    {inheritedGroup.name}
+                  </span>
+                  <span className="px-1.5 py-0.5 text-xs bg-gray-700/60 text-gray-400 rounded">
+                    {t('inherited.inherited')}
+                  </span>
+                </div>
+              ) : (
+                <div>
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      const groupId = e.target.value
+                      if (groupId && confirm(t('group.confirmAssign'))) {
+                        assignToGroup.mutate({ groupId, folderId: folder.id })
+                      }
+                    }}
+                    disabled={assignToGroup.isPending}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="">{t('group.selectGroup')}</option>
+                    {(groupsData as Array<{ id: string; name: string }> || []).map((g) => (
+                      <option key={g.id} value={g.id}>{g.name}</option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {t('group.assignHelp')}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}

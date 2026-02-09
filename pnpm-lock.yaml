@@ -38,6 +38,9 @@ importers:
       '@fastify/static':
         specifier: ^8.0.0
         version: 8.3.0
+      '@fastify/websocket':
+        specifier: ^11.0.0
+        version: 11.2.0
       '@prisma/client':
         specifier: ^5.22.0
         version: 5.22.0(prisma@5.22.0)
@@ -78,6 +81,9 @@ importers:
       '@types/nodemailer':
         specifier: ^7.0.9
         version: 7.0.9
+      '@types/ws':
+        specifier: ^8.5.10
+        version: 8.18.1
       prisma:
         specifier: ^5.22.0
         version: 5.22.0
@@ -151,6 +157,31 @@ importers:
       vite:
         specifier: ^6.0.0
         version: 6.4.1(@types/node@22.19.8)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/agent:
+    dependencies:
+      commander:
+        specifier: ^12.0.0
+        version: 12.1.0
+      undici:
+        specifier: ^7.1.0
+        version: 7.20.0
+      ws:
+        specifier: ^8.16.0
+        version: 8.19.0
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.0
+        version: 22.19.8
+      '@types/ws':
+        specifier: ^8.5.10
+        version: 8.18.1
+      tsx:
+        specifier: ^4.19.0
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
 
   packages/import-export:
     dependencies:
@@ -643,6 +674,9 @@ packages:
   '@fastify/static@8.3.0':
     resolution: {integrity: sha512-yKxviR5PH1OKNnisIzZKmgZSus0r2OZb8qCSbqmw34aolT4g3UlzYfeBRym+HJ1J471CR8e2ldNub4PubD1coA==}
 
+  '@fastify/websocket@11.2.0':
+    resolution: {integrity: sha512-3HrDPbAG1CzUCqnslgJxppvzaAZffieOVbLp1DAy1huCSynUWPifSvfdEDUR8HlJLp3sp1A36uOM2tJogADS8w==}
+
   '@hapi/b64@5.0.0':
     resolution: {integrity: sha512-ngu0tSEmrezoiIaNGG6rRvKOUkUuDdf4XTPnONHGYfSGRmDqPZX5oJL6HAdKTo1UQHECbdB4OzhWrfgVppjHUw==}
 
@@ -917,6 +951,9 @@ packages:
   '@types/react@19.2.10':
     resolution: {integrity: sha512-WPigyYuGhgZ/cTPRXB2EwUw+XvsRA3GqHlsP4qteqrnnjDrApbS7MxcGr/hke5iUoeB7E/gQtrs9I37zAJ0Vjw==}
 
+  '@types/ws@8.18.1':
+    resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
+
   '@uiw/codemirror-extensions-basic-setup@4.25.4':
     resolution: {integrity: sha512-YzNwkm0AbPv1EXhCHYR5v0nqfemG2jEB0Z3Att4rBYqKrlG7AA9Rhjc3IyBaOzsBu18wtrp9/+uhTyu7TXSRng==}
     peerDependencies:
@@ -1066,6 +1103,10 @@ packages:
   color-name@1.1.4:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
 
+  commander@12.1.0:
+    resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
+    engines: {node: '>=18'}
+
   commander@4.1.1:
     resolution: {integrity: sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==}
     engines: {node: '>= 6'}
@@ -1134,6 +1175,9 @@ packages:
 
   dlv@1.1.3:
     resolution: {integrity: sha512-+HlytyjlPKnIG8XuRG8WvmBP8xs8P71y+SKKS6ZXWoEgLuePxtDoUEiH7WkdePWrQ5JBpE6aoVqfZfJUQkjXwA==}
+
+  duplexify@4.1.3:
+    resolution: {integrity: sha512-M3BmBhwJRZsSx38lZyhE53Csddgzl5R7xGJNk7CVddZD6CcmwMCH8J+7AprIrQKH7TonKxaCjcv27Qmf+sQ+oA==}
 
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
@@ -1742,6 +1786,9 @@ packages:
   steed@1.1.3:
     resolution: {integrity: sha512-EUkci0FAUiE4IvGTSKcDJIQ/eRUP2JJb56+fvZ4sdnguLTqIdKjSxUe138poW8mkvKWXW2sFPrgTsxqoISnmoA==}
 
+  stream-shift@1.0.3:
+    resolution: {integrity: sha512-76ORR0DO1o1hlKwTbi/DM3EXWGf3ZJYO8cXX5RJwnul2DEg2oyoZyjLNoQM8WsvZiFKCRfC1O0J7iCvie3RZmQ==}
+
   string-width@4.2.3:
     resolution: {integrity: sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==}
     engines: {node: '>=8'}
@@ -1940,6 +1987,18 @@ packages:
 
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
+
+  ws@8.19.0:
+    resolution: {integrity: sha512-blAT2mjOEIi0ZzruJfIhb3nps74PRWTCz1IjglWEEpQl5XS/UNama6u2/rjFkDDouqr4L67ry+1aGIALViWjDg==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
 
   xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
@@ -2366,6 +2425,15 @@ snapshots:
       fastq: 1.20.1
       glob: 11.1.0
 
+  '@fastify/websocket@11.2.0':
+    dependencies:
+      duplexify: 4.1.3
+      fastify-plugin: 5.1.0
+      ws: 8.19.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
   '@hapi/b64@5.0.0':
     dependencies:
       '@hapi/hoek': 9.3.0
@@ -2607,6 +2675,10 @@ snapshots:
     dependencies:
       csstype: 3.2.3
 
+  '@types/ws@8.18.1':
+    dependencies:
+      '@types/node': 22.19.8
+
   '@uiw/codemirror-extensions-basic-setup@4.25.4(@codemirror/autocomplete@6.20.0)(@codemirror/commands@6.10.1)(@codemirror/language@6.12.1)(@codemirror/lint@6.9.3)(@codemirror/search@6.6.0)(@codemirror/state@6.5.4)(@codemirror/view@6.39.12)':
     dependencies:
       '@codemirror/autocomplete': 6.20.0
@@ -2772,6 +2844,8 @@ snapshots:
 
   color-name@1.1.4: {}
 
+  commander@12.1.0: {}
+
   commander@4.1.1: {}
 
   content-disposition@0.5.4:
@@ -2815,6 +2889,13 @@ snapshots:
   didyoumean@1.2.2: {}
 
   dlv@1.1.3: {}
+
+  duplexify@4.1.3:
+    dependencies:
+      end-of-stream: 1.4.5
+      inherits: 2.0.4
+      readable-stream: 3.6.2
+      stream-shift: 1.0.3
 
   eastasianwidth@0.2.0: {}
 
@@ -3462,6 +3543,8 @@ snapshots:
       fastseries: 1.7.2
       reusify: 1.1.0
 
+  stream-shift@1.0.3: {}
+
   string-width@4.2.3:
     dependencies:
       emoji-regex: 8.0.0
@@ -3658,6 +3741,8 @@ snapshots:
       strip-ansi: 7.1.2
 
   wrappy@1.0.2: {}
+
+  ws@8.19.0: {}
 
   xtend@4.0.2: {}
 

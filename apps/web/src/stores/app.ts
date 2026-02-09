@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Folder, Request, Environment, HttpResponse } from '@api-client/shared'
+import type { Folder, Request, Environment, HttpResponse, SendMode } from '@api-client/shared'
 import type { Language } from '../i18n'
 
 interface FolderWithChildren extends Folder {
@@ -93,6 +93,14 @@ interface AppState {
   setShowEnvironmentModal: (show: boolean) => void
   showAdmin: boolean
   setShowAdmin: (show: boolean) => void
+  showChangelog: boolean
+  setShowChangelog: (show: boolean) => void
+
+  // Send mode
+  sendMode: SendMode
+  setSendMode: (mode: SendMode) => void
+  selectedAgentId: string | null
+  setSelectedAgentId: (id: string | null) => void
 
   // Language
   language: Language
@@ -259,6 +267,14 @@ export const useAppStore = create<AppState>()(
       setShowEnvironmentModal: (show) => set({ showEnvironmentModal: show }),
       showAdmin: false,
       setShowAdmin: (show) => set({ showAdmin: show }),
+      showChangelog: false,
+      setShowChangelog: (show) => set({ showChangelog: show }),
+
+      // Send mode
+      sendMode: 'server' as SendMode,
+      setSendMode: (mode) => set({ sendMode: mode }),
+      selectedAgentId: null,
+      setSelectedAgentId: (id) => set({ selectedAgentId: id }),
 
       // Language - detect browser language, default to 'en'
       language: getInitialLanguage(),
@@ -269,6 +285,8 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         language: state.language,
         sidebarWidth: state.sidebarWidth,
+        sendMode: state.sendMode,
+        selectedAgentId: state.selectedAgentId,
       }),
     }
   )

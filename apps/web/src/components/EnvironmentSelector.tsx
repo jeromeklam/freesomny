@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { ChevronDown, Plus, Settings, Check, Trash2 } from 'lucide-react'
+import { ChevronDown, Plus, Settings, Check, Trash2, Copy } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
-import { useEnvironments, useCreateEnvironment, useActivateEnvironment, useDeleteEnvironment } from '../hooks/useApi'
+import { useEnvironments, useCreateEnvironment, useActivateEnvironment, useDeleteEnvironment, useDuplicateEnvironment } from '../hooks/useApi'
 import { useTranslation } from '../hooks/useTranslation'
 
 export function EnvironmentSelector() {
@@ -18,6 +18,7 @@ export function EnvironmentSelector() {
   const createEnvironment = useCreateEnvironment()
   const activateEnvironment = useActivateEnvironment()
   const deleteEnvironment = useDeleteEnvironment()
+  const duplicateEnvironment = useDuplicateEnvironment()
   const { t } = useTranslation()
 
   const activeEnv = environments.find((e) => e.id === activeEnvironmentId)
@@ -78,11 +79,21 @@ export function EnvironmentSelector() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
+                        duplicateEnvironment.mutate(env.id)
+                      }}
+                      className="p-1 text-gray-500 hover:text-blue-400 transition-colors"
+                      title={t('environment.duplicateEnvironment')}
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
                         if (confirm(t('environment.confirmDelete').replace('{name}', env.name))) {
                           deleteEnvironment.mutate(env.id)
                         }
                       }}
-                      className="p-1 text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="p-1 text-gray-500 hover:text-red-400 transition-colors"
                       title={t('environment.deleteEnvironment')}
                     >
                       <Trash2 className="w-3.5 h-3.5" />

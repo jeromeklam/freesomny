@@ -16,6 +16,8 @@
     "addRequest": "Ajouter une requête",
     "editSettings": "Modifier les paramètres",
     "duplicate": "Dupliquer",
+    "insertBefore": "Insérer avant",
+    "insertAfter": "Insérer après",
     "delete": "Supprimer",
     "confirmDeleteFolder": "Supprimer le dossier « {name} » et tout son contenu ?",
     "confirmDeleteRequest": "Supprimer la requête « {name} » ?"
@@ -25,6 +27,8 @@
     "send": "Envoyer",
     "sending": "Envoi...",
     "urlPlaceholder": "Entrez une URL ou collez une commande curl",
+    "description": "Description",
+    "descriptionPlaceholder": "Description de la requête, notes, commentaires...",
     "tabs": {
       "params": "Params",
       "headers": "En-têtes",
@@ -101,10 +105,12 @@
     "generatedVar": "Variable de travail — valeur générée ou calculée",
     "clickToPromoteToTeam": "Cliquer pour définir votre valeur comme valeur d'équipe",
     "clickToOverride": "Cliquer pour créer un remplacement local",
+    "overridePlaceholder": "Votre valeur...",
     "confirmPromoteToTeam": "Définir votre valeur locale pour « {key} » comme nouvelle valeur d'équipe ? Cela mettra à jour la valeur pour tous les membres.",
     "dangerZone": "Zone de danger",
     "deleteWarning": "La suppression de cet environnement est définitive et irréversible. Toutes les variables seront perdues.",
     "deleteEnvironment": "Supprimer l'environnement",
+    "duplicateEnvironment": "Dupliquer l'environnement",
     "confirmDelete": "Supprimer définitivement l'environnement « {name} » ? Cette action est irréversible."
   },
   "import": {
@@ -264,7 +270,10 @@
     "add": "Ajouter",
     "singleKey": "Clé unique (avertir si doublons)",
     "multipleKeys": "Valeurs multiples autorisées",
-    "duplicateWarning": "Clé en doublon — cette clé est marquée comme unique"
+    "duplicateWarning": "Clé en doublon — cette clé est marquée comme unique",
+    "override": "Remplacer cette valeur localement",
+    "overridden": "remplacé",
+    "overrides": "remplace"
   },
   "settings": {
     "title": "Paramètres",
@@ -441,7 +450,12 @@
     "resetPasswordSubmit": "Réinitialiser",
     "resetPasswordSuccess": "Le mot de passe a été réinitialisé. Vous pouvez maintenant vous connecter.",
     "resetPasswordInvalid": "Lien de réinitialisation invalide ou expiré.",
-    "passwordMismatch": "Les mots de passe ne correspondent pas"
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "registrationSuccess": "Compte créé ! Vérifiez votre email pour confirmer votre compte, puis attendez l'approbation d'un administrateur.",
+    "emailVerified": "Email vérifié avec succès. Un administrateur examinera votre compte.",
+    "invalidVerifyLink": "Lien de vérification invalide ou expiré.",
+    "emailNotVerified": "Veuillez d'abord vérifier votre email.",
+    "accountPendingApproval": "Votre compte est en attente d'approbation par un administrateur."
   },
   "admin": {
     "title": "Administration",
@@ -482,19 +496,30 @@
       "search": "Rechercher un utilisateur...",
       "noUsers": "Aucun utilisateur trouvé",
       "collections": "Collections",
-      "groups": "Groupes"
+      "groups": "Groupes",
+      "pendingApprovals": "Approbations en attente",
+      "approve": "Approuver",
+      "reject": "Rejeter",
+      "confirmReject": "Rejeter l'utilisateur « {name} » ? Son compte sera définitivement supprimé.",
+      "verified": "Vérifié",
+      "notVerified": "Non vérifié",
+      "pendingVerification": "En attente de vérification",
+      "pendingApproval": "En attente d'approbation"
     },
     "groups": {
       "name": "Nom",
       "description": "Description",
       "members": "Membres",
-      "folders": "Dossiers",
+      "folders": "Collections",
       "environments": "Environnements",
       "created": "Créé",
       "create": "Créer un groupe",
       "addMember": "Ajouter un membre",
       "removeMember": "Retirer",
+      "removeCollection": "Retirer du groupe",
+      "noCollections": "Aucune collection assignée",
       "confirmDelete": "Supprimer le groupe « {name} » ?",
+      "confirmRemoveCollection": "Retirer la collection « {name} » de ce groupe ?",
       "memberEmail": "Email de l'utilisateur",
       "memberRole": "Rôle",
       "noGroups": "Aucun groupe trouvé",
@@ -516,5 +541,28 @@
     "showInherited": "Afficher les éléments hérités des dossiers parents",
     "hideInherited": "Masquer les éléments hérités",
     "fromFolder": "De : {folder}"
+  },
+  "sendMode": {
+    "server": "Serveur",
+    "serverDesc": "Requête envoyée via le serveur FreeSomnia",
+    "browser": "Navigateur",
+    "browserDesc": "Requête envoyée depuis votre navigateur — peut atteindre localhost",
+    "agent": "Agent",
+    "agentDesc": "Requête envoyée via l'agent connecté sur votre machine",
+    "corsWarning": "Le mode navigateur est soumis aux restrictions CORS. Le serveur cible doit autoriser les requêtes cross-origin.",
+    "selectAgent": "Sélectionner l'agent :",
+    "noAgents": "Aucun agent connecté. Lancez freesomnia-agent sur votre machine de dev."
+  },
+  "group": {
+    "assignment": "Groupe",
+    "selectGroup": "Assigner à un groupe...",
+    "unassign": "Retirer",
+    "assignHelp": "Assigner à un groupe pour partager avec tous les membres.",
+    "confirmAssign": "Assigner au groupe sélectionné ? Il sera visible par tous les membres du groupe.",
+    "confirmUnassign": "Retirer du groupe et remettre dans votre espace personnel ?",
+    "ownedBy": "Groupe : {group}"
+  },
+  "changelog": {
+    "title": "Journal des modifications"
   }
 }

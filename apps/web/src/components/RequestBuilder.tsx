@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
-import { hoverTooltip, type Tooltip, EditorView } from '@codemirror/view'
-import { Send, Loader2, Code2, Filter, Eye, EyeOff } from 'lucide-react'
+import { hoverTooltip, type Tooltip, EditorView, ViewPlugin, Decoration, type DecorationSet, type ViewUpdate } from '@codemirror/view'
+import { RangeSetBuilder } from '@codemirror/state'
+import { Send, Loader2, Code2, Filter, Eye, EyeOff, Server, Globe, Laptop, ChevronDown, FileText } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
-import { useRequest, useUpdateRequest, useSendRequest, useEnvironmentVariables, useInheritedContext } from '../hooks/useApi'
+import { useRequest, useUpdateRequest, useSendRequest, useEnvironmentVariables, useInheritedContext, useAgents } from '../hooks/useApi'
+import type { SendMode } from '@api-client/shared'
 import { useTranslation } from '../hooks/useTranslation'
 import { KeyValueEditor } from './KeyValueEditor'
 import { AuthEditor } from './AuthEditor'
@@ -76,6 +78,7 @@ const METHOD_COLORS: Record<string, string> = {
 interface RequestData {
   id: string
   name: string
+  description: string
   method: string
   url: string
   headers: KeyValueItem[]
@@ -104,9 +107,19 @@ export function RequestBuilder() {
   const sendRequest = useSendRequest()
   const { t } = useTranslation()
 
+  const sendMode = useAppStore((s) => s.sendMode)
+  const setSendMode = useAppStore((s) => s.setSendMode)
+  const selectedAgentId = useAppStore((s) => s.selectedAgentId)
+  const setSelectedAgentId = useAppStore((s) => s.setSelectedAgentId)
+
+  const { data: agentsData } = useAgents()
+  const agents = agentsData as Array<{ id: string; name: string; connectedAt: string; lastHeartbeat: string }> | undefined
+
   const [showCodeGen, setShowCodeGen] = useState(false)
   const [showJsonApiBuilder, setShowJsonApiBuilder] = useState(false)
   const [showInherited, setShowInherited] = useState(true)
+  const [showSendModeMenu, setShowSendModeMenu] = useState(false)
+  const [showDescription, setShowDescription] = useState(false)
 
   const { data: inheritedData } = useInheritedContext(selectedRequestId)
   const inherited = inheritedData as {
@@ -118,10 +131,11 @@ export function RequestBuilder() {
   // Map environment variables for tooltips
   const variablesForTooltip = useMemo(() => {
     if (!envVarsData || !Array.isArray(envVarsData)) return []
-    return (envVarsData as Array<{ key: string; teamValue?: string; localValue?: string; status?: string }>).map((v) => ({
+    return (envVarsData as Array<{ key: string; teamValue?: string; localValue?: string; status?: string; isSecret?: boolean }>).map((v) => ({
       key: v.key,
       value: v.localValue ?? v.teamValue ?? '',
       source: v.status === 'overridden' ? 'local override' : 'environment',
+      isSecret: v.isSecret,
     }))
   }, [envVarsData])
 
@@ -151,7 +165,7 @@ export function RequestBuilder() {
           dom.className = 'cm-variable-tooltip'
 
           if (found) {
-            const isSecret = /secret|password|token|key/i.test(varName)
+            const isSecret = found.isSecret || /secret|password|token|key/i.test(varName)
             dom.innerHTML = `<div style="padding:4px 8px;font-size:12px;font-family:monospace;">` +
               `<div style="color:#93c5fd;margin-bottom:2px;">${varName}</div>` +
               `<div style="color:#d1d5db;">${isSecret ? '••••••••' : found.value || '<empty>'}</div>` +
@@ -175,12 +189,51 @@ export function RequestBuilder() {
       return null
     })
 
+    // Inline variable highlighting: green for resolved, red for undefined
+    const varResolved = Decoration.mark({ class: 'cm-var-resolved' })
+    const varUndefined = Decoration.mark({ class: 'cm-var-undefined' })
+
+    function buildDecorations(view: EditorView): DecorationSet {
+      const builder = new RangeSetBuilder<Decoration>()
+      const doc = view.state.doc
+      for (let i = 1; i <= doc.lines; i++) {
+        const line = doc.line(i)
+        const pattern = /\{\{([^}]+)\}\}/g
+        let m
+        while ((m = pattern.exec(line.text)) !== null) {
+          const varName = m[1].trim()
+          const vars = variablesRef.current
+          const found = vars.find((v) => v.key === varName)
+          const deco = found ? varResolved : varUndefined
+          builder.add(line.from + m.index, line.from + m.index + m[0].length, deco)
+        }
+      }
+      return builder.finish()
+    }
+
+    const varHighlightPlugin = ViewPlugin.fromClass(
+      class {
+        decorations: DecorationSet
+        constructor(view: EditorView) {
+          this.decorations = buildDecorations(view)
+        }
+        update(update: ViewUpdate) {
+          if (update.docChanged || update.viewportChanged) {
+            this.decorations = buildDecorations(update.view)
+          }
+        }
+      },
+      { decorations: (v) => v.decorations }
+    )
+
     // Single-line theme: no wrapping, no line numbers, compact
     const singleLineTheme = EditorView.theme({
       '&': { maxHeight: '36px', fontSize: '14px' },
       '.cm-content': { padding: '6px 0', fontFamily: 'ui-monospace, monospace' },
       '.cm-line': { padding: '0' },
       '.cm-scroller': { overflow: 'hidden auto' },
+      '.cm-var-resolved': { color: '#4ade80', fontWeight: '500' },
+      '.cm-var-undefined': { color: '#f87171', fontWeight: '500' },
     })
 
     // Prevent Enter from creating new lines
@@ -194,8 +247,9 @@ export function RequestBuilder() {
       },
     })
 
-    return [tooltipExt, singleLineTheme, preventNewline]
-  }, [])
+    return [tooltipExt, varHighlightPlugin, singleLineTheme, preventNewline]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variablesForTooltip])
 
   const [localRequest, setLocalRequest] = useState<RequestData | null>(null)
   const localRequestRef = useRef<RequestData | null>(null)
@@ -236,8 +290,10 @@ export function RequestBuilder() {
       const data = requestData as RequestData
       setLocalRequest(data)
       localRequestRef.current = data
-      // Update tab info when request data loads
       updateRequestTabInfo(data.id, data.name, data.method)
+      // Auto-show description if it has content
+      if (data.description) setShowDescription(true)
+      else setShowDescription(false)
     } else {
       setLocalRequest(null)
       localRequestRef.current = null
@@ -337,6 +393,19 @@ export function RequestBuilder() {
         </div>
 
         <button
+          onClick={() => setShowDescription(!showDescription)}
+          className={clsx(
+            'p-2 rounded',
+            showDescription || localRequest.description
+              ? 'text-blue-400 hover:text-blue-300 hover:bg-gray-700'
+              : 'text-gray-400 hover:text-white hover:bg-gray-700'
+          )}
+          title={t('request.description')}
+        >
+          <FileText className="w-4 h-4" />
+        </button>
+
+        <button
           onClick={() => setShowCodeGen(true)}
           className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
           title={t('codegen.title')}
@@ -344,19 +413,120 @@ export function RequestBuilder() {
           <Code2 className="w-4 h-4" />
         </button>
 
-        <button
-          onClick={handleSend}
-          disabled={isLoading}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 rounded font-medium text-sm"
-        >
-          {isLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Send className="w-4 h-4" />
+        <div className="relative flex items-center">
+          <button
+            onClick={handleSend}
+            disabled={isLoading}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 rounded-l font-medium text-sm"
+            title={sendMode === 'browser' ? t('sendMode.browser') : sendMode === 'agent' ? t('sendMode.agent') : t('sendMode.server')}
+          >
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : sendMode === 'browser' ? (
+              <Globe className="w-4 h-4" />
+            ) : sendMode === 'agent' ? (
+              <Laptop className="w-4 h-4" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+            {t('request.send')}
+          </button>
+          <button
+            onClick={() => setShowSendModeMenu(!showSendModeMenu)}
+            className="flex items-center px-1.5 self-stretch bg-blue-600 hover:bg-blue-700 rounded-r border-l border-blue-500"
+          >
+            <ChevronDown className="w-3 h-3" />
+          </button>
+          {showSendModeMenu && (
+            <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-600 rounded shadow-lg z-50 w-64">
+              <button
+                onClick={() => { setSendMode('server'); setShowSendModeMenu(false) }}
+                className={clsx(
+                  'flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-gray-700',
+                  sendMode === 'server' && 'text-blue-400'
+                )}
+              >
+                <Server className="w-4 h-4 shrink-0" />
+                <div>
+                  <div>{t('sendMode.server')}</div>
+                  <div className="text-xs text-gray-500">{t('sendMode.serverDesc')}</div>
+                </div>
+              </button>
+              <button
+                onClick={() => { setSendMode('browser'); setShowSendModeMenu(false) }}
+                className={clsx(
+                  'flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-gray-700',
+                  sendMode === 'browser' && 'text-blue-400'
+                )}
+              >
+                <Globe className="w-4 h-4 shrink-0" />
+                <div>
+                  <div>{t('sendMode.browser')}</div>
+                  <div className="text-xs text-gray-500">{t('sendMode.browserDesc')}</div>
+                </div>
+              </button>
+              <button
+                onClick={() => { setSendMode('agent'); setShowSendModeMenu(false) }}
+                className={clsx(
+                  'flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-gray-700',
+                  sendMode === 'agent' && 'text-blue-400'
+                )}
+              >
+                <Laptop className="w-4 h-4 shrink-0" />
+                <div>
+                  <div>{t('sendMode.agent')}</div>
+                  <div className="text-xs text-gray-500">{t('sendMode.agentDesc')}</div>
+                </div>
+              </button>
+              {sendMode === 'browser' && (
+                <div className="px-3 py-2 text-xs text-yellow-400 border-t border-gray-700">
+                  {t('sendMode.corsWarning')}
+                </div>
+              )}
+              {sendMode === 'agent' && (
+                <div className="border-t border-gray-700 py-1">
+                  {agents && agents.length > 0 ? (
+                    <>
+                      <div className="px-3 py-1 text-xs text-gray-500">{t('sendMode.selectAgent')}</div>
+                      {agents.map((agent) => (
+                        <button
+                          key={agent.id}
+                          onClick={() => { setSelectedAgentId(agent.id); setShowSendModeMenu(false) }}
+                          className={clsx(
+                            'flex items-center gap-2 w-full px-3 py-1.5 text-sm hover:bg-gray-700',
+                            selectedAgentId === agent.id && 'text-green-400'
+                          )}
+                        >
+                          <div className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
+                          {agent.name}
+                        </button>
+                      ))}
+                    </>
+                  ) : (
+                    <div className="px-3 py-2 text-xs text-yellow-400">
+                      {t('sendMode.noAgents')}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
-          {t('request.send')}
-        </button>
+        </div>
       </div>
+
+      {/* Description */}
+      {showDescription && (
+        <div className="px-3 pb-2 border-b border-gray-700">
+          <textarea
+            value={localRequest.description || ''}
+            onChange={(e) => handleChange('description', e.target.value)}
+            onBlur={handleSave}
+            placeholder={t('request.descriptionPlaceholder')}
+            rows={2}
+            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-gray-300 placeholder-gray-600 resize-y focus:outline-none focus:border-blue-500"
+          />
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex border-b border-gray-700">
@@ -492,6 +662,8 @@ export function RequestBuilder() {
       {showCodeGen && (
         <CodeGeneratorModal
           request={localRequest}
+          inheritedHeaders={inheritedHeaders}
+          inheritedAuth={inherited?.auth || null}
           onClose={() => setShowCodeGen(false)}
         />
       )}

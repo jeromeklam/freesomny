@@ -109,6 +109,7 @@ export async function folderRoutes(fastify: FastifyInstance) {
       include: {
         requests: { orderBy: { sortOrder: 'asc' } },
         children: { orderBy: { sortOrder: 'asc' } },
+        group: { select: { id: true, name: true } },
       },
     })
 

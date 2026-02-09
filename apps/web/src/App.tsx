@@ -18,7 +18,10 @@ import { ImportModal } from './components/ImportModal'
 import { SettingsModal } from './components/SettingsModal'
 import { AuthScreen } from './components/AuthScreen'
 import { ResetPasswordScreen } from './components/ResetPasswordScreen'
+import { VerifyScreen } from './components/VerifyScreen'
 import { AdminModal } from './components/AdminModal'
+import { ChangelogModal } from './components/ChangelogModal'
+import { APP_VERSION } from '@api-client/shared'
 
 function MainApp() {
   const [isDraggingSidebar, setIsDraggingSidebar] = useState(false)
@@ -37,6 +40,7 @@ function MainApp() {
   const setUser = useAppStore((s) => s.setUser)
   const showAdmin = useAppStore((s) => s.showAdmin)
   const setShowAdmin = useAppStore((s) => s.setShowAdmin)
+  const setShowChangelog = useAppStore((s) => s.setShowChangelog)
 
   const { t, language, setLanguage } = useTranslation()
 
@@ -102,7 +106,16 @@ function MainApp() {
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-2 border-b border-gray-700 bg-gray-800">
         <div className="flex items-center gap-4">
-          <h1 className="text-lg font-semibold">FreeSomnia</h1>
+          <h1 className="text-lg font-semibold flex items-center gap-2">
+            FreeSomnia
+            <button
+              onClick={() => setShowChangelog(true)}
+              className="text-xs font-normal text-gray-500 hover:text-blue-400 transition-colors"
+              title={t('changelog.title')}
+            >
+              v{APP_VERSION}
+            </button>
+          </h1>
         </div>
 
         <div className="flex items-center gap-2">
@@ -254,6 +267,7 @@ function MainApp() {
       <ImportModal isOpen={showImport} onClose={() => setShowImport(false)} />
       <SettingsModal />
       {showAdmin && <AdminModal onClose={() => setShowAdmin(false)} />}
+      <ChangelogModal />
     </div>
   )
 }
@@ -300,6 +314,11 @@ function App() {
   // Handle /reset-password route
   if (window.location.pathname === '/reset-password') {
     return <ResetPasswordScreen />
+  }
+
+  // Handle /verify route (email verification)
+  if (window.location.pathname === '/verify') {
+    return <VerifyScreen />
   }
 
   // Show loading state

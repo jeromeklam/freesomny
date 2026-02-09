@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { foldersApi, requestsApi, environmentsApi, historyApi, settingsApi, authApi } from '../lib/api'
+import { foldersApi, requestsApi, environmentsApi, historyApi, settingsApi, authApi, agentsApi, groupsApi } from '../lib/api'
+import type { PreparedRequest } from '@api-client/shared'
+import { executeBrowserFetch } from '../lib/browser-fetch'
 import { useAppStore } from '../stores/app'
 
 // Folders
@@ -151,10 +153,45 @@ export function useSendRequest() {
   const setRequestError = useAppStore((s) => s.setRequestError)
   const setScriptOutput = useAppStore((s) => s.setScriptOutput)
   const activeEnvironmentId = useAppStore((s) => s.activeEnvironmentId)
+  const sendMode = useAppStore((s) => s.sendMode)
+  const selectedAgentId = useAppStore((s) => s.selectedAgentId)
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) => requestsApi.send(id, activeEnvironmentId || undefined),
+    mutationFn: async (id: string) => {
+      const envId = activeEnvironmentId || undefined
+
+      if (sendMode === 'browser') {
+        // Step 1: Prepare (server-side resolve + pre-scripts)
+        const prepared = await requestsApi.prepare(id, envId) as PreparedRequest
+
+        if (prepared.skipped) {
+          return {
+            skipped: true,
+            scripts: { pre: prepared.scripts.pre },
+          }
+        }
+
+        // Step 2: Execute in browser via fetch()
+        const httpResponse = await executeBrowserFetch(prepared)
+
+        // Step 3: Report back (server-side post-scripts + history)
+        const reportResult = await requestsApi.report(id, {
+          requestMeta: prepared.requestMeta,
+          response: httpResponse,
+          preScriptLogs: prepared.scripts.pre.logs,
+          preScriptErrors: prepared.scripts.pre.errors,
+        })
+
+        return reportResult
+      } else if (sendMode === 'agent' && selectedAgentId) {
+        // Send via connected agent
+        return requestsApi.send(id, envId, 'agent', selectedAgentId)
+      } else {
+        // Default: server-side send
+        return requestsApi.send(id, envId)
+      }
+    },
     onMutate: () => {
       setIsLoading(true)
       setCurrentResponse(null)
@@ -212,6 +249,18 @@ export function useSendRequest() {
   })
 }
 
+// Agents
+export function useAgents() {
+  const sendMode = useAppStore((s) => s.sendMode)
+
+  return useQuery({
+    queryKey: ['agents'],
+    queryFn: agentsApi.list,
+    refetchInterval: sendMode === 'agent' ? 10000 : false,
+    enabled: sendMode === 'agent',
+  })
+}
+
 export function useResolvedRequest(id: string | null) {
   const activeEnvironmentId = useAppStore((s) => s.activeEnvironmentId)
 
@@ -254,6 +303,17 @@ export function useCreateEnvironment() {
 
   return useMutation({
     mutationFn: environmentsApi.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['environments'] })
+    },
+  })
+}
+
+export function useDuplicateEnvironment() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: environmentsApi.duplicate,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['environments'] })
     },
@@ -344,6 +404,62 @@ export function useUpdateSettings() {
     mutationFn: settingsApi.update,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] })
+    },
+  })
+}
+
+// Groups (user-facing)
+export function useGroups() {
+  return useQuery({
+    queryKey: ['groups'],
+    queryFn: groupsApi.list,
+  })
+}
+
+export function useAssignFolderToGroup() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ groupId, folderId }: { groupId: string; folderId: string }) =>
+      groupsApi.assignFolder(groupId, folderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['folders'] })
+      queryClient.invalidateQueries({ queryKey: ['groups'] })
+    },
+  })
+}
+
+export function useUnassignFolderFromGroup() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ groupId, folderId }: { groupId: string; folderId: string }) =>
+      groupsApi.unassignFolder(groupId, folderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['folders'] })
+      queryClient.invalidateQueries({ queryKey: ['groups'] })
+    },
+  })
+}
+
+export function useAssignEnvironmentToGroup() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ groupId, environmentId }: { groupId: string; environmentId: string }) =>
+      groupsApi.assignEnvironment(groupId, environmentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['environments'] })
+      queryClient.invalidateQueries({ queryKey: ['groups'] })
+    },
+  })
+}
+
+export function useUnassignEnvironmentFromGroup() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ groupId, environmentId }: { groupId: string; environmentId: string }) =>
+      groupsApi.unassignEnvironment(groupId, environmentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['environments'] })
+      queryClient.invalidateQueries({ queryKey: ['groups'] })
     },
   })
 }

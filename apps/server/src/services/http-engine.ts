@@ -50,19 +50,25 @@ function mergeAuthResult(
   }
 }
 
-export async function executeRequest(
+// Prepared HTTP request (interpolated, auth applied, ready to execute)
+export interface PreparedHttpRequest {
+  method: string
+  url: string // Final URL with query params
+  headers: Record<string, string> // Interpolated, auth applied, Content-Type set
+  body: string | null
+}
+
+// Prepare a request: resolve env vars, interpolate, apply auth, build URL
+export async function prepareRequest(
   resolved: ResolvedRequest,
   options: ExecuteOptions = {}
-): Promise<HttpResponse> {
-  const startTime = Date.now()
-
+): Promise<PreparedHttpRequest> {
   // Get environment variables for interpolation
   let variables = new Map<string, { key: string; value: string; source: 'team' | 'local' | 'dynamic'; isSecret: boolean }>()
 
   if (options.environmentId) {
     variables = await resolveVariables(options.environmentId, options.userId)
   } else {
-    // Try to get active environment
     const activeEnv = await getActiveEnvironment()
     if (activeEnv) {
       variables = await resolveVariables(activeEnv.id, options.userId)
@@ -70,7 +76,7 @@ export async function executeRequest(
   }
 
   // Interpolate URL
-  let url = await interpolateString(resolved.url, variables)
+  const url = await interpolateString(resolved.url, variables)
 
   // Interpolate headers
   const headers = await interpolateRecord(resolved.headers, variables)
@@ -86,7 +92,6 @@ export async function executeRequest(
 
   // Apply auth
   if (resolved.auth.type !== 'none' && resolved.auth.type !== 'inherit') {
-    // Interpolate auth config values
     const authConfigStr = JSON.stringify(resolved.auth.config)
     const interpolatedAuthStr = await interpolateString(authConfigStr, variables)
     const interpolatedAuthConfig = JSON.parse(interpolatedAuthStr) as AuthConfig
@@ -105,6 +110,33 @@ export async function executeRequest(
 
   // Build final URL with query params
   const finalUrl = buildUrl(url, queryParams)
+
+  // Set Content-Type if not already set
+  if (body && !['GET', 'HEAD'].includes(resolved.method)) {
+    if (!headers['Content-Type'] && !headers['content-type']) {
+      if (resolved.bodyType === 'json') {
+        headers['Content-Type'] = 'application/json'
+      } else if (resolved.bodyType === 'jsonapi') {
+        headers['Content-Type'] = 'application/vnd.api+json'
+      } else if (resolved.bodyType === 'urlencoded') {
+        headers['Content-Type'] = 'application/x-www-form-urlencoded'
+      } else if (resolved.bodyType === 'raw') {
+        headers['Content-Type'] = 'text/plain'
+      }
+    }
+  }
+
+  return { method: resolved.method, url: finalUrl, headers, body }
+}
+
+export async function executeRequest(
+  resolved: ResolvedRequest,
+  options: ExecuteOptions = {}
+): Promise<HttpResponse> {
+  const startTime = Date.now()
+
+  // Prepare: interpolate, apply auth, build URL
+  const prepared = await prepareRequest(resolved, options)
 
   // Create agent with appropriate settings
   const agentOptions: { connect?: { rejectUnauthorized: boolean } } = {}
@@ -127,33 +159,20 @@ export async function executeRequest(
     dispatcher: Dispatcher
     body?: string
   } = {
-    method: resolved.method,
-    headers,
+    method: prepared.method,
+    headers: prepared.headers,
     headersTimeout: resolved.timeout,
     bodyTimeout: resolved.timeout,
     dispatcher,
   }
 
   // Add body for non-GET/HEAD requests
-  if (body && !['GET', 'HEAD'].includes(resolved.method)) {
-    requestOptions.body = body
-
-    // Set Content-Type if not already set
-    if (!headers['Content-Type'] && !headers['content-type']) {
-      if (resolved.bodyType === 'json') {
-        requestOptions.headers = { ...headers, 'Content-Type': 'application/json' }
-      } else if (resolved.bodyType === 'jsonapi') {
-        requestOptions.headers = { ...headers, 'Content-Type': 'application/vnd.api+json' }
-      } else if (resolved.bodyType === 'urlencoded') {
-        requestOptions.headers = { ...headers, 'Content-Type': 'application/x-www-form-urlencoded' }
-      } else if (resolved.bodyType === 'raw') {
-        requestOptions.headers = { ...headers, 'Content-Type': 'text/plain' }
-      }
-    }
+  if (prepared.body && !['GET', 'HEAD'].includes(prepared.method)) {
+    requestOptions.body = prepared.body
   }
 
   try {
-    const response = await undiciRequest(finalUrl, requestOptions)
+    const response = await undiciRequest(prepared.url, requestOptions)
 
     // Convert headers to Record<string, string>
     const responseHeaders: Record<string, string> = {}

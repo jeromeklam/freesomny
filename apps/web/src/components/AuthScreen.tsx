@@ -14,6 +14,7 @@ export function AuthScreen() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [forgotSuccess, setForgotSuccess] = useState(false)
+  const [registerSuccess, setRegisterSuccess] = useState(false)
 
   const setUser = useAppStore((s) => s.setUser)
   const setupRequired = useAppStore((s) => s.setupRequired)
@@ -30,6 +31,10 @@ export function AuthScreen() {
     try {
       if (effectiveMode === 'register') {
         const response = await authApi.register({ email, password, name })
+        if (response.requiresVerification) {
+          setRegisterSuccess(true)
+          return
+        }
         setAuthToken(response.token)
         setUser(response.user)
       } else if (effectiveMode === 'forgot') {
@@ -146,6 +151,22 @@ export function AuthScreen() {
               <button
                 onClick={switchToLogin}
                 className="w-full text-sm text-gray-400 hover:text-gray-300 mt-2"
+              >
+                {t('auth.backToLogin')}
+              </button>
+            </div>
+          ) : registerSuccess ? (
+            /* Registration success — verification needed */
+            <div className="space-y-4">
+              <div className="p-3 bg-green-500/20 border border-green-500/50 rounded-lg">
+                <p className="text-sm text-green-400">{t('auth.registrationSuccess')}</p>
+              </div>
+              <button
+                onClick={() => {
+                  setRegisterSuccess(false)
+                  setMode('login')
+                }}
+                className="w-full text-sm text-gray-400 hover:text-gray-300"
               >
                 {t('auth.backToLogin')}
               </button>

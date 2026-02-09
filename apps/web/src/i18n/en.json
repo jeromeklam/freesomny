@@ -16,6 +16,8 @@
     "addRequest": "Add Request",
     "editSettings": "Edit Settings",
     "duplicate": "Duplicate",
+    "insertBefore": "Insert Before",
+    "insertAfter": "Insert After",
     "delete": "Delete",
     "confirmDeleteFolder": "Delete folder \"{name}\" and all its contents?",
     "confirmDeleteRequest": "Delete request \"{name}\"?"
@@ -25,6 +27,8 @@
     "send": "Send",
     "sending": "Sending...",
     "urlPlaceholder": "Enter URL or paste curl command",
+    "description": "Description",
+    "descriptionPlaceholder": "Request description, notes, comments...",
     "tabs": {
       "params": "Params",
       "headers": "Headers",
@@ -101,10 +105,12 @@
     "generatedVar": "Work variable — generated or computed value",
     "clickToPromoteToTeam": "Click to set your value as the team value",
     "clickToOverride": "Click to create a local override",
+    "overridePlaceholder": "Your override...",
     "confirmPromoteToTeam": "Set your local value for \"{key}\" as the new team value? This will update the value for all team members.",
     "dangerZone": "Danger zone",
     "deleteWarning": "Deleting this environment is permanent and cannot be undone. All variables will be lost.",
     "deleteEnvironment": "Delete environment",
+    "duplicateEnvironment": "Duplicate environment",
     "confirmDelete": "Delete environment \"{name}\" permanently? This action cannot be undone."
   },
   "import": {
@@ -264,7 +270,10 @@
     "add": "Add",
     "singleKey": "Single key (warn if duplicates)",
     "multipleKeys": "Multiple values allowed",
-    "duplicateWarning": "Duplicate key — this key is marked as single"
+    "duplicateWarning": "Duplicate key — this key is marked as single",
+    "override": "Override this value locally",
+    "overridden": "overridden",
+    "overrides": "overrides"
   },
   "settings": {
     "title": "Settings",
@@ -441,7 +450,12 @@
     "resetPasswordSubmit": "Reset Password",
     "resetPasswordSuccess": "Password has been reset. You can now login.",
     "resetPasswordInvalid": "Invalid or expired reset link.",
-    "passwordMismatch": "Passwords do not match"
+    "passwordMismatch": "Passwords do not match",
+    "registrationSuccess": "Account created! Check your email to verify your account, then wait for admin approval.",
+    "emailVerified": "Email verified successfully. An administrator will review your account.",
+    "invalidVerifyLink": "Invalid or expired verification link.",
+    "emailNotVerified": "Please verify your email first.",
+    "accountPendingApproval": "Your account is pending admin approval."
   },
   "admin": {
     "title": "Administration",
@@ -482,19 +496,30 @@
       "search": "Search users...",
       "noUsers": "No users found",
       "collections": "Collections",
-      "groups": "Groups"
+      "groups": "Groups",
+      "pendingApprovals": "Pending Approvals",
+      "approve": "Approve",
+      "reject": "Reject",
+      "confirmReject": "Reject user \"{name}\"? This will permanently delete their account.",
+      "verified": "Verified",
+      "notVerified": "Not verified",
+      "pendingVerification": "Pending verification",
+      "pendingApproval": "Pending approval"
     },
     "groups": {
       "name": "Name",
       "description": "Description",
       "members": "Members",
-      "folders": "Folders",
+      "folders": "Collections",
       "environments": "Environments",
       "created": "Created",
       "create": "Create Group",
       "addMember": "Add Member",
       "removeMember": "Remove",
+      "removeCollection": "Remove from group",
+      "noCollections": "No collections assigned",
       "confirmDelete": "Delete group \"{name}\"?",
+      "confirmRemoveCollection": "Remove collection \"{name}\" from this group?",
       "memberEmail": "User email",
       "memberRole": "Role",
       "noGroups": "No groups found",
@@ -516,5 +541,28 @@
     "showInherited": "Show inherited from parent folders",
     "hideInherited": "Hide inherited",
     "fromFolder": "From: {folder}"
+  },
+  "sendMode": {
+    "server": "Server",
+    "serverDesc": "Request sent via FreeSomnia server",
+    "browser": "Browser",
+    "browserDesc": "Request sent from your browser — can reach localhost",
+    "agent": "Agent",
+    "agentDesc": "Request sent via connected agent on your machine",
+    "corsWarning": "Browser mode is subject to CORS restrictions. Target server must allow cross-origin requests.",
+    "selectAgent": "Select agent:",
+    "noAgents": "No agents connected. Run freesomnia-agent on your dev machine."
+  },
+  "group": {
+    "assignment": "Group",
+    "selectGroup": "Assign to a group...",
+    "unassign": "Remove",
+    "assignHelp": "Assign to a group to share with all members.",
+    "confirmAssign": "Assign to the selected group? It will be visible to all group members.",
+    "confirmUnassign": "Remove from group and return to your personal workspace?",
+    "ownedBy": "Group: {group}"
+  },
+  "changelog": {
+    "title": "Changelog"
   }
 }

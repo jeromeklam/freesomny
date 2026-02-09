@@ -77,6 +77,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
         name: true,
         role: true,
         isActive: true,
+        isVerified: true,
         createdAt: true,
         _count: {
           select: { folders: true, groupMemberships: true },
@@ -181,6 +182,39 @@ export async function adminRoutes(fastify: FastifyInstance) {
     return { data: { success: true } }
   })
 
+  // Approve user
+  fastify.put<{ Params: { id: string } }>('/api/admin/users/:id/approve', async (request, reply) => {
+    const user = await prisma.user.findUnique({ where: { id: request.params.id } })
+    if (!user) {
+      return reply.status(404).send({ error: 'User not found' })
+    }
+
+    await prisma.user.update({
+      where: { id: request.params.id },
+      data: { isActive: true },
+    })
+
+    const currentUser = getCurrentUser(request)
+    await logAudit('user.approve', currentUser?.id ?? null, user.id, { email: user.email })
+
+    return { data: { success: true } }
+  })
+
+  // Reject user (delete)
+  fastify.delete<{ Params: { id: string } }>('/api/admin/users/:id/reject', async (request, reply) => {
+    const user = await prisma.user.findUnique({ where: { id: request.params.id } })
+    if (!user) {
+      return reply.status(404).send({ error: 'User not found' })
+    }
+
+    await prisma.user.delete({ where: { id: request.params.id } })
+
+    const currentUser = getCurrentUser(request)
+    await logAudit('user.reject', currentUser?.id ?? null, request.params.id, { email: user.email })
+
+    return { data: { success: true } }
+  })
+
   // Admin-triggered password reset
   fastify.post<{ Params: { id: string } }>('/api/admin/users/:id/reset-password', async (request, reply) => {
     const currentUser = getCurrentUser(request)
@@ -234,6 +268,11 @@ export async function adminRoutes(fastify: FastifyInstance) {
             user: { select: { id: true, email: true, name: true } },
           },
           orderBy: { createdAt: 'asc' },
+        },
+        folders: {
+          select: { id: true, name: true },
+          where: { parentId: null },
+          orderBy: { name: 'asc' },
         },
         _count: {
           select: { folders: true, environments: true },
@@ -382,6 +421,33 @@ export async function adminRoutes(fastify: FastifyInstance) {
       const currentUser = getCurrentUser(request)
       await logAudit('group.member_removed', currentUser?.id || null, request.params.id, {
         memberEmail: member.user.email,
+      })
+
+      return { data: { success: true } }
+    }
+  )
+
+  // Remove folder from group (admin)
+  fastify.delete<{ Params: { id: string; folderId: string } }>(
+    '/api/admin/groups/:id/folders/:folderId',
+    async (request, reply) => {
+      const folder = await prisma.folder.findUnique({
+        where: { id: request.params.folderId },
+      })
+
+      if (!folder || folder.groupId !== request.params.id) {
+        return reply.status(404).send({ error: 'Folder not found in this group' })
+      }
+
+      const currentUser = getCurrentUser(request)
+
+      await prisma.folder.update({
+        where: { id: request.params.folderId },
+        data: { groupId: null, userId: currentUser?.id || folder.userId },
+      })
+
+      await logAudit('group.folder_removed', currentUser?.id || null, request.params.id, {
+        folderName: folder.name,
       })
 
       return { data: { success: true } }

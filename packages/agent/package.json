@@ -1,0 +1,25 @@
+{
+  "name": "@api-client/agent",
+  "version": "0.1.0",
+  "description": "FreeSomnia local proxy agent — executes API requests from your dev machine",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "freesomnia-agent": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "commander": "^12.0.0",
+    "undici": "^7.1.0",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/ws": "^8.5.10",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

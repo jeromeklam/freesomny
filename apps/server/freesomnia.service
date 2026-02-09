@@ -22,8 +22,9 @@ User=freesomnia
 Group=freesomnia
 WorkingDirectory=/opt/freesomnia
 
-# Node.js executable and application
-ExecStart=/usr/bin/node apps/server/dist/index.js
+# Detect Node.js path: adjust if installed elsewhere (nvm, volta, etc.)
+# Find with: which node
+ExecStart=/usr/local/bin/node apps/server/dist/index.js
 
 # Restart policy
 Restart=always
@@ -35,12 +36,10 @@ Environment=NODE_ENV=production
 # Load environment variables from file
 EnvironmentFile=/opt/freesomnia/.env
 
-# Security hardening (optional but recommended)
+# Security hardening
 NoNewPrivileges=true
-ProtectSystem=strict
-ProtectHome=true
 PrivateTmp=true
-ReadWritePaths=/opt/freesomnia/apps/server/prisma/data
+ReadWritePaths=/opt/freesomnia
 
 # Logging
 StandardOutput=journal

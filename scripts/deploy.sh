@@ -195,10 +195,11 @@ deploy_remote() {
 
         # Install dependencies
         cd "$DEPLOY_PATH"
-        pnpm install --frozen-lockfile --prod
+        pnpm install --frozen-lockfile
 
-        # Run migrations
+        # Run migrations and regenerate Prisma client
         pnpm --filter @api-client/server prisma migrate deploy
+        pnpm --filter @api-client/server prisma generate
 
         # Restart service
         sudo systemctl restart freesomnia

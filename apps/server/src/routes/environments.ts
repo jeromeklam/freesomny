@@ -58,7 +58,10 @@ export async function environmentRoutes(fastify: FastifyInstance) {
   fastify.get<{ Params: { id: string } }>('/api/environments/:id', async (request) => {
     const env = await prisma.environment.findUnique({
       where: { id: request.params.id },
-      include: { variables: true },
+      include: {
+        variables: true,
+        group: { select: { id: true, name: true } },
+      },
     })
 
     if (!env) {
@@ -125,6 +128,66 @@ export async function environmentRoutes(fastify: FastifyInstance) {
     })
 
     return { data: { success: true } }
+  })
+
+  // Duplicate environment
+  fastify.post<{ Params: { id: string } }>('/api/environments/:id/duplicate', { preHandler: [optionalAuth] }, async (request) => {
+    const original = await prisma.environment.findUnique({
+      where: { id: request.params.id },
+      include: { variables: true },
+    })
+
+    if (!original) {
+      return { error: 'Environment not found' }
+    }
+
+    const userId = getCurrentUserId(request)
+
+    // Clone environment
+    const newEnv = await prisma.environment.create({
+      data: {
+        name: `Copy of ${original.name}`,
+        description: original.description,
+        isActive: false,
+        userId: userId || original.userId,
+        groupId: original.groupId,
+      },
+    })
+
+    // Clone variables
+    if (original.variables.length > 0) {
+      await prisma.environmentVariable.createMany({
+        data: original.variables.map(v => ({
+          key: v.key,
+          value: v.value,
+          description: v.description,
+          type: v.type,
+          scope: v.scope,
+          isSecret: v.isSecret,
+          category: v.category,
+          sortOrder: v.sortOrder,
+          environmentId: newEnv.id,
+        })),
+      })
+    }
+
+    // Clone local overrides
+    const overrides = await prisma.localOverride.findMany({
+      where: { environmentId: original.id },
+    })
+    if (overrides.length > 0) {
+      await prisma.localOverride.createMany({
+        data: overrides.map(o => ({
+          key: o.key,
+          value: o.value,
+          description: o.description,
+          environmentId: newEnv.id,
+          userId: o.userId,
+        })),
+      })
+    }
+
+    return { data: newEnv }
   })
 
   // Activate environment

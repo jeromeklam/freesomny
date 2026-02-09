@@ -522,4 +522,78 @@ export async function groupRoutes(fastify: FastifyInstance) {
       return { data: updatedEnv }
     }
   )
+
+  // Unassign folder from group (return to user ownership)
+  fastify.delete<{ Params: { id: string; folderId: string } }>(
+    '/api/groups/:id/folders/:folderId',
+    { preHandler: [requireAuth] },
+    async (request, reply) => {
+      const userId = getCurrentUserId(request)
+
+      const membership = await prisma.groupMember.findUnique({
+        where: {
+          groupId_userId: {
+            groupId: request.params.id,
+            userId: userId!,
+          },
+        },
+      })
+
+      if (!membership || (membership.role !== 'admin' && membership.role !== 'owner')) {
+        return reply.status(403).send({ error: 'Permission denied' })
+      }
+
+      const folder = await prisma.folder.findUnique({
+        where: { id: request.params.folderId },
+      })
+
+      if (!folder || folder.groupId !== request.params.id) {
+        return reply.status(404).send({ error: 'Folder not found in this group' })
+      }
+
+      const updated = await prisma.folder.update({
+        where: { id: request.params.folderId },
+        data: { groupId: null, userId: userId },
+      })
+
+      return { data: updated }
+    }
+  )
+
+  // Unassign environment from group (return to user ownership)
+  fastify.delete<{ Params: { id: string; environmentId: string } }>(
+    '/api/groups/:id/environments/:environmentId',
+    { preHandler: [requireAuth] },
+    async (request, reply) => {
+      const userId = getCurrentUserId(request)
+
+      const membership = await prisma.groupMember.findUnique({
+        where: {
+          groupId_userId: {
+            groupId: request.params.id,
+            userId: userId!,
+          },
+        },
+      })
+
+      if (!membership || (membership.role !== 'admin' && membership.role !== 'owner')) {
+        return reply.status(403).send({ error: 'Permission denied' })
+      }
+
+      const env = await prisma.environment.findUnique({
+        where: { id: request.params.environmentId },
+      })
+
+      if (!env || env.groupId !== request.params.id) {
+        return reply.status(404).send({ error: 'Environment not found in this group' })
+      }
+
+      const updated = await prisma.environment.update({
+        where: { id: request.params.environmentId },
+        data: { groupId: null, userId: userId },
+      })
+
+      return { data: updated }
+    }
+  )
 }

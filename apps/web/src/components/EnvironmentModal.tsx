@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { X, Plus, Trash2, RotateCcw, Lock, Unlock, GripVertical, Tag, Cog } from 'lucide-react'
+import { X, Plus, Trash2, RotateCcw, Lock, Unlock, GripVertical, Tag, Cog, Users } from 'lucide-react'
 import { ResizableModal } from './ResizableModal'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
-import { useEnvironmentVariables, useDeleteEnvironment } from '../hooks/useApi'
+import { useEnvironmentVariables, useDeleteEnvironment, useGroups, useAssignEnvironmentToGroup, useUnassignEnvironmentFromGroup } from '../hooks/useApi'
 import { useTranslation } from '../hooks/useTranslation'
 import { environmentsApi } from '../lib/api'
 import { useQueryClient } from '@tanstack/react-query'
@@ -41,6 +41,9 @@ export function EnvironmentModal() {
 
   const { data: variables, refetch } = useEnvironmentVariables(activeEnvironmentId)
   const deleteEnvironment = useDeleteEnvironment()
+  const { data: groupsData } = useGroups()
+  const assignToGroup = useAssignEnvironmentToGroup()
+  const unassignFromGroup = useUnassignEnvironmentFromGroup()
   const queryClient = useQueryClient()
   const { t } = useTranslation()
   const dragRowRef = useRef<HTMLTableRowElement | null>(null)
@@ -306,8 +309,7 @@ export function EnvironmentModal() {
                     <th className="pb-2 w-8"></th>
                     <th className="pb-2 font-medium">{t('environment.key')}</th>
                     <th className="pb-2 font-medium w-16">{t('environment.category')}</th>
-                    <th className="pb-2 font-medium">{t('environment.teamValue')}</th>
-                    <th className="pb-2 font-medium">{t('environment.yourValue')}</th>
+                    <th className="pb-2 font-medium">{t('common.value')}</th>
                     <th className="pb-2 font-medium">{t('environment.status')}</th>
                     <th className="pb-2 w-28"></th>
                   </tr>
@@ -360,17 +362,23 @@ export function EnvironmentModal() {
                           {v.category === 'input' ? t('environment.input') : t('environment.generated')}
                         </button>
                       </td>
-                      <td className="py-3 pr-4 font-mono text-gray-400">
-                        {v.isSecret && !showSecrets ? '••••••••' : v.teamValue || '-'}
-                      </td>
                       <td className="py-3 pr-4">
-                        <input
-                          type={v.isSecret && !showSecrets ? 'password' : 'text'}
-                          value={v.localValue ?? ''}
-                          onChange={(e) => handleSetOverride(v.key, e.target.value)}
-                          placeholder="-"
-                          className="w-full px-2 py-1 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
-                        />
+                        <div className="space-y-1">
+                          <div className={clsx(
+                            'px-2 py-1 font-mono text-xs',
+                            v.status === 'overridden' ? 'text-gray-400 line-through' : 'text-gray-300'
+                          )}>
+                            <span className="text-[10px] text-blue-400/70 mr-1">[{t('environment.team')}]</span>
+                            {v.isSecret && !showSecrets ? '••••••••' : v.teamValue || '-'}
+                          </div>
+                          <input
+                            type={v.isSecret && !showSecrets ? 'password' : 'text'}
+                            value={v.localValue ?? ''}
+                            onChange={(e) => handleSetOverride(v.key, e.target.value)}
+                            placeholder={t('environment.overridePlaceholder')}
+                            className="w-full px-2 py-1 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
                       </td>
                       <td className="py-3 pr-4">
                         <button
@@ -531,6 +539,54 @@ export function EnvironmentModal() {
                   </button>
                 </div>
               )}
+
+              {/* Group assignment */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">
+                  {t('group.assignment')}
+                </label>
+                {activeEnv?.group ? (
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm bg-purple-900/30 text-purple-400 border border-purple-700/50 rounded">
+                      <Users className="w-3.5 h-3.5" />
+                      {activeEnv.group.name}
+                    </span>
+                    <button
+                      onClick={() => {
+                        if (activeEnvironmentId && confirm(t('group.confirmUnassign'))) {
+                          unassignFromGroup.mutate({ groupId: activeEnv.group!.id, environmentId: activeEnvironmentId })
+                        }
+                      }}
+                      disabled={unassignFromGroup.isPending}
+                      className="px-2 py-1.5 text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20 border border-red-700/50 rounded"
+                    >
+                      {t('group.unassign')}
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        const groupId = e.target.value
+                        if (groupId && activeEnvironmentId && confirm(t('group.confirmAssign'))) {
+                          assignToGroup.mutate({ groupId, environmentId: activeEnvironmentId })
+                        }
+                      }}
+                      disabled={assignToGroup.isPending}
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
+                    >
+                      <option value="">{t('group.selectGroup')}</option>
+                      {(groupsData as Array<{ id: string; name: string }> || []).map((g) => (
+                        <option key={g.id} value={g.id}>{g.name}</option>
+                      ))}
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {t('group.assignHelp')}
+                    </p>
+                  </div>
+                )}
+              </div>
 
               {/* Delete environment */}
               <div className="pt-6 mt-6 border-t border-gray-700">

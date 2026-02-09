@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { ChevronRight, ChevronDown, Folder, FolderOpen, FileJson, Plus, MoreVertical, Trash2, Edit2, GripVertical, Copy } from 'lucide-react'
+import { ChevronRight, ChevronDown, Folder, FolderOpen, FileJson, Plus, MoreVertical, Trash2, Edit2, GripVertical, Copy, ArrowUpFromLine, ArrowDownFromLine, Users } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
 import { useCreateFolder, useCreateRequest, useDeleteFolder, useDeleteRequest, useDuplicateRequest, useReorderFolder, useReorderRequest } from '../hooks/useApi'
@@ -9,6 +9,7 @@ interface FolderNode {
   id: string
   name: string
   sortOrder: number
+  group?: { id: string; name: string } | null
   children: FolderNode[]
   requests: Array<{
     id: string
@@ -46,12 +47,14 @@ interface FolderItemProps {
   folder: FolderNode
   level?: number
   parentId: string | null
+  siblingFolders?: FolderNode[]
+  inheritedGroup?: { id: string; name: string } | null
   onDragStart: (item: DragItem) => void
   onDragEnd: () => void
   dragItem: DragItem | null
 }
 
-function FolderItem({ folder, level = 0, parentId, onDragStart, onDragEnd, dragItem }: FolderItemProps) {
+function FolderItem({ folder, level = 0, parentId, siblingFolders = [], inheritedGroup, onDragStart, onDragEnd, dragItem }: FolderItemProps) {
   const [showMenu, setShowMenu] = useState(false)
   const [dropTarget, setDropTarget] = useState<'above' | 'inside' | 'below' | null>(null)
   const folderRef = useRef<HTMLDivElement>(null)
@@ -105,6 +108,24 @@ function FolderItem({ folder, level = 0, parentId, onDragStart, onDragEnd, dragI
     setShowMenu(false)
     createRequest.mutate({ name: 'New Request', folderId: folder.id, method: 'GET' })
     if (!isExpanded) toggleFolderExpanded(folder.id)
+  }
+
+  const handleInsertFolderBefore = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowMenu(false)
+    const idx = siblingFolders.findIndex(f => f.id === folder.id)
+    const prevOrder = idx > 0 ? siblingFolders[idx - 1].sortOrder : folder.sortOrder - 1
+    const sortOrder = Math.floor((prevOrder + folder.sortOrder) / 2)
+    createFolder.mutate({ name: 'New Folder', parentId, sortOrder: sortOrder === folder.sortOrder ? folder.sortOrder - 1 : sortOrder })
+  }
+
+  const handleInsertFolderAfter = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowMenu(false)
+    const idx = siblingFolders.findIndex(f => f.id === folder.id)
+    const nextOrder = idx < siblingFolders.length - 1 ? siblingFolders[idx + 1].sortOrder : folder.sortOrder + 1
+    const sortOrder = Math.floor((folder.sortOrder + nextOrder) / 2)
+    createFolder.mutate({ name: 'New Folder', parentId, sortOrder: sortOrder === folder.sortOrder ? folder.sortOrder + 1 : sortOrder })
   }
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -268,6 +289,22 @@ function FolderItem({ folder, level = 0, parentId, onDragStart, onDragEnd, dragI
 
         <span className="flex-1 truncate text-sm">{folder.name}</span>
 
+        {folder.group ? (
+          <span
+            className="flex items-center gap-0.5 px-1 py-0.5 text-[9px] bg-purple-900/30 text-purple-400 border border-purple-700/50 rounded shrink-0"
+            title={folder.group.name}
+          >
+            <Users className="w-3 h-3" />
+          </span>
+        ) : inheritedGroup ? (
+          <span
+            className="flex items-center gap-0.5 px-1 py-0.5 text-[9px] bg-purple-900/15 text-purple-500/50 border border-purple-700/25 rounded shrink-0"
+            title={`${inheritedGroup.name} (${t('inherited.inherited')})`}
+          >
+            <Users className="w-3 h-3" />
+          </span>
+        ) : null}
+
         <div className="relative opacity-0 group-hover:opacity-100">
           <button
             onClick={(e) => {
@@ -280,7 +317,7 @@ function FolderItem({ folder, level = 0, parentId, onDragStart, onDragEnd, dragI
           </button>
 
           {showMenu && (
-            <div className="absolute right-0 top-full z-50 mt-1 w-40 bg-gray-800 border border-gray-700 rounded shadow-lg">
+            <div className="absolute right-0 top-full z-50 mt-1 w-48 bg-gray-800 border border-gray-700 rounded shadow-lg">
               <button
                 onClick={handleAddFolder}
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
@@ -292,6 +329,19 @@ function FolderItem({ folder, level = 0, parentId, onDragStart, onDragEnd, dragI
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
               >
                 <FileJson className="w-4 h-4" /> {t('sidebar.addRequest')}
+              </button>
+              <hr className="border-gray-700" />
+              <button
+                onClick={handleInsertFolderBefore}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
+              >
+                <ArrowUpFromLine className="w-4 h-4" /> {t('sidebar.insertBefore')}
+              </button>
+              <button
+                onClick={handleInsertFolderAfter}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
+              >
+                <ArrowDownFromLine className="w-4 h-4" /> {t('sidebar.insertAfter')}
               </button>
               <hr className="border-gray-700" />
               <button
@@ -333,6 +383,8 @@ function FolderItem({ folder, level = 0, parentId, onDragStart, onDragEnd, dragI
               folder={child}
               level={level + 1}
               parentId={folder.id}
+              siblingFolders={folder.children}
+              inheritedGroup={folder.group || inheritedGroup}
               onDragStart={onDragStart}
               onDragEnd={onDragEnd}
               dragItem={dragItem}
@@ -343,6 +395,7 @@ function FolderItem({ folder, level = 0, parentId, onDragStart, onDragEnd, dragI
             <RequestItem
               key={request.id}
               request={request}
+              siblingRequests={folder.requests}
               folderId={folder.id}
               level={level + 1}
               onDragStart={onDragStart}
@@ -360,12 +413,13 @@ interface RequestItemProps {
   request: FolderNode['requests'][0]
   folderId: string
   level: number
+  siblingRequests?: FolderNode['requests']
   onDragStart: (item: DragItem) => void
   onDragEnd: () => void
   dragItem: DragItem | null
 }
 
-function RequestItem({ request, folderId, level, onDragStart, onDragEnd, dragItem }: RequestItemProps) {
+function RequestItem({ request, folderId, level, siblingRequests = [], onDragStart, onDragEnd, dragItem }: RequestItemProps) {
   const [showMenu, setShowMenu] = useState(false)
   const [dropTarget, setDropTarget] = useState<'above' | 'below' | null>(null)
   const requestRef = useRef<HTMLDivElement>(null)
@@ -375,10 +429,29 @@ function RequestItem({ request, folderId, level, onDragStart, onDragEnd, dragIte
   const setCurrentRequest = useAppStore((s) => s.setCurrentRequest)
   const openRequestTab = useAppStore((s) => s.openRequestTab)
 
+  const createRequest = useCreateRequest()
   const deleteRequest = useDeleteRequest()
   const duplicateRequest = useDuplicateRequest()
   const reorderRequest = useReorderRequest()
   const { t } = useTranslation()
+
+  const handleInsertBefore = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowMenu(false)
+    const idx = siblingRequests.findIndex(r => r.id === request.id)
+    const prevOrder = idx > 0 ? siblingRequests[idx - 1].sortOrder : request.sortOrder - 1
+    const sortOrder = Math.floor((prevOrder + request.sortOrder) / 2)
+    createRequest.mutate({ name: 'New Request', folderId, method: 'GET', sortOrder: sortOrder === request.sortOrder ? request.sortOrder - 1 : sortOrder })
+  }
+
+  const handleInsertAfter = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowMenu(false)
+    const idx = siblingRequests.findIndex(r => r.id === request.id)
+    const nextOrder = idx < siblingRequests.length - 1 ? siblingRequests[idx + 1].sortOrder : request.sortOrder + 1
+    const sortOrder = Math.floor((request.sortOrder + nextOrder) / 2)
+    createRequest.mutate({ name: 'New Request', folderId, method: 'GET', sortOrder: sortOrder === request.sortOrder ? request.sortOrder + 1 : sortOrder })
+  }
 
   const isDragging = dragItem?.type === 'request' && dragItem.id === request.id
 
@@ -494,7 +567,20 @@ function RequestItem({ request, folderId, level, onDragStart, onDragEnd, dragIte
           </button>
 
           {showMenu && (
-            <div className="absolute right-0 top-full z-50 mt-1 w-36 bg-gray-800 border border-gray-700 rounded shadow-lg">
+            <div className="absolute right-0 top-full z-50 mt-1 w-44 bg-gray-800 border border-gray-700 rounded shadow-lg">
+              <button
+                onClick={handleInsertBefore}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
+              >
+                <ArrowUpFromLine className="w-4 h-4" /> {t('sidebar.insertBefore')}
+              </button>
+              <button
+                onClick={handleInsertAfter}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
+              >
+                <ArrowDownFromLine className="w-4 h-4" /> {t('sidebar.insertAfter')}
+              </button>
+              <hr className="border-gray-700" />
               <button
                 onClick={(e) => {
                   e.stopPropagation()
@@ -578,6 +664,7 @@ export function FolderTree() {
               key={folder.id}
               folder={folder as unknown as FolderNode}
               parentId={null}
+              siblingFolders={folders as unknown as FolderNode[]}
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
               dragItem={dragItem}

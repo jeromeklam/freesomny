@@ -16,12 +16,65 @@ interface CodeGenRequest {
   authConfig: AuthConfig
 }
 
+interface InheritedHeader {
+  key: string
+  value: string
+  enabled: boolean
+  sourceFolderName: string
+}
+
+interface InheritedAuth {
+  type: AuthType
+  config: AuthConfig
+  sourceFolderName: string
+}
+
 interface CodeGeneratorModalProps {
   request: CodeGenRequest
+  inheritedHeaders?: InheritedHeader[]
+  inheritedAuth?: InheritedAuth | null
   onClose: () => void
 }
 
 type Language = 'curl' | 'php' | 'python'
+
+function getAuthHeaders(req: CodeGenRequest): Array<{ key: string; value: string }> {
+  const headers: Array<{ key: string; value: string }> = []
+  switch (req.authType) {
+    case 'bearer': {
+      const token = (req.authConfig as { token?: string }).token || ''
+      if (token) headers.push({ key: 'Authorization', value: `Bearer ${token}` })
+      break
+    }
+    case 'jwt_freefw': {
+      const token = (req.authConfig as { token?: string }).token || ''
+      if (token) headers.push({ key: 'Authorization', value: `JWT id="${token}"` })
+      break
+    }
+    case 'apikey': {
+      const config = req.authConfig as { key?: string; value?: string; addTo?: string }
+      if (config.key && config.value && config.addTo === 'header') {
+        headers.push({ key: config.key, value: config.value })
+      }
+      break
+    }
+    case 'oauth2': {
+      const config = req.authConfig as { accessToken?: string; headerPrefix?: string }
+      if (config.accessToken) {
+        headers.push({ key: 'Authorization', value: `${config.headerPrefix || 'Bearer'} ${config.accessToken}` })
+      }
+      break
+    }
+    case 'openid': {
+      const config = req.authConfig as { accessToken?: string; tokenPrefix?: string }
+      if (config.accessToken) {
+        headers.push({ key: 'Authorization', value: `${config.tokenPrefix || 'Bearer'} ${config.accessToken}` })
+      }
+      break
+    }
+  }
+  return headers
+}
 
 function generateCurl(req: CodeGenRequest): string {
   const parts: string[] = ['curl']
@@ -30,13 +83,14 @@ function generateCurl(req: CodeGenRequest): string {
     parts.push('-X', req.method)
   }
 
-  // Auth headers
-  if (req.authType === 'bearer') {
-    const token = (req.authConfig as { token?: string }).token || ''
-    parts.push('-H', `'Authorization: Bearer ${token}'`)
-  } else if (req.authType === 'basic') {
+  // Auth
+  if (req.authType === 'basic') {
     const { username, password } = req.authConfig as { username?: string; password?: string }
     parts.push('-u', `'${username || ''}:${password || ''}'`)
+  } else {
+    for (const ah of getAuthHeaders(req)) {
+      parts.push('-H', `'${ah.key}: ${ah.value}'`)
+    }
   }
 
   // Headers
@@ -104,9 +158,9 @@ function generatePhp(req: CodeGenRequest): string {
     headers.push("'Content-Type: application/x-www-form-urlencoded'")
   }
 
-  if (req.authType === 'bearer') {
-    const token = (req.authConfig as { token?: string }).token || ''
-    headers.push(`'Authorization: Bearer ${token}'`)
+  // Auth headers
+  for (const ah of getAuthHeaders(req)) {
+    headers.push(`'${ah.key}: ${ah.value}'`)
   }
 
   for (const h of req.headers) {
@@ -123,7 +177,7 @@ function generatePhp(req: CodeGenRequest): string {
     lines.push(']);')
   }
 
-  // Auth
+  // Auth (basic uses CURLOPT_USERPWD)
   if (req.authType === 'basic') {
     const { username, password } = req.authConfig as { username?: string; password?: string }
     lines.push(`curl_setopt($ch, CURLOPT_USERPWD, '${username || ''}:${password || ''}');`)
@@ -163,9 +217,9 @@ function generatePython(req: CodeGenRequest): string {
     headers['Content-Type'] = 'application/x-www-form-urlencoded'
   }
 
-  if (req.authType === 'bearer') {
-    const token = (req.authConfig as { token?: string }).token || ''
-    headers['Authorization'] = `Bearer ${token}`
+  // Auth headers
+  for (const ah of getAuthHeaders(req)) {
+    headers[ah.key] = ah.value
   }
 
   for (const h of req.headers) {
@@ -237,12 +291,51 @@ const generators: Record<Language, (req: CodeGenRequest) => string> = {
   python: generatePython,
 }
 
-export function CodeGeneratorModal({ request, onClose }: CodeGeneratorModalProps) {
+function buildMergedRequest(
+  request: CodeGenRequest,
+  inheritedHeaders?: InheritedHeader[],
+  inheritedAuth?: InheritedAuth | null,
+): CodeGenRequest {
+  // Merge inherited headers with request headers
+  const allHeaders: Array<{ key: string; value: string; enabled?: boolean }> = []
+
+  // Add inherited headers first (from parent folders)
+  if (inheritedHeaders) {
+    for (const h of inheritedHeaders) {
+      if (h.enabled) {
+        allHeaders.push({ key: h.key, value: h.value, enabled: true })
+      }
+    }
+  }
+
+  // Add request's own headers (may override inherited ones)
+  for (const h of request.headers) {
+    allHeaders.push(h)
+  }
+
+  // Determine effective auth: request's own auth, or inherited if 'inherit'
+  let effectiveAuthType = request.authType
+  let effectiveAuthConfig = request.authConfig
+  if (request.authType === 'inherit' && inheritedAuth && inheritedAuth.type !== 'none') {
+    effectiveAuthType = inheritedAuth.type
+    effectiveAuthConfig = inheritedAuth.config
+  }
+
+  return {
+    ...request,
+    headers: allHeaders,
+    authType: effectiveAuthType,
+    authConfig: effectiveAuthConfig,
+  }
+}
+
+export function CodeGeneratorModal({ request, inheritedHeaders, inheritedAuth, onClose }: CodeGeneratorModalProps) {
   const [language, setLanguage] = useState<Language>('curl')
   const [copied, setCopied] = useState(false)
   const { t } = useTranslation()
 
-  const code = generators[language](request)
+  const mergedRequest = buildMergedRequest(request, inheritedHeaders, inheritedAuth)
+  const code = generators[language](mergedRequest)
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(code)

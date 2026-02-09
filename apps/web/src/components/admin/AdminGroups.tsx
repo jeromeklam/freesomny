@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Plus, Trash2, UserPlus, UserMinus, ChevronDown, ChevronRight } from 'lucide-react'
+import { Plus, Trash2, UserPlus, UserMinus, FolderOpen, X, ChevronDown, ChevronRight } from 'lucide-react'
 import { clsx } from 'clsx'
 import { adminApi, type AdminGroup } from '../../lib/api'
 import { useTranslation } from '../../hooks/useTranslation'
@@ -81,6 +81,13 @@ export function AdminGroups() {
 
   const handleRemoveMember = async (groupId: string, memberId: string) => {
     await adminApi.removeGroupMember(groupId, memberId)
+    loadGroupDetails(groupId)
+    loadGroups()
+  }
+
+  const handleRemoveFolder = async (groupId: string, folderId: string, folderName: string) => {
+    if (!window.confirm(t('admin.groups.confirmRemoveCollection').replace('{name}', folderName))) return
+    await adminApi.removeGroupFolder(groupId, folderId)
     loadGroupDetails(groupId)
     loadGroups()
   }
@@ -247,6 +254,33 @@ export function AdminGroups() {
                     >
                       {t('admin.groups.addMember')}
                     </button>
+                  </div>
+
+                  {/* Collections */}
+                  <div className="mt-3 pt-3 border-t border-gray-700">
+                    <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+                      {t('admin.groups.folders')}
+                    </div>
+
+                    {expandedGroup.folders && expandedGroup.folders.length > 0 ? (
+                      expandedGroup.folders.map((folder) => (
+                        <div key={folder.id} className="flex items-center justify-between py-1 group/folder">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <FolderOpen className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                            <span className="text-sm text-gray-300 truncate">{folder.name}</span>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveFolder(group.id, folder.id, folder.name)}
+                            className="p-1 text-gray-500 hover:text-red-400 opacity-0 group-hover/folder:opacity-100"
+                            title={t('admin.groups.removeCollection')}
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-xs text-gray-500 italic">{t('admin.groups.noCollections')}</div>
+                    )}
                   </div>
                 </div>
               )}

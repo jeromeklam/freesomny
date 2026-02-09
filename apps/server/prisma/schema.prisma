@@ -14,7 +14,10 @@ model User {
   password     String    // bcrypt hashed
   name         String
   role                String    @default("user") // user | admin
-  isActive            Boolean   @default(true)
+  isActive            Boolean   @default(false) // admin approval required
+  isVerified          Boolean   @default(false) // email verification required
+  verifyToken         String?
+  verifyTokenExpiresAt DateTime?
   resetToken          String?
   resetTokenExpiresAt DateTime?
   createdAt           DateTime  @default(now())

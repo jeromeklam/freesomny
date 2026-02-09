@@ -192,10 +192,10 @@ sudo certbot --nginx -d api.yourdomain.com
 | `JWT_SECRET` | (insecure default) | Secret for JWT signing |
 | `AUTH_REQUIRED` | `false` | Force authentication for all users |
 | `APP_URL` | `http://localhost:5173` | Frontend URL (used in password reset links) |
-| `SMTP_HOST` | *(none)* | SMTP server hostname |
-| `SMTP_PORT` | `587` | SMTP server port |
-| `SMTP_USER` | *(none)* | SMTP username |
-| `SMTP_PASS` | *(none)* | SMTP password |
+| `SMTP_HOST` | *(none)* | SMTP server hostname (required for email) |
+| `SMTP_PORT` | `25` | SMTP port (25=relay, 587=STARTTLS, 465=SSL) |
+| `SMTP_USER` | *(none)* | SMTP username (omit for unauthenticated relay) |
+| `SMTP_PASS` | *(none)* | SMTP password (omit for unauthenticated relay) |
 | `SMTP_FROM` | `noreply@freesomnia.local` | From address for emails |
 
 ## Database Migrations

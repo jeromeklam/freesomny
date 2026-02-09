@@ -78,9 +78,22 @@ export const requestsApi = {
     request<unknown>(`/requests/${id}/resolved${environmentId ? `?environmentId=${environmentId}` : ''}`),
   getInherited: (id: string) =>
     request<unknown>(`/requests/${id}/inherited`),
-  send: (id: string, environmentId?: string) =>
-    request<unknown>(`/requests/${id}/send${environmentId ? `?environmentId=${environmentId}` : ''}`, {
+  send: (id: string, environmentId?: string, via?: string, agentId?: string) => {
+    const params = new URLSearchParams()
+    if (environmentId) params.set('environmentId', environmentId)
+    if (via) params.set('via', via)
+    if (agentId) params.set('agentId', agentId)
+    const query = params.toString()
+    return request<unknown>(`/requests/${id}/send${query ? `?${query}` : ''}`, { method: 'POST' })
+  },
+  prepare: (id: string, environmentId?: string) =>
+    request<unknown>(`/requests/${id}/prepare${environmentId ? `?environmentId=${environmentId}` : ''}`, {
       method: 'POST',
+    }),
+  report: (id: string, data: unknown) =>
+    request<unknown>(`/requests/${id}/report`, {
+      method: 'POST',
+      body: JSON.stringify(data),
     }),
 }
 
@@ -103,6 +116,8 @@ export const environmentsApi = {
     request<unknown>(`/environments/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) =>
     request<{ success: boolean }>(`/environments/${id}`, { method: 'DELETE' }),
+  duplicate: (id: string) =>
+    request<unknown>(`/environments/${id}/duplicate`, { method: 'POST' }),
   activate: (id: string) =>
     request<unknown>(`/environments/${id}/activate`, { method: 'PUT' }),
   getVariables: (id: string) => request<unknown[]>(`/environments/${id}/variables`),
@@ -192,6 +207,8 @@ export interface AuthUser {
 export interface AuthResponse {
   token: string
   user: AuthUser
+  requiresVerification?: boolean
+  message?: string
 }
 
 export interface AuthStatus {
@@ -218,6 +235,8 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify({ token, password }),
     }),
+  verify: (token: string) =>
+    request<{ success: boolean; message: string }>(`/auth/verify?token=${encodeURIComponent(token)}`),
 }
 
 // Admin
@@ -227,6 +246,7 @@ export interface AdminUser {
   name: string
   role: string
   isActive: boolean
+  isVerified: boolean
   createdAt: string
   _count: { folders: number; groupMemberships: number; environments?: number }
   groupMemberships?: { group: { id: string; name: string }; role: string }[]
@@ -240,6 +260,7 @@ export interface AdminGroup {
   updatedAt: string
   _count: { members: number; folders: number; environments: number }
   members?: { id: string; role: string; user: { id: string; email: string; name: string } }[]
+  folders?: { id: string; name: string }[]
 }
 
 export interface AuditEntry {
@@ -259,6 +280,40 @@ export interface AdminStats {
   environments: number
 }
 
+// Groups (user-facing)
+export interface UserGroup {
+  id: string
+  name: string
+  description: string
+  myRole: string
+  memberCount: number
+  folderCount: number
+  environmentCount: number
+}
+
+export const groupsApi = {
+  list: () => request<UserGroup[]>('/groups'),
+  assignFolder: (groupId: string, folderId: string) =>
+    request<unknown>(`/groups/${groupId}/folders`, {
+      method: 'POST',
+      body: JSON.stringify({ folderId }),
+    }),
+  unassignFolder: (groupId: string, folderId: string) =>
+    request<unknown>(`/groups/${groupId}/folders/${folderId}`, { method: 'DELETE' }),
+  assignEnvironment: (groupId: string, environmentId: string) =>
+    request<unknown>(`/groups/${groupId}/environments`, {
+      method: 'POST',
+      body: JSON.stringify({ environmentId }),
+    }),
+  unassignEnvironment: (groupId: string, environmentId: string) =>
+    request<unknown>(`/groups/${groupId}/environments/${environmentId}`, { method: 'DELETE' }),
+}
+
+// Agents
+export const agentsApi = {
+  list: () => request<Array<{ id: string; name: string; connectedAt: string; lastHeartbeat: string }>>('/agents'),
+}
+
 export const adminApi = {
   // Stats
   getStats: () => request<AdminStats>('/admin/stats'),
@@ -275,6 +330,10 @@ export const adminApi = {
     request<{ success: boolean; consoleOnly?: boolean }>(`/admin/users/${id}/reset-password`, {
       method: 'POST',
     }),
+  approveUser: (id: string) =>
+    request<{ success: boolean }>(`/admin/users/${id}/approve`, { method: 'PUT' }),
+  rejectUser: (id: string) =>
+    request<{ success: boolean }>(`/admin/users/${id}/reject`, { method: 'DELETE' }),
 
   // Groups
   getGroups: () => request<AdminGroup[]>('/admin/groups'),
@@ -292,6 +351,10 @@ export const adminApi = {
     }),
   removeGroupMember: (groupId: string, memberId: string) =>
     request<{ success: boolean }>(`/admin/groups/${groupId}/members/${memberId}`, {
+      method: 'DELETE',
+    }),
+  removeGroupFolder: (groupId: string, folderId: string) =>
+    request<{ success: boolean }>(`/admin/groups/${groupId}/folders/${folderId}`, {
       method: 'DELETE',
     }),
 

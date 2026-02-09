@@ -2,20 +2,76 @@ import nodemailer from 'nodemailer'
 
 function getSmtpConfig() {
   const host = process.env.SMTP_HOST
-  const port = parseInt(process.env.SMTP_PORT || '587', 10)
+  const port = parseInt(process.env.SMTP_PORT || '25', 10)
   const user = process.env.SMTP_USER
   const pass = process.env.SMTP_PASS
   const from = process.env.SMTP_FROM || 'noreply@freesomnia.local'
 
-  if (!host || !user || !pass) {
+  if (!host) {
     return null
   }
 
-  return { host, port, user, pass, from }
+  return { host, port, user: user || null, pass: pass || null, from }
+}
+
+function createTransporter(smtp: NonNullable<ReturnType<typeof getSmtpConfig>>) {
+  const options: Record<string, unknown> = {
+    host: smtp.host,
+    port: smtp.port,
+    secure: smtp.port === 465,
+  }
+
+  if (smtp.user && smtp.pass) {
+    options.auth = { user: smtp.user, pass: smtp.pass }
+  } else {
+    // Unauthenticated SMTP (e.g. port 25 relay)
+    options.tls = { rejectUnauthorized: false }
+  }
+
+  return nodemailer.createTransport(options)
 }
 
 export function isSmtpConfigured(): boolean {
   return getSmtpConfig() !== null
+}
+
+export async function sendVerificationEmail(
+  email: string,
+  verifyUrl: string
+): Promise<{ sent: boolean; consoleOnly: boolean }> {
+  const smtp = getSmtpConfig()
+
+  if (!smtp) {
+    console.log('═══════════════════════════════════════════')
+    console.log('  EMAIL VERIFICATION LINK (SMTP not configured)')
+    console.log(`  Email: ${email}`)
+    console.log(`  Link:  ${verifyUrl}`)
+    console.log('═══════════════════════════════════════════')
+    return { sent: true, consoleOnly: true }
+  }
+
+  const transporter = createTransporter(smtp)
+
+  await transporter.sendMail({
+    from: smtp.from,
+    to: email,
+    subject: 'FreeSomnia — Verify Your Email',
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+        <h2 style="color: #1e293b;">Welcome to FreeSomnia!</h2>
+        <p style="color: #475569;">Thank you for registering. Please verify your email address by clicking the button below.</p>
+        <a href="${verifyUrl}" style="display: inline-block; margin: 16px 0; padding: 12px 24px; background: #2563eb; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600;">
+          Verify Email
+        </a>
+        <p style="color: #475569;">After verification, an administrator will need to approve your account before you can log in.</p>
+        <p style="color: #94a3b8; font-size: 13px;">This link expires in 24 hours.</p>
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+        <p style="color: #94a3b8; font-size: 12px;">FreeSomnia — API Client</p>
+      </div>
+    `,
+  })
+
+  return { sent: true, consoleOnly: false }
 }
 
 export async function sendPasswordResetEmail(
@@ -34,15 +90,7 @@ export async function sendPasswordResetEmail(
     return { sent: true, consoleOnly: true }
   }
 
-  const transporter = nodemailer.createTransport({
-    host: smtp.host,
-    port: smtp.port,
-    secure: smtp.port === 465,
-    auth: {
-      user: smtp.user,
-      pass: smtp.pass,
-    },
-  })
+  const transporter = createTransporter(smtp)
 
   await transporter.sendMail({
     from: smtp.from,

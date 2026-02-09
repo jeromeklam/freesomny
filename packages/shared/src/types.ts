@@ -138,6 +138,8 @@ export interface Folder {
   verifySsl: 'inherit' | 'true' | 'false'
   proxy: string | null
   sortOrder: number
+  groupId?: string | null
+  group?: { id: string; name: string } | null
   createdAt: Date
   updatedAt: Date
   children?: Folder[]
@@ -176,6 +178,8 @@ export interface Environment {
   name: string
   description: string
   isActive: boolean
+  groupId?: string | null
+  group?: { id: string; name: string } | null
   variables?: EnvironmentVariable[]
   createdAt: Date
   updatedAt: Date
@@ -307,6 +311,46 @@ export interface ApiResponse<T> {
 export interface ApiError {
   error: string
   details?: unknown
+}
+
+// Send modes
+export type SendMode = 'server' | 'browser' | 'agent'
+
+// Prepared request ready for browser-side or agent execution
+export interface PreparedRequest {
+  method: string
+  url: string // Fully interpolated final URL with query params
+  headers: Record<string, string> // Fully interpolated, auth applied
+  body: string | null
+  requestMeta: {
+    requestId: string
+    environmentId: string | null
+    originalUrl: string
+    originalMethod: string
+  }
+  scripts: {
+    pre: {
+      logs: Array<{ source: string; message: string }>
+      errors: Array<{ source: string; message: string }>
+    }
+  }
+  skipped?: boolean
+}
+
+// Report payload sent back after browser-side fetch
+export interface BrowserFetchReport {
+  requestMeta: PreparedRequest['requestMeta']
+  response: HttpResponse
+  preScriptLogs?: Array<{ source: string; message: string }>
+  preScriptErrors?: Array<{ source: string; message: string }>
+}
+
+// Connected agent info
+export interface ConnectedAgentInfo {
+  id: string
+  name: string
+  connectedAt: string
+  lastHeartbeat: string
 }
 
 // Settings
