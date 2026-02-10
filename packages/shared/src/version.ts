@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.5.2'
+export const APP_VERSION = '0.5.3'
 
 export interface ChangelogEntry {
   version: string
@@ -7,6 +7,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.5.3',
+    date: '2026-02-10',
+    changes: [
+      'Correction : les scripts pré/post-requête ne bloquent plus l\'exécution quand isolated-vm est indisponible',
+      'Recompilation automatique d\'isolated-vm lors du déploiement (npm rebuild dans install.sh)',
+      'Correction : la coloration des variables {{}} (vert/rouge) se met à jour instantanément au changement d\'environnement',
+    ],
+  },
   {
     version: '0.5.2',
     date: '2026-02-09',

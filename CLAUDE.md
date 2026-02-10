@@ -171,8 +171,8 @@ Self-contained tarball — NO pnpm, npm, or prisma needed on the target server.
 
 **Deploy process (`install.sh`):**
 - Commands: `install` (first time), `deploy` (updates), `migrate` (DB only), `status`
-- ZERO package manager commands — just copies files and starts service
 - `deploy_files()`: backs up `.env`, copies `apps/` to `/opt/freesomnia/apps/`, restores `.env`
+- `rebuild_native_modules()`: runs `npm rebuild isolated-vm` to recompile C++ addon for target platform (requires `npm` + `build-essential`)
 - `run_migrations()`: applies `migrate-postgresql*.sql` via `psql`, tracks in `_prisma_migrations` table via direct SQL INSERT
 - `setup_service()`: creates `freesomnia` user, installs systemd service
 - `ensure_node()`: finds Node.js (nvm dirs, PATH) and copies to `/usr/local/bin/node`
@@ -195,7 +195,8 @@ Self-contained tarball — NO pnpm, npm, or prisma needed on the target server.
 ```
 
 **Cross-platform notes:**
-- `isolated-vm` (C++ native addon): uses lazy dynamic import in `sandbox.ts` — server starts even if module can't load on target platform
+- `isolated-vm` (C++ native addon): lazy dynamic import in `sandbox.ts` — server starts even if module can't load; scripts skip gracefully with warning instead of blocking requests
+- `install.sh` automatically runs `npm rebuild isolated-vm` after deploy (requires `apt install npm build-essential python3` on server)
 - Prisma binary targets: macOS builds include both `native` (macOS) and `debian-openssl-3.0.x` (Linux) query engines
 - Schema patching happens BEFORE `pnpm deploy` so `@prisma/client` postinstall generates the correct PostgreSQL client
 
