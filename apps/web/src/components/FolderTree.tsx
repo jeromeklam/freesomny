@@ -796,6 +796,62 @@ export function FolderTree() {
 
   return (
     <div className="flex flex-col h-full">
+      {/* FAVORITES section — above collections */}
+      {favorites.length > 0 && (
+        <div className="border-b border-gray-700">
+          <div
+            className="flex items-center gap-1 px-3 py-2 cursor-pointer hover:bg-gray-800/50"
+            onClick={() => setFavoritesExpanded(!favoritesExpanded)}
+          >
+            {favoritesExpanded ? (
+              <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+            ) : (
+              <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
+            )}
+            <Star className="w-3.5 h-3.5 text-yellow-400 fill-current" />
+            <span className="text-sm font-medium text-gray-400">{t('sidebar.favorites')}</span>
+            <span className="text-[10px] text-gray-600 ml-1">{favorites.length}</span>
+          </div>
+
+          {favoritesExpanded && (
+            <div className="pb-1">
+              {favorites.map((fav) => (
+                <div
+                  key={fav.id}
+                  className={clsx(
+                    'flex items-center gap-2 px-2 py-1 cursor-pointer hover:bg-gray-800 rounded group',
+                    selectedRequestId === fav.id && 'bg-gray-800'
+                  )}
+                  style={{ paddingLeft: '24px' }}
+                  onClick={() => {
+                    openRequestTab(fav.id, fav.name, fav.method)
+                    setSelectedFolderId(null)
+                    setCurrentRequest(null)
+                  }}
+                >
+                  <MethodBadge method={fav.method} />
+                  <span className="flex-1 truncate text-sm">{fav.name}</span>
+                  <span className="text-[10px] text-gray-600 truncate max-w-[80px]" title={fav.folderName}>
+                    {fav.folderName}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleFavorite.mutate({ id: fav.id, isFavorite: false })
+                    }}
+                    className="p-0.5 text-yellow-400 opacity-0 group-hover:opacity-100 hover:text-yellow-500 rounded transition-opacity"
+                    title={t('sidebar.removeFromFavorites')}
+                  >
+                    <Star className="w-3 h-3 fill-current" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* COLLECTIONS header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-gray-700">
         <span className="text-sm font-medium text-gray-400">{t('sidebar.collections')}</span>
         <div className="flex items-center gap-1">
@@ -816,6 +872,7 @@ export function FolderTree() {
         </div>
       </div>
 
+      {/* Search bar — only for collections */}
       {showSearch && (
         <div className="flex items-center gap-1 px-2 py-1.5 border-b border-gray-700">
           <Search className="w-3.5 h-3.5 text-gray-500 shrink-0" />
@@ -840,64 +897,8 @@ export function FolderTree() {
         </div>
       )}
 
+      {/* Collection tree */}
       <div className="flex-1 overflow-auto py-2">
-        {/* FAVORITES section */}
-        {favorites.length > 0 && (
-          <div className="mb-1">
-            <div
-              className="flex items-center gap-1 px-3 py-1 cursor-pointer hover:bg-gray-800/50"
-              onClick={() => setFavoritesExpanded(!favoritesExpanded)}
-            >
-              {favoritesExpanded ? (
-                <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
-              ) : (
-                <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
-              )}
-              <Star className="w-3.5 h-3.5 text-yellow-400 fill-current" />
-              <span className="text-xs font-medium text-gray-400">{t('sidebar.favorites')}</span>
-              <span className="text-[10px] text-gray-600 ml-1">{favorites.length}</span>
-            </div>
-
-            {favoritesExpanded && (
-              <div className="mt-0.5">
-                {favorites.map((fav) => (
-                  <div
-                    key={fav.id}
-                    className={clsx(
-                      'flex items-center gap-2 px-2 py-1 cursor-pointer hover:bg-gray-800 rounded group',
-                      selectedRequestId === fav.id && 'bg-gray-800'
-                    )}
-                    style={{ paddingLeft: '24px' }}
-                    onClick={() => {
-                      openRequestTab(fav.id, fav.name, fav.method)
-                      setSelectedFolderId(null)
-                      setCurrentRequest(null)
-                    }}
-                  >
-                    <MethodBadge method={fav.method} />
-                    <span className="flex-1 truncate text-sm">{fav.name}</span>
-                    <span className="text-[10px] text-gray-600 truncate max-w-[80px]" title={fav.folderName}>
-                      {fav.folderName}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        toggleFavorite.mutate({ id: fav.id, isFavorite: false })
-                      }}
-                      className="p-0.5 text-yellow-400 opacity-0 group-hover:opacity-100 hover:text-yellow-500 rounded transition-opacity"
-                      title={t('sidebar.removeFromFavorites')}
-                    >
-                      <Star className="w-3 h-3 fill-current" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="mx-3 my-1 border-b border-gray-700/50" />
-          </div>
-        )}
-
         {folders.length === 0 ? (
           <div className="px-4 py-8 text-center text-gray-500 text-sm">
             <p>{t('sidebar.noCollections')}</p>
