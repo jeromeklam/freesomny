@@ -1,5 +1,3 @@
-import type { ResolvedRequest, HttpResponse } from '@api-client/shared'
-
 // Lazy import: isolated-vm is a native C++ module that may not be
 // available on cross-platform deployments (built on macOS, deployed on Linux).
 // We load it on first use so the server can start without it.
@@ -274,7 +272,20 @@ export async function runPreRequestScript(
   script: string,
   context: ScriptContext
 ): Promise<ScriptResult> {
-  const ivm = await getIvm()
+  let ivm: any
+  try {
+    ivm = await getIvm()
+  } catch {
+    // isolated-vm not available (cross-platform deploy) — skip script silently
+    return {
+      success: true,
+      logs: ['[warn] Script skipped: isolated-vm not available on this platform'],
+      errors: [],
+      tests: [],
+      envUpdates: new Map(),
+      skip: false,
+    }
+  }
   const isolate = new ivm.Isolate({ memoryLimit: 8 })
 
   try {
@@ -340,7 +351,20 @@ export async function runPostResponseScript(
   script: string,
   context: ScriptContext
 ): Promise<ScriptResult> {
-  const ivm = await getIvm()
+  let ivm: any
+  try {
+    ivm = await getIvm()
+  } catch {
+    // isolated-vm not available (cross-platform deploy) — skip script silently
+    return {
+      success: true,
+      logs: ['[warn] Script skipped: isolated-vm not available on this platform'],
+      errors: [],
+      tests: [],
+      envUpdates: new Map(),
+      skip: false,
+    }
+  }
   const isolate = new ivm.Isolate({ memoryLimit: 8 })
 
   try {
