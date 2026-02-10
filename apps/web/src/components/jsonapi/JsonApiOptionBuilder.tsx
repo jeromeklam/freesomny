@@ -42,7 +42,7 @@ export function JsonApiOptionBuilder({ entries, onChange }: JsonApiOptionBuilder
         <p className="text-gray-500 text-sm mb-4">{t('jsonapi.option.noOptions')}</p>
         <button
           onClick={handleAdd}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-800 border border-gray-700 rounded"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded"
         >
           <Plus className="w-4 h-4" />
           {t('jsonapi.option.addOption')}
@@ -59,7 +59,7 @@ export function JsonApiOptionBuilder({ entries, onChange }: JsonApiOptionBuilder
             type="checkbox"
             checked={entry.enabled}
             onChange={() => handleToggle(entry.id)}
-            className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded"
+            className="w-4 h-4 text-blue-600 bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded"
           />
           <span className="text-gray-500 text-sm font-mono">option[</span>
           <input
@@ -67,7 +67,7 @@ export function JsonApiOptionBuilder({ entries, onChange }: JsonApiOptionBuilder
             value={entry.key}
             onChange={(e) => handleChange(entry.id, e.target.value)}
             placeholder={t('jsonapi.option.keyPlaceholder')}
-            className="flex-1 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
+            className="flex-1 px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
           />
           <span className="text-gray-500 text-sm font-mono">]</span>
           <button
@@ -81,7 +81,7 @@ export function JsonApiOptionBuilder({ entries, onChange }: JsonApiOptionBuilder
 
       <button
         onClick={handleAdd}
-        className="flex items-center gap-1 mt-3 px-3 py-1.5 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded"
+        className="flex items-center gap-1 mt-3 px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
       >
         <Plus className="w-4 h-4" />
         {t('jsonapi.option.addOption')}

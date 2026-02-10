@@ -46,7 +46,7 @@ function SourceTag({ source }: { source: string }) {
       'inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded',
       isAuth
         ? 'bg-blue-900/40 text-blue-400 border border-blue-700/50'
-        : 'bg-gray-700 text-gray-300'
+        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
     )}>
       [{source}]
     </span>
@@ -94,15 +94,15 @@ export function ResolvedView({ requestId }: ResolvedViewProps) {
     <div className="p-4 space-y-6 overflow-auto">
       {/* URL */}
       <section>
-        <h3 className="text-sm font-medium text-gray-400 uppercase mb-2">URL</h3>
-        <div className="bg-gray-800 rounded p-3">
+        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">URL</h3>
+        <div className="bg-white dark:bg-gray-800 rounded p-3">
           <div className="font-mono text-sm text-green-400 mb-2">{resolved.url.final}</div>
           {resolved.url.segments.length > 0 && (
-            <div className="border-t border-gray-700 pt-2 mt-2">
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
               <p className="text-xs text-gray-500 mb-1">Segments:</p>
               {resolved.url.segments.map((segment, i) => (
                 <div key={i} className="flex items-center gap-2 text-sm">
-                  <code className="text-gray-300">{segment.raw}</code>
+                  <code className="text-gray-700 dark:text-gray-300">{segment.raw}</code>
                   <SourceTag source={segment.folderName || segment.source} />
                   {segment.raw !== segment.resolved && (
                     <span className="text-gray-500">→ {segment.resolved}</span>
@@ -116,13 +116,13 @@ export function ResolvedView({ requestId }: ResolvedViewProps) {
 
       {/* Headers */}
       <section>
-        <h3 className="text-sm font-medium text-gray-400 uppercase mb-2">
+        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">
           Headers ({resolved.headers.length} resolved)
         </h3>
-        <div className="bg-gray-800 rounded overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-gray-500 uppercase border-b border-gray-700">
+              <tr className="text-left text-xs text-gray-500 uppercase border-b border-gray-200 dark:border-gray-700">
                 <th className="px-3 py-2 font-medium">Key</th>
                 <th className="px-3 py-2 font-medium">Value</th>
                 <th className="px-3 py-2 font-medium">Source</th>
@@ -134,13 +134,13 @@ export function ResolvedView({ requestId }: ResolvedViewProps) {
                 const isAuthGenerated = header.source.startsWith('auth:')
                 return (
                   <tr key={i} className={clsx(
-                    'border-b border-gray-700/50 last:border-0',
+                    'border-b border-gray-200/50 dark:border-gray-700/50 last:border-0',
                     isAuthGenerated && 'bg-blue-900/10'
                   )}>
-                    <td className={clsx('px-3 py-2 font-mono', isAuthGenerated ? 'text-blue-400' : 'text-gray-300')}>
+                    <td className={clsx('px-3 py-2 font-mono', isAuthGenerated ? 'text-blue-400' : 'text-gray-700 dark:text-gray-300')}>
                       {header.key}
                     </td>
-                    <td className={clsx('px-3 py-2 font-mono truncate max-w-xs', isAuthGenerated ? 'text-blue-400' : 'text-gray-300')}>
+                    <td className={clsx('px-3 py-2 font-mono truncate max-w-xs', isAuthGenerated ? 'text-blue-400' : 'text-gray-700 dark:text-gray-300')}>
                       {header.value}
                     </td>
                     <td className="px-3 py-2">
@@ -166,13 +166,13 @@ export function ResolvedView({ requestId }: ResolvedViewProps) {
 
       {/* Query Params */}
       <section>
-        <h3 className="text-sm font-medium text-gray-400 uppercase mb-2">
+        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">
           Query Params ({resolved.queryParams.length} resolved)
         </h3>
-        <div className="bg-gray-800 rounded overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-gray-500 uppercase border-b border-gray-700">
+              <tr className="text-left text-xs text-gray-500 uppercase border-b border-gray-200 dark:border-gray-700">
                 <th className="px-3 py-2 font-medium">Key</th>
                 <th className="px-3 py-2 font-medium">Value</th>
                 <th className="px-3 py-2 font-medium">Source</th>
@@ -181,9 +181,9 @@ export function ResolvedView({ requestId }: ResolvedViewProps) {
             </thead>
             <tbody>
               {resolved.queryParams.map((param, i) => (
-                <tr key={i} className="border-b border-gray-700/50 last:border-0">
-                  <td className="px-3 py-2 font-mono text-gray-300">{param.key}</td>
-                  <td className="px-3 py-2 font-mono text-gray-300">{param.value}</td>
+                <tr key={i} className="border-b border-gray-200/50 dark:border-gray-700/50 last:border-0">
+                  <td className="px-3 py-2 font-mono text-gray-700 dark:text-gray-300">{param.key}</td>
+                  <td className="px-3 py-2 font-mono text-gray-700 dark:text-gray-300">{param.value}</td>
                   <td className="px-3 py-2">
                     <SourceTag source={param.source} />
                   </td>
@@ -206,8 +206,8 @@ export function ResolvedView({ requestId }: ResolvedViewProps) {
 
       {/* Auth */}
       <section>
-        <h3 className="text-sm font-medium text-gray-400 uppercase mb-2">Auth</h3>
-        <div className="bg-gray-800 rounded p-3">
+        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Auth</h3>
+        <div className="bg-white dark:bg-gray-800 rounded p-3">
           <div className="flex items-center gap-2 mb-2">
             <span className="font-medium">Type:</span>
             <span className="font-mono text-blue-400">{resolved.auth.type}</span>
@@ -221,14 +221,14 @@ export function ResolvedView({ requestId }: ResolvedViewProps) {
 
       {/* Scripts */}
       <section>
-        <h3 className="text-sm font-medium text-gray-400 uppercase mb-2">Scripts</h3>
-        <div className="bg-gray-800 rounded p-3 space-y-4">
+        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Scripts</h3>
+        <div className="bg-white dark:bg-gray-800 rounded p-3 space-y-4">
           <div>
-            <p className="text-sm text-gray-400 mb-1">Pre-request (top-down):</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Pre-request (top-down):</p>
             {resolved.scripts.pre.length > 0 ? (
               <ol className="list-decimal list-inside text-sm">
                 {resolved.scripts.pre.map((script, i) => (
-                  <li key={i} className="text-gray-300">
+                  <li key={i} className="text-gray-700 dark:text-gray-300">
                     <SourceTag source={script.source} />
                     <span className="ml-2 text-gray-500">
                       {script.script.substring(0, 50)}
@@ -242,11 +242,11 @@ export function ResolvedView({ requestId }: ResolvedViewProps) {
             )}
           </div>
           <div>
-            <p className="text-sm text-gray-400 mb-1">Post-response (bottom-up):</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Post-response (bottom-up):</p>
             {resolved.scripts.post.length > 0 ? (
               <ol className="list-decimal list-inside text-sm">
                 {resolved.scripts.post.map((script, i) => (
-                  <li key={i} className="text-gray-300">
+                  <li key={i} className="text-gray-700 dark:text-gray-300">
                     <SourceTag source={script.source} />
                     <span className="ml-2 text-gray-500">
                       {script.script.substring(0, 50)}

@@ -132,7 +132,7 @@ export function ResizableModal({
     >
       <div
         className={clsx(
-          'relative bg-gray-900 border border-gray-700 rounded-lg shadow-xl flex flex-col overflow-hidden',
+          'relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl flex flex-col overflow-hidden',
           className
         )}
         style={{

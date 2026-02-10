@@ -378,7 +378,7 @@ export function RequestBuilder() {
   return (
     <div className="flex flex-col h-full">
       {/* URL Bar */}
-      <div className="flex items-center gap-2 p-3 border-b border-gray-700">
+      <div className="flex items-center gap-2 p-3 border-b border-gray-200 dark:border-gray-700">
         <select
           value={localRequest.method}
           onChange={(e) => handleChange('method', e.target.value)}
@@ -394,7 +394,7 @@ export function RequestBuilder() {
           ))}
         </select>
 
-        <div className="flex-1 bg-gray-800 border border-gray-600 rounded focus-within:border-blue-500 overflow-hidden">
+        <div className="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded focus-within:border-blue-500 overflow-hidden">
           <CodeMirror
             value={localRequest.url}
             onChange={(val) => handleChange('url', val)}
@@ -413,8 +413,8 @@ export function RequestBuilder() {
           className={clsx(
             'p-2 rounded',
             showDescription || localRequest.description
-              ? 'text-blue-400 hover:text-blue-300 hover:bg-gray-700'
-              : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              ? 'text-blue-400 hover:text-blue-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700'
           )}
           title={t('request.description')}
         >
@@ -423,7 +423,7 @@ export function RequestBuilder() {
 
         <button
           onClick={() => setShowCodeGen(true)}
-          className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
+          className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
           title={t('codegen.title')}
         >
           <Code2 className="w-4 h-4" />
@@ -454,11 +454,11 @@ export function RequestBuilder() {
             <ChevronDown className="w-3 h-3" />
           </button>
           {showSendModeMenu && (
-            <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-600 rounded shadow-lg z-50 w-64">
+            <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg z-50 w-64">
               <button
                 onClick={() => { setSendMode('server'); setShowSendModeMenu(false) }}
                 className={clsx(
-                  'flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-gray-700',
+                  'flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-gray-200 dark:hover:bg-gray-700',
                   sendMode === 'server' && 'text-blue-400'
                 )}
               >
@@ -471,7 +471,7 @@ export function RequestBuilder() {
               <button
                 onClick={() => { setSendMode('browser'); setShowSendModeMenu(false) }}
                 className={clsx(
-                  'flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-gray-700',
+                  'flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-gray-200 dark:hover:bg-gray-700',
                   sendMode === 'browser' && 'text-blue-400'
                 )}
               >
@@ -484,7 +484,7 @@ export function RequestBuilder() {
               <button
                 onClick={() => { setSendMode('agent'); setShowSendModeMenu(false) }}
                 className={clsx(
-                  'flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-gray-700',
+                  'flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-gray-200 dark:hover:bg-gray-700',
                   sendMode === 'agent' && 'text-blue-400'
                 )}
               >
@@ -495,12 +495,12 @@ export function RequestBuilder() {
                 </div>
               </button>
               {sendMode === 'browser' && (
-                <div className="px-3 py-2 text-xs text-yellow-400 border-t border-gray-700">
+                <div className="px-3 py-2 text-xs text-yellow-400 border-t border-gray-200 dark:border-gray-700">
                   {t('sendMode.corsWarning')}
                 </div>
               )}
               {sendMode === 'agent' && (
-                <div className="border-t border-gray-700 py-1">
+                <div className="border-t border-gray-200 dark:border-gray-700 py-1">
                   {agents && agents.length > 0 ? (
                     <>
                       <div className="px-3 py-1 text-xs text-gray-500">{t('sendMode.selectAgent')}</div>
@@ -509,7 +509,7 @@ export function RequestBuilder() {
                           key={agent.id}
                           onClick={() => { setSelectedAgentId(agent.id); setShowSendModeMenu(false) }}
                           className={clsx(
-                            'flex items-center gap-2 w-full px-3 py-1.5 text-sm hover:bg-gray-700',
+                            'flex items-center gap-2 w-full px-3 py-1.5 text-sm hover:bg-gray-200 dark:hover:bg-gray-700',
                             selectedAgentId === agent.id && 'text-green-400'
                           )}
                         >
@@ -532,20 +532,20 @@ export function RequestBuilder() {
 
       {/* Description */}
       {showDescription && (
-        <div className="px-3 pb-2 border-b border-gray-700">
+        <div className="px-3 pb-2 border-b border-gray-200 dark:border-gray-700">
           <textarea
             value={localRequest.description || ''}
             onChange={(e) => handleChange('description', e.target.value)}
             onBlur={handleSave}
             placeholder={t('request.descriptionPlaceholder')}
             rows={2}
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-gray-300 placeholder-gray-600 resize-y focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-600 resize-y focus:outline-none focus:border-blue-500"
           />
         </div>
       )}
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-700">
+      <div className="flex border-b border-gray-200 dark:border-gray-700">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -554,7 +554,7 @@ export function RequestBuilder() {
               'px-4 py-2 text-sm font-medium border-b-2 -mb-px',
               activeTab === tab.id
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             )}
           >
             {tab.label}
@@ -574,7 +574,7 @@ export function RequestBuilder() {
                     'flex items-center gap-1.5 px-2 py-1 text-xs rounded border',
                     showInherited
                       ? 'text-blue-400 border-blue-500/30 bg-blue-500/10'
-                      : 'text-gray-500 border-gray-700 hover:text-gray-400'
+                      : 'text-gray-500 border-gray-200 dark:border-gray-700 hover:text-gray-500 dark:hover:text-gray-400'
                   )}
                   title={showInherited ? t('inherited.hideInherited') : t('inherited.showInherited')}
                 >
@@ -584,7 +584,7 @@ export function RequestBuilder() {
               ) : <div />}
               <button
                 onClick={() => setShowJsonApiBuilder(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-800 border border-gray-700 rounded"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded"
               >
                 <Filter className="w-4 h-4" />
                 {t('jsonapi.builder')}
@@ -612,7 +612,7 @@ export function RequestBuilder() {
                     'flex items-center gap-1.5 px-2 py-1 text-xs rounded border',
                     showInherited
                       ? 'text-blue-400 border-blue-500/30 bg-blue-500/10'
-                      : 'text-gray-500 border-gray-700 hover:text-gray-400'
+                      : 'text-gray-500 border-gray-200 dark:border-gray-700 hover:text-gray-500 dark:hover:text-gray-400'
                   )}
                   title={showInherited ? t('inherited.hideInherited') : t('inherited.showInherited')}
                 >

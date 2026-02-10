@@ -19,18 +19,18 @@ export function ChangelogModal() {
       minWidth={380}
       minHeight={300}
       onClose={() => setShowChangelog(false)}
-      className="bg-gray-800"
+      className="bg-white dark:bg-gray-800"
     >
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold">
             {t('changelog.title')}
-            <span className="ml-2 text-sm font-normal text-gray-400">v{APP_VERSION}</span>
+            <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">v{APP_VERSION}</span>
           </h2>
           <button
             onClick={() => setShowChangelog(false)}
-            className="p-1 text-gray-400 hover:text-white rounded hover:bg-gray-700"
+            className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded hover:bg-gray-200 dark:hover:bg-gray-700"
           >
             <X className="w-5 h-5" />
           </button>
@@ -48,7 +48,7 @@ export function ChangelogModal() {
               </div>
               <ul className="space-y-1 ml-1">
                 {entry.changes.map((change, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
                     <span className="text-blue-400 mt-1 shrink-0">•</span>
                     <span>{change}</span>
                   </li>

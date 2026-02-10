@@ -80,8 +80,8 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur, inheritedAu
   }
 
   const inputClass =
-    'w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500'
-  const labelClass = 'block text-sm text-gray-400 mb-1'
+    'w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500'
+  const labelClass = 'block text-sm text-gray-500 dark:text-gray-400 mb-1'
 
   return (
     <div className="p-4">
@@ -104,12 +104,12 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur, inheritedAu
         <div>
           <p className="text-sm text-gray-500">{t('auth.inheritFromParent')}</p>
           {inheritedAuth && inheritedAuth.type !== 'none' && (
-            <div className="mt-3 p-3 bg-gray-800/50 border border-gray-700/50 rounded opacity-60">
+            <div className="mt-3 p-3 bg-white/50 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50 rounded opacity-60">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-medium text-gray-400 uppercase">
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                   {AUTH_TYPES[inheritedAuth.type]?.label || inheritedAuth.type}
                 </span>
-                <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-gray-700/60 text-gray-400 rounded">
+                <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-gray-200/60 dark:bg-gray-700/60 text-gray-500 dark:text-gray-400 rounded">
                   {inheritedAuth.sourceFolderName}
                 </span>
               </div>
@@ -371,7 +371,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur, inheritedAu
                 handleConfigChange('pkce', e.target.checked)
                 onBlur?.()
               }}
-              className="w-4 h-4 rounded bg-gray-700 border-gray-600"
+              className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
             />
             <label className="text-sm">{t('auth.enablePkce')}</label>
           </div>
@@ -424,7 +424,7 @@ export function AuthEditor({ authType, authConfig, onChange, onBlur, inheritedAu
                 handleConfigChange('includePayloadHash', e.target.checked)
                 onBlur?.()
               }}
-              className="w-4 h-4 rounded bg-gray-700 border-gray-600"
+              className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
             />
             <label className="text-sm">{t('auth.includePayloadHash')}</label>
           </div>

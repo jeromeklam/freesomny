@@ -65,12 +65,12 @@ export function AuthScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">FreeSomnia</h1>
-          <p className="text-gray-400 mt-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">FreeSomnia</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">
             {setupRequired
               ? t('auth.createFirstAccount')
               : effectiveMode === 'forgot'
@@ -80,17 +80,17 @@ export function AuthScreen() {
         </div>
 
         {/* Auth Card */}
-        <div className="bg-gray-800 rounded-lg shadow-xl p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6">
           {/* Mode Toggle (only show if not setup and not forgot) */}
           {!setupRequired && effectiveMode !== 'forgot' && (
-            <div className="flex mb-6 bg-gray-900 rounded-lg p-1">
+            <div className="flex mb-6 bg-gray-50 dark:bg-gray-900 rounded-lg p-1">
               <button
                 onClick={() => setMode('login')}
                 className={clsx(
                   'flex-1 py-2 text-sm font-medium rounded-md transition-colors',
                   mode === 'login'
-                    ? 'bg-gray-700 text-white'
-                    : 'text-gray-400 hover:text-white'
+                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                 )}
               >
                 {t('auth.login')}
@@ -100,8 +100,8 @@ export function AuthScreen() {
                 className={clsx(
                   'flex-1 py-2 text-sm font-medium rounded-md transition-colors',
                   mode === 'register'
-                    ? 'bg-gray-700 text-white'
-                    : 'text-gray-400 hover:text-white'
+                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                 )}
               >
                 {t('auth.register')}
@@ -119,7 +119,7 @@ export function AuthScreen() {
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       {t('auth.email')}
                     </label>
                     <input
@@ -127,7 +127,7 @@ export function AuthScreen() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                      className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500"
                       placeholder={t('auth.emailPlaceholder')}
                     />
                   </div>
@@ -150,7 +150,7 @@ export function AuthScreen() {
 
               <button
                 onClick={switchToLogin}
-                className="w-full text-sm text-gray-400 hover:text-gray-300 mt-2"
+                className="w-full text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 mt-2"
               >
                 {t('auth.backToLogin')}
               </button>
@@ -166,7 +166,7 @@ export function AuthScreen() {
                   setRegisterSuccess(false)
                   setMode('login')
                 }}
-                className="w-full text-sm text-gray-400 hover:text-gray-300"
+                className="w-full text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               >
                 {t('auth.backToLogin')}
               </button>
@@ -176,7 +176,7 @@ export function AuthScreen() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {effectiveMode === 'register' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t('auth.name')}
                   </label>
                   <input
@@ -184,14 +184,14 @@ export function AuthScreen() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
-                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500"
                     placeholder={t('auth.namePlaceholder')}
                   />
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('auth.email')}
                 </label>
                 <input
@@ -199,13 +199,13 @@ export function AuthScreen() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500"
                   placeholder={t('auth.emailPlaceholder')}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('auth.password')}
                 </label>
                 <input
@@ -214,7 +214,7 @@ export function AuthScreen() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500"
                   placeholder={t('auth.passwordPlaceholder')}
                 />
                 {effectiveMode === 'register' && (
@@ -245,7 +245,7 @@ export function AuthScreen() {
                 <button
                   type="button"
                   onClick={switchToForgot}
-                  className="w-full text-sm text-gray-400 hover:text-gray-300"
+                  className="w-full text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                 >
                   {t('auth.forgotPassword')}
                 </button>

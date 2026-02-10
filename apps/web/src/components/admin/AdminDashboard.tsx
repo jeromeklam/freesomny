@@ -16,7 +16,7 @@ export function AdminDashboard() {
 
   if (!stats) {
     return (
-      <div className="p-6 text-center text-gray-400">{t('common.loading')}</div>
+      <div className="p-6 text-center text-gray-500 dark:text-gray-400">{t('common.loading')}</div>
     )
   }
 
@@ -35,13 +35,13 @@ export function AdminDashboard() {
         {cards.map((card) => (
           <div
             key={card.label}
-            className="bg-gray-900 border border-gray-700 rounded-lg p-4"
+            className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
           >
             <div className="flex items-center gap-3">
               <card.icon className={clsx('w-8 h-8', card.color)} />
               <div>
-                <div className="text-2xl font-bold text-white">{card.value}</div>
-                <div className="text-xs text-gray-400">{card.label}</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">{card.value}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{card.label}</div>
               </div>
             </div>
           </div>
@@ -49,11 +49,11 @@ export function AdminDashboard() {
       </div>
 
       {/* SMTP Status */}
-      <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
+      <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
         <div className="flex items-center gap-3">
-          <Mail className="w-5 h-5 text-gray-400" />
+          <Mail className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           <div>
-            <div className="text-sm font-medium text-gray-300">{t('admin.dashboard.smtpStatus')}</div>
+            <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('admin.dashboard.smtpStatus')}</div>
             {smtpConfigured !== null && (
               <div className={clsx('text-xs mt-0.5', smtpConfigured ? 'text-green-400' : 'text-yellow-400')}>
                 {smtpConfigured ? t('admin.dashboard.smtpConfigured') : t('admin.dashboard.smtpNotConfigured')}

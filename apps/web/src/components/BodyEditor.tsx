@@ -275,7 +275,7 @@ export function BodyEditor({ bodyType, body, onChange, onBlur, variables = [], q
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-4 p-3 border-b border-gray-700">
+      <div className="flex items-center gap-4 p-3 border-b border-gray-200 dark:border-gray-700">
         {Object.entries(BODY_TYPES).map(([value, { label }]) => (
           <label key={value} className="flex items-center gap-2 cursor-pointer">
             <input
@@ -284,9 +284,9 @@ export function BodyEditor({ bodyType, body, onChange, onBlur, variables = [], q
               value={value}
               checked={bodyType === value}
               onChange={() => handleTypeChange(value)}
-              className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600"
+              className="w-4 h-4 text-blue-600 bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
             />
-            <span className={clsx('text-sm', bodyType === value ? 'text-white' : 'text-gray-400')}>
+            <span className={clsx('text-sm', bodyType === value ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400')}>
               {label}
             </span>
           </label>
@@ -311,7 +311,7 @@ export function BodyEditor({ bodyType, body, onChange, onBlur, variables = [], q
               <button
                 onClick={formatJson}
                 disabled={!!jsonError}
-                className="px-3 py-1 text-xs text-gray-400 hover:text-white border border-gray-600 rounded hover:border-gray-500 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-3 py-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-300 dark:border-gray-600 rounded hover:border-gray-400 dark:hover:border-gray-500 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {t('body.format')}
               </button>
@@ -383,7 +383,7 @@ export function BodyEditor({ bodyType, body, onChange, onBlur, variables = [], q
                 ? t('body.enterUrlencoded')
                 : t('body.enterContent')
             }
-            className="w-full h-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono resize-none focus:outline-none focus:border-blue-500"
+            className="w-full h-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono resize-none focus:outline-none focus:border-blue-500"
           />
         </div>
       )}

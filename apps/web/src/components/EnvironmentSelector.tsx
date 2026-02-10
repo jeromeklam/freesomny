@@ -46,17 +46,17 @@ export function EnvironmentSelector() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-800 border border-gray-700 rounded hover:bg-gray-700"
+        className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
       >
-        <span className="text-gray-400">Env:</span>
+        <span className="text-gray-500 dark:text-gray-400">Env:</span>
         <span className="font-medium">{activeEnv?.name || 'No environment'}</span>
-        <ChevronDown className="w-4 h-4 text-gray-400" />
+        <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
       </button>
 
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 top-full z-50 mt-1 w-64 bg-gray-800 border border-gray-700 rounded shadow-lg">
+          <div className="absolute right-0 top-full z-50 mt-1 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
             <div className="p-2">
               {environments.length === 0 && !isLoading ? (
                 <p className="px-2 py-2 text-sm text-gray-500">No environments yet</p>
@@ -65,8 +65,8 @@ export function EnvironmentSelector() {
                   <div
                     key={env.id}
                     className={clsx(
-                      'flex items-center justify-between px-3 py-2 text-sm rounded hover:bg-gray-700 group',
-                      env.id === activeEnvironmentId && 'bg-gray-700'
+                      'flex items-center justify-between px-3 py-2 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 group',
+                      env.id === activeEnvironmentId && 'bg-gray-100 dark:bg-gray-700'
                     )}
                   >
                     <button
@@ -103,7 +103,7 @@ export function EnvironmentSelector() {
               )}
             </div>
 
-            <hr className="border-gray-700" />
+            <hr className="border-gray-200 dark:border-gray-700" />
 
             {showCreate ? (
               <div className="p-2">
@@ -116,20 +116,20 @@ export function EnvironmentSelector() {
                     if (e.key === 'Escape') setShowCreate(false)
                   }}
                   placeholder="Environment name"
-                  className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded text-sm focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded text-sm focus:outline-none focus:border-blue-500"
                   autoFocus
                 />
                 <div className="flex gap-2 mt-2">
                   <button
                     onClick={handleCreate}
                     disabled={!newEnvName.trim()}
-                    className="flex-1 px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 rounded"
+                    className="flex-1 px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white rounded"
                   >
                     Create
                   </button>
                   <button
                     onClick={() => setShowCreate(false)}
-                    className="px-3 py-1.5 text-sm text-gray-400 hover:text-white"
+                    className="px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   >
                     Cancel
                   </button>
@@ -139,7 +139,7 @@ export function EnvironmentSelector() {
               <div className="p-2 space-y-1">
                 <button
                   onClick={() => setShowCreate(true)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
                 >
                   <Plus className="w-4 h-4" />
                   New Environment
@@ -149,7 +149,7 @@ export function EnvironmentSelector() {
                     setIsOpen(false)
                     setShowEnvironmentModal(true)
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
                 >
                   <Settings className="w-4 h-4" />
                   Manage Environments

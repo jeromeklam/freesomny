@@ -61,7 +61,7 @@ export function JsonApiSortBuilder({ fields, onChange }: JsonApiSortBuilderProps
         <p className="text-gray-500 text-sm mb-4">{t('jsonapi.sort.noSort')}</p>
         <button
           onClick={handleAdd}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-800 border border-gray-700 rounded"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded"
         >
           <Plus className="w-4 h-4" />
           {t('jsonapi.sort.addField')}
@@ -83,7 +83,7 @@ export function JsonApiSortBuilder({ fields, onChange }: JsonApiSortBuilderProps
             value={sortField.field}
             onChange={(e) => handleChange(sortField.id, 'field', e.target.value)}
             placeholder={t('jsonapi.sort.field')}
-            className="flex-1 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
+            className="flex-1 px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
           />
 
           {/* Direction toggle */}
@@ -110,7 +110,7 @@ export function JsonApiSortBuilder({ fields, onChange }: JsonApiSortBuilderProps
             <button
               onClick={() => moveUp(index)}
               disabled={index === 0}
-              className="p-0.5 text-gray-500 hover:text-gray-300 disabled:opacity-30"
+              className="p-0.5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-30"
               title={t('jsonapi.sort.moveUp')}
             >
               <ArrowUp className="w-3 h-3" />
@@ -118,7 +118,7 @@ export function JsonApiSortBuilder({ fields, onChange }: JsonApiSortBuilderProps
             <button
               onClick={() => moveDown(index)}
               disabled={index === fields.length - 1}
-              className="p-0.5 text-gray-500 hover:text-gray-300 disabled:opacity-30"
+              className="p-0.5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-30"
               title={t('jsonapi.sort.moveDown')}
             >
               <ArrowDown className="w-3 h-3" />
@@ -137,7 +137,7 @@ export function JsonApiSortBuilder({ fields, onChange }: JsonApiSortBuilderProps
 
       <button
         onClick={handleAdd}
-        className="flex items-center gap-1 mt-3 px-3 py-1.5 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded"
+        className="flex items-center gap-1 mt-3 px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
       >
         <Plus className="w-4 h-4" />
         {t('jsonapi.sort.addField')}

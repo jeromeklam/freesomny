@@ -151,6 +151,17 @@ Key files:
 - **Admin backend**: `DELETE /api/admin/groups/:id/folders/:folderId` (admin remove folder from group)
 - **Admin backend**: `DELETE /api/admin/groups/:id/environments/:environmentId` (admin remove env from group)
 
+### Theme switcher (light / dark / auto)
+- 3 modes: `light`, `dark` (default), `auto` (follows OS preference via `matchMedia`)
+- Persisted in Zustand store (localStorage) like language preference
+- `Theme` type (`'light' | 'dark' | 'auto'`) in `apps/web/src/stores/app.ts`
+- `useTheme()` hook in `apps/web/src/hooks/useTheme.ts` — applies/removes `dark` class on `<html>`, listens to `matchMedia` in auto mode
+- Toggle: Moon/Sun/Monitor icon button in header, cycles dark → light → auto
+- Tailwind `darkMode: 'class'` — all components use `dark:` variants (light defaults + dark overrides)
+- CSS (index.css): scrollbar and CodeMirror themes use `.dark` parent selector
+- Color mapping: `bg-gray-900`→`bg-gray-50 dark:bg-gray-900`, `bg-gray-800`→`bg-white dark:bg-gray-800`, `border-gray-700`→`border-gray-200 dark:border-gray-700`, `text-gray-400`→`text-gray-500 dark:text-gray-400`, `text-white`→`text-gray-900 dark:text-white`
+- Accent/semantic colors (blue, green, red, yellow, purple, orange) left unchanged
+
 ### Code generation
 - CodeGeneratorModal: cURL, PHP, Python code generation
 - Includes inherited headers from parent folders and auth-generated Authorization
@@ -331,5 +342,5 @@ After first install, edit `/opt/freesomnia/.env`:
 - Zod for API validation
 - Zustand for frontend state
 - TanStack Query for server state
-- Tailwind CSS (dark mode default)
+- Tailwind CSS (light/dark/auto theme, `darkMode: 'class'`)
 - API responses: `{ data: T }` or `{ error: string }`

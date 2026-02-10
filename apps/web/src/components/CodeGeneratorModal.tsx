@@ -351,18 +351,18 @@ export function CodeGeneratorModal({ request, inheritedHeaders, inheritedAuth, o
       minWidth={400}
       minHeight={300}
       onClose={onClose}
-      className="bg-gray-800"
+      className="bg-white dark:bg-gray-800"
     >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold">{t('codegen.title')}</h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-700 rounded">
+          <button onClick={onClose} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Language tabs */}
-        <div className="flex border-b border-gray-700">
+        <div className="flex border-b border-gray-200 dark:border-gray-700">
           {LANGUAGES.map((lang) => (
             <button
               key={lang.id}
@@ -371,7 +371,7 @@ export function CodeGeneratorModal({ request, inheritedHeaders, inheritedAuth, o
                 'px-4 py-2 text-sm font-medium border-b-2 -mb-px',
                 language === lang.id
                   ? 'border-blue-500 text-blue-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-300'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               )}
             >
               {lang.label}
@@ -380,7 +380,7 @@ export function CodeGeneratorModal({ request, inheritedHeaders, inheritedAuth, o
 
           <button
             onClick={handleCopy}
-            className="ml-auto mr-3 flex items-center gap-1 px-3 py-1 my-1 text-xs text-gray-400 hover:text-white border border-gray-600 rounded hover:border-gray-500"
+            className="ml-auto mr-3 flex items-center gap-1 px-3 py-1 my-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-300 dark:border-gray-600 rounded hover:border-gray-400 dark:hover:border-gray-500"
           >
             {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             {copied ? t('response.copied') : t('response.copy')}
@@ -389,7 +389,7 @@ export function CodeGeneratorModal({ request, inheritedHeaders, inheritedAuth, o
 
         {/* Code output */}
         <div className="flex-1 overflow-auto p-4">
-          <pre className="text-sm font-mono text-gray-300 whitespace-pre-wrap break-all">{code}</pre>
+          <pre className="text-sm font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-all">{code}</pre>
         </div>
     </ResizableModal>
   )

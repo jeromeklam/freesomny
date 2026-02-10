@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.5.3'
+export const APP_VERSION = '0.5.4'
 
 export interface ChangelogEntry {
   version: string
@@ -7,6 +7,16 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.5.4',
+    date: '2026-02-10',
+    changes: [
+      'Sélecteur de thème : clair, sombre et auto (préférence système)',
+      'Thème persisté dans les préférences utilisateur (comme la langue)',
+      'Bouton de cycle dans l\'en-tête avec icônes Soleil / Lune / Moniteur',
+      'Support complet du mode clair sur tous les composants et modales',
+    ],
+  },
   {
     version: '0.5.3',
     date: '2026-02-10',

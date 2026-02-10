@@ -263,8 +263,8 @@ function FolderItem({ folder, level = 0, parentId, siblingFolders = [], inherite
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={clsx(
-          'flex items-center gap-1 px-2 py-1 cursor-pointer hover:bg-gray-800 rounded group',
-          isSelected && 'bg-gray-800',
+          'flex items-center gap-1 px-2 py-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded group',
+          isSelected && 'bg-gray-100 dark:bg-gray-800',
           isDragging && 'opacity-50',
           dropTarget === 'inside' && 'ring-2 ring-blue-500 ring-inset'
         )}
@@ -275,11 +275,11 @@ function FolderItem({ folder, level = 0, parentId, siblingFolders = [], inherite
           <GripVertical className="w-3 h-3 text-gray-500" />
         </div>
 
-        <button onClick={handleToggle} className="p-0.5 hover:bg-gray-700 rounded">
+        <button onClick={handleToggle} className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded">
           {isExpanded ? (
-            <ChevronDown className="w-4 h-4 text-gray-400" />
+            <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           ) : (
-            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <ChevronRight className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           )}
         </button>
 
@@ -313,39 +313,39 @@ function FolderItem({ folder, level = 0, parentId, siblingFolders = [], inherite
               e.stopPropagation()
               setShowMenu(!showMenu)
             }}
-            className="p-1 hover:bg-gray-700 rounded"
+            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
           >
-            <MoreVertical className="w-4 h-4 text-gray-400" />
+            <MoreVertical className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           </button>
 
           {showMenu && (
-            <div className="absolute right-0 top-full z-50 mt-1 w-48 bg-gray-800 border border-gray-700 rounded shadow-lg">
+            <div className="absolute right-0 top-full z-50 mt-1 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
               <button
                 onClick={handleAddFolder}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
               >
                 <Plus className="w-4 h-4" /> {t('sidebar.addFolder')}
               </button>
               <button
                 onClick={handleAddRequest}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
               >
                 <FileJson className="w-4 h-4" /> {t('sidebar.addRequest')}
               </button>
-              <hr className="border-gray-700" />
+              <hr className="border-gray-200 dark:border-gray-700" />
               <button
                 onClick={handleInsertFolderBefore}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
               >
                 <ArrowUpFromLine className="w-4 h-4" /> {t('sidebar.insertBefore')}
               </button>
               <button
                 onClick={handleInsertFolderAfter}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
               >
                 <ArrowDownFromLine className="w-4 h-4" /> {t('sidebar.insertAfter')}
               </button>
-              <hr className="border-gray-700" />
+              <hr className="border-gray-200 dark:border-gray-700" />
               <button
                 onClick={(e) => {
                   e.stopPropagation()
@@ -354,13 +354,13 @@ function FolderItem({ folder, level = 0, parentId, siblingFolders = [], inherite
                   setSelectedRequestId(null)
                   setCurrentRequest(null)
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
               >
                 <Edit2 className="w-4 h-4" /> {t('sidebar.editSettings')}
               </button>
               <button
                 onClick={handleDelete}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 dark:text-red-400 hover:bg-gray-200 dark:hover:bg-gray-700"
               >
                 <Trash2 className="w-4 h-4" /> {t('sidebar.delete')}
               </button>
@@ -580,8 +580,8 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={clsx(
-          'flex items-center gap-2 px-2 py-1 cursor-pointer hover:bg-gray-800 rounded group',
-          selectedRequestId === request.id && 'bg-gray-800',
+          'flex items-center gap-2 px-2 py-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded group',
+          selectedRequestId === request.id && 'bg-gray-100 dark:bg-gray-800',
           isDragging && 'opacity-50'
         )}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
@@ -600,7 +600,7 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
             onBlur={handleRenameConfirm}
             onKeyDown={handleRenameKeyDown}
             onClick={(e) => e.stopPropagation()}
-            className="flex-1 min-w-0 text-sm bg-gray-700 border border-blue-500 rounded px-1 py-0 outline-none text-gray-200"
+            className="flex-1 min-w-0 text-sm bg-gray-100 dark:bg-gray-700 border border-blue-500 rounded px-1 py-0 outline-none text-gray-800 dark:text-gray-200"
           />
         ) : (
           <span className="flex-1 truncate text-sm" onDoubleClick={(e) => { e.stopPropagation(); startRename() }}>{request.name}</span>
@@ -628,32 +628,32 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
               e.stopPropagation()
               setShowMenu(!showMenu)
             }}
-            className="p-1 hover:bg-gray-700 rounded"
+            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
           >
-            <MoreVertical className="w-4 h-4 text-gray-400" />
+            <MoreVertical className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           </button>
 
           {showMenu && (
-            <div className="absolute right-0 top-full z-50 mt-1 w-44 bg-gray-800 border border-gray-700 rounded shadow-lg">
+            <div className="absolute right-0 top-full z-50 mt-1 w-44 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
               <button
                 onClick={handleInsertBefore}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
               >
                 <ArrowUpFromLine className="w-4 h-4" /> {t('sidebar.insertBefore')}
               </button>
               <button
                 onClick={handleInsertAfter}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
               >
                 <ArrowDownFromLine className="w-4 h-4" /> {t('sidebar.insertAfter')}
               </button>
-              <hr className="border-gray-700" />
+              <hr className="border-gray-200 dark:border-gray-700" />
               <button
                 onClick={(e) => {
                   e.stopPropagation()
                   startRename()
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
               >
                 <Pencil className="w-4 h-4" /> {t('sidebar.rename')}
               </button>
@@ -663,7 +663,7 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
                   setShowMenu(false)
                   duplicateRequest.mutate(request.id)
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
               >
                 <Copy className="w-4 h-4" /> {t('sidebar.duplicate')}
               </button>
@@ -673,12 +673,12 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
                   setShowMenu(false)
                   toggleFavorite.mutate({ id: request.id, isFavorite: !request.isFavorite })
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
               >
                 <Star className={clsx('w-4 h-4', request.isFavorite && 'fill-current text-yellow-400')} />
                 {request.isFavorite ? t('sidebar.removeFromFavorites') : t('sidebar.addToFavorites')}
               </button>
-              <hr className="border-gray-700" />
+              <hr className="border-gray-200 dark:border-gray-700" />
               <button
                 onClick={(e) => {
                   e.stopPropagation()
@@ -687,7 +687,7 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
                     deleteRequest.mutate(request.id)
                   }
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 dark:text-red-400 hover:bg-gray-200 dark:hover:bg-gray-700"
               >
                 <Trash2 className="w-4 h-4" /> {t('sidebar.delete')}
               </button>
@@ -798,9 +798,9 @@ export function FolderTree() {
     <div className="flex flex-col h-full">
       {/* FAVORITES section — above collections */}
       {favorites.length > 0 && (
-        <div className="border-b border-gray-700">
+        <div className="border-b border-gray-200 dark:border-gray-700">
           <div
-            className="flex items-center gap-1 px-3 py-2 cursor-pointer hover:bg-gray-800/50"
+            className="flex items-center gap-1 px-3 py-2 cursor-pointer hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
             onClick={() => setFavoritesExpanded(!favoritesExpanded)}
           >
             {favoritesExpanded ? (
@@ -809,7 +809,7 @@ export function FolderTree() {
               <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
             )}
             <Star className="w-3.5 h-3.5 text-yellow-400 fill-current" />
-            <span className="text-sm font-medium text-gray-400">{t('sidebar.favorites')}</span>
+            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('sidebar.favorites')}</span>
             <span className="text-[10px] text-gray-600 ml-1">{favorites.length}</span>
           </div>
 
@@ -819,8 +819,8 @@ export function FolderTree() {
                 <div
                   key={fav.id}
                   className={clsx(
-                    'flex items-center gap-2 px-2 py-1 cursor-pointer hover:bg-gray-800 rounded group',
-                    selectedRequestId === fav.id && 'bg-gray-800'
+                    'flex items-center gap-2 px-2 py-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded group',
+                    selectedRequestId === fav.id && 'bg-gray-100 dark:bg-gray-800'
                   )}
                   style={{ paddingLeft: '24px' }}
                   onClick={() => {
@@ -852,29 +852,29 @@ export function FolderTree() {
       )}
 
       {/* COLLECTIONS header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-700">
-        <span className="text-sm font-medium text-gray-400">{t('sidebar.collections')}</span>
+      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700">
+        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('sidebar.collections')}</span>
         <div className="flex items-center gap-1">
           <button
             onClick={() => setShowSearch(!showSearch)}
-            className={clsx('p-1 hover:bg-gray-700 rounded', showSearch && 'bg-gray-700')}
+            className={clsx('p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded', showSearch && 'bg-gray-100 dark:bg-gray-700')}
             title={t('sidebar.search')}
           >
-            <Search className="w-4 h-4 text-gray-400" />
+            <Search className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           </button>
           <button
             onClick={() => createFolder.mutate({ name: 'New Collection', parentId: null })}
-            className="p-1 hover:bg-gray-700 rounded"
+            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
             title={t('sidebar.newCollection')}
           >
-            <Plus className="w-4 h-4 text-gray-400" />
+            <Plus className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
       </div>
 
       {/* Search bar — only for collections */}
       {showSearch && (
-        <div className="flex items-center gap-1 px-2 py-1.5 border-b border-gray-700">
+        <div className="flex items-center gap-1 px-2 py-1.5 border-b border-gray-200 dark:border-gray-700">
           <Search className="w-3.5 h-3.5 text-gray-500 shrink-0" />
           <input
             ref={searchInputRef}
@@ -883,15 +883,15 @@ export function FolderTree() {
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Escape') handleClearSearch() }}
             placeholder={t('sidebar.searchPlaceholder')}
-            className="flex-1 min-w-0 bg-transparent text-sm text-gray-200 placeholder-gray-500 outline-none"
+            className="flex-1 min-w-0 bg-transparent text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 outline-none"
           />
           {searchTerm && (
             <button
               onClick={handleClearSearch}
-              className="p-0.5 hover:bg-gray-700 rounded"
+              className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
               title={t('sidebar.clearSearch')}
             >
-              <X className="w-3.5 h-3.5 text-gray-400" />
+              <X className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
             </button>
           )}
         </div>

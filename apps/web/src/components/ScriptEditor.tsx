@@ -32,7 +32,7 @@ export function ScriptEditor({ preScript, postScript, onChange, onBlur }: Script
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex border-b border-gray-700">
+      <div className="flex border-b border-gray-200 dark:border-gray-700">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -41,7 +41,7 @@ export function ScriptEditor({ preScript, postScript, onChange, onBlur }: Script
               'px-4 py-2 text-sm font-medium border-b-2 -mb-px',
               activeScript === tab.id
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             )}
           >
             {tab.label}
@@ -49,21 +49,21 @@ export function ScriptEditor({ preScript, postScript, onChange, onBlur }: Script
         ))}
       </div>
 
-      <div className="p-3 border-b border-gray-700 bg-gray-800/50">
-        <p className="text-sm text-gray-400">{currentDescription}</p>
+      <div className="p-3 border-b border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50">
+        <p className="text-sm text-gray-500 dark:text-gray-400">{currentDescription}</p>
         <details className="mt-2">
           <summary className="text-xs text-blue-400 cursor-pointer hover:underline">
             {t('scripts.availableApis')}
           </summary>
-          <div className="mt-2 text-xs text-gray-400 font-mono space-y-1">
-            <p className="font-sans font-medium text-gray-300 mt-2">{t('scripts.environment')}</p>
+          <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 font-mono space-y-1">
+            <p className="font-sans font-medium text-gray-700 dark:text-gray-300 mt-2">{t('scripts.environment')}</p>
             <p>env.get("key") - Read variable</p>
             <p>env.set("key", "value") - Set local override</p>
             <p>env.delete("key") - Delete local override</p>
 
             {activeScript === 'pre' ? (
               <>
-                <p className="font-sans font-medium text-gray-300 mt-2">{t('scripts.requestMutable')}</p>
+                <p className="font-sans font-medium text-gray-700 dark:text-gray-300 mt-2">{t('scripts.requestMutable')}</p>
                 <p>request.url - Get/set URL</p>
                 <p>request.method - Get/set method</p>
                 <p>request.headers.get("key")</p>
@@ -74,7 +74,7 @@ export function ScriptEditor({ preScript, postScript, onChange, onBlur }: Script
               </>
             ) : (
               <>
-                <p className="font-sans font-medium text-gray-300 mt-2">{t('scripts.responseReadOnly')}</p>
+                <p className="font-sans font-medium text-gray-700 dark:text-gray-300 mt-2">{t('scripts.responseReadOnly')}</p>
                 <p>response.status - HTTP status code</p>
                 <p>response.statusText</p>
                 <p>response.headers - Headers object</p>
@@ -82,12 +82,12 @@ export function ScriptEditor({ preScript, postScript, onChange, onBlur }: Script
                 <p>response.time - Response time (ms)</p>
                 <p>response.size - Response size (bytes)</p>
 
-                <p className="font-sans font-medium text-gray-300 mt-2">{t('scripts.testing')}</p>
+                <p className="font-sans font-medium text-gray-700 dark:text-gray-300 mt-2">{t('scripts.testing')}</p>
                 <p>test("name", () ={'>'} condition)</p>
               </>
             )}
 
-            <p className="font-sans font-medium text-gray-300 mt-2">{t('scripts.consoleApi')}</p>
+            <p className="font-sans font-medium text-gray-700 dark:text-gray-300 mt-2">{t('scripts.consoleApi')}</p>
             <p>console.log(...args)</p>
             <p>console.error(...args)</p>
           </div>

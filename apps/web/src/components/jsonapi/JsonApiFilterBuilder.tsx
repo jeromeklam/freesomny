@@ -55,14 +55,14 @@ function LogicToggle({
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs text-gray-500">{label}</span>
-      <div className="flex rounded overflow-hidden border border-gray-700">
+      <div className="flex rounded overflow-hidden border border-gray-200 dark:border-gray-700">
         <button
           onClick={() => onChange('and')}
           className={clsx(
             'px-2 py-0.5 text-xs font-semibold transition-colors',
             value === 'and'
               ? 'bg-blue-600 text-white'
-              : 'bg-gray-800 text-gray-400 hover:text-gray-300'
+              : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           )}
         >
           {t('jsonapi.filters.and')}
@@ -73,7 +73,7 @@ function LogicToggle({
             'px-2 py-0.5 text-xs font-semibold transition-colors',
             value === 'or'
               ? 'bg-orange-600 text-white'
-              : 'bg-gray-800 text-gray-400 hover:text-gray-300'
+              : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           )}
         >
           {t('jsonapi.filters.or')}
@@ -106,7 +106,7 @@ function ConditionRow({
         type="checkbox"
         checked={condition.enabled}
         onChange={(e) => onChange({ ...condition, enabled: e.target.checked })}
-        className="w-4 h-4 rounded bg-gray-700 border-gray-600 shrink-0"
+        className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600 shrink-0"
       />
 
       {/* Field */}
@@ -116,7 +116,7 @@ function ConditionRow({
         onChange={(e) => onChange({ ...condition, field: e.target.value })}
         placeholder={t('jsonapi.filters.field')}
         className={clsx(
-          'w-36 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm font-mono',
+          'w-36 px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono',
           'focus:outline-none focus:border-blue-500',
           !condition.enabled && 'opacity-50'
         )}
@@ -127,7 +127,7 @@ function ConditionRow({
         value={condition.operator}
         onChange={(e) => onChange({ ...condition, operator: e.target.value })}
         className={clsx(
-          'w-40 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm',
+          'w-40 px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm',
           'focus:outline-none focus:border-blue-500',
           !condition.enabled && 'opacity-50'
         )}
@@ -147,7 +147,7 @@ function ConditionRow({
           onChange={(e) => onChange({ ...condition, value: e.target.value })}
           placeholder={t('jsonapi.filters.valuePlaceholder')}
           className={clsx(
-            'flex-1 min-w-0 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm font-mono',
+            'flex-1 min-w-0 px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono',
             'focus:outline-none focus:border-blue-500',
             !condition.enabled && 'opacity-50'
           )}
@@ -165,7 +165,7 @@ function ConditionRow({
             }}
             placeholder={t('jsonapi.filters.valueBetweenMin')}
             className={clsx(
-              'flex-1 min-w-0 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm font-mono',
+              'flex-1 min-w-0 px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono',
               'focus:outline-none focus:border-blue-500',
               !condition.enabled && 'opacity-50'
             )}
@@ -180,7 +180,7 @@ function ConditionRow({
             }}
             placeholder={t('jsonapi.filters.valueBetweenMax')}
             className={clsx(
-              'flex-1 min-w-0 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm font-mono',
+              'flex-1 min-w-0 px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono',
               'focus:outline-none focus:border-blue-500',
               !condition.enabled && 'opacity-50'
             )}
@@ -195,7 +195,7 @@ function ConditionRow({
           onChange={(e) => onChange({ ...condition, value: e.target.value })}
           placeholder={t('jsonapi.filters.valueInPlaceholder')}
           className={clsx(
-            'flex-1 min-w-0 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm font-mono',
+            'flex-1 min-w-0 px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono',
             'focus:outline-none focus:border-blue-500',
             !condition.enabled && 'opacity-50'
           )}
@@ -248,11 +248,11 @@ function GroupCard({
   }
 
   return (
-    <div className="border border-gray-700 rounded-lg bg-gray-900/50">
+    <div className="border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50/50 dark:bg-gray-900/50">
       {/* Group header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-700/50">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200/50 dark:border-gray-700/50">
         <div className="flex items-center gap-3">
-          <span className="text-xs font-medium text-gray-400">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
             {t('jsonapi.filters.group')} {groupIndex + 1}
           </span>
           {group.conditions.length > 1 && (
@@ -288,7 +288,7 @@ function GroupCard({
 
         <button
           onClick={addCondition}
-          className="flex items-center gap-1 mt-2 px-2 py-1 text-xs text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded"
+          className="flex items-center gap-1 mt-2 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
         >
           <Plus className="w-3.5 h-3.5" />
           {t('jsonapi.filters.addCondition')}
@@ -322,7 +322,7 @@ export function JsonApiFilterBuilder({ state, onChange }: JsonApiFilterBuilderPr
         <p className="text-gray-500 text-sm mb-4">{t('jsonapi.filters.noFilters')}</p>
         <button
           onClick={addGroup}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-800 border border-gray-700 rounded"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded"
         >
           <Plus className="w-4 h-4" />
           {t('jsonapi.filters.addGroup')}
@@ -373,7 +373,7 @@ export function JsonApiFilterBuilder({ state, onChange }: JsonApiFilterBuilderPr
 
       <button
         onClick={addGroup}
-        className="flex items-center gap-1 mt-2 px-3 py-1.5 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded"
+        className="flex items-center gap-1 mt-2 px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
       >
         <Plus className="w-4 h-4" />
         {t('jsonapi.filters.addGroup')}

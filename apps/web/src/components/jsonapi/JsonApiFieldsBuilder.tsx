@@ -38,7 +38,7 @@ export function JsonApiFieldsBuilder({ entries, onChange }: JsonApiFieldsBuilder
         <p className="text-gray-500 text-sm mb-4">{t('jsonapi.fields.noFields')}</p>
         <button
           onClick={handleAdd}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-800 border border-gray-700 rounded"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded"
         >
           <Plus className="w-4 h-4" />
           {t('jsonapi.fields.addFieldset')}
@@ -56,7 +56,7 @@ export function JsonApiFieldsBuilder({ entries, onChange }: JsonApiFieldsBuilder
             value={entry.resourceType}
             onChange={(e) => handleChange(entry.id, 'resourceType', e.target.value)}
             placeholder={t('jsonapi.fields.resourceTypePlaceholder')}
-            className="w-40 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
+            className="w-40 px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
           />
           <span className="text-gray-600 text-sm">=</span>
           <input
@@ -64,7 +64,7 @@ export function JsonApiFieldsBuilder({ entries, onChange }: JsonApiFieldsBuilder
             value={entry.fields}
             onChange={(e) => handleChange(entry.id, 'fields', e.target.value)}
             placeholder={t('jsonapi.fields.fieldsPlaceholder')}
-            className="flex-1 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
+            className="flex-1 px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
           />
           <button
             onClick={() => handleRemove(entry.id)}
@@ -77,7 +77,7 @@ export function JsonApiFieldsBuilder({ entries, onChange }: JsonApiFieldsBuilder
 
       <button
         onClick={handleAdd}
-        className="flex items-center gap-1 mt-3 px-3 py-1.5 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded"
+        className="flex items-center gap-1 mt-3 px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
       >
         <Plus className="w-4 h-4" />
         {t('jsonapi.fields.addFieldset')}

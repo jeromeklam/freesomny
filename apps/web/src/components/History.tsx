@@ -83,21 +83,21 @@ export function History() {
       onClose={() => setShowHistory(false)}
     >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-gray-400" />
+            <Clock className="w-5 h-5 text-gray-500 dark:text-gray-400" />
             <h2 className="text-lg font-semibold">{t('history.title')}</h2>
           </div>
           <button
             onClick={() => setShowHistory(false)}
-            className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded"
+            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Search */}
-        <div className="flex items-center gap-2 px-6 py-3 border-b border-gray-700">
+        <div className="flex items-center gap-2 px-6 py-3 border-b border-gray-200 dark:border-gray-700">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
@@ -105,7 +105,7 @@ export function History() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t('history.search')}
-              className="w-full pl-10 pr-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
+              className="w-full pl-10 pr-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
             />
           </div>
           <button
@@ -131,15 +131,15 @@ export function History() {
               <p className="text-sm">{t('history.noHistoryDesc')}</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-700/50">
+            <div className="divide-y divide-gray-200/50 dark:divide-gray-700/50">
               {entries.map((entry) => (
                 <div
                   key={entry.id}
-                  className="flex items-center gap-3 px-6 py-3 hover:bg-gray-800/50 cursor-pointer"
+                  className="flex items-center gap-3 px-6 py-3 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 cursor-pointer"
                 >
                   <MethodBadge method={entry.method} />
                   <StatusBadge status={entry.responseStatus} />
-                  <span className="flex-1 truncate text-sm font-mono text-gray-300">{entry.url}</span>
+                  <span className="flex-1 truncate text-sm font-mono text-gray-700 dark:text-gray-300">{entry.url}</span>
                   <span className="text-xs text-gray-500">{entry.responseTime}ms</span>
                   <span className="text-xs text-gray-500">{formatTime(entry.createdAt)}</span>
                 </div>
@@ -149,11 +149,11 @@ export function History() {
         </div>
 
         {/* Footer */}
-        <div className="flex justify-between items-center px-6 py-3 border-t border-gray-700 text-sm text-gray-500">
+        <div className="flex justify-between items-center px-6 py-3 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-500">
           <span>{data?.total || 0} {t('history.entries')}</span>
           <button
             onClick={() => setShowHistory(false)}
-            className="px-4 py-1.5 text-gray-400 hover:text-white"
+            className="px-4 py-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
           >
             {t('history.close')}
           </button>

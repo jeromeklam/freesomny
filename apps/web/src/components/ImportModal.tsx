@@ -122,13 +122,13 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
       minWidth={380}
       minHeight={300}
       onClose={handleClose}
-      className="bg-gray-800"
+      className="bg-white dark:bg-gray-800"
     >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold">{t('import.title')}</h2>
           <button
             onClick={handleClose}
-            className="p-1 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
+            className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
           >
             <X className="w-5 h-5" />
           </button>
@@ -137,7 +137,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
         <div className="p-4 space-y-4">
           {/* Format selection */}
           <div>
-            <label className="block text-sm text-gray-400 mb-2">{t('import.format')}</label>
+            <label className="block text-sm text-gray-500 dark:text-gray-400 mb-2">{t('import.format')}</label>
             <div className="flex gap-2">
               <button
                 onClick={() => {
@@ -149,7 +149,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
                   'flex items-center gap-2 px-3 py-2 rounded border',
                   format === 'postman'
                     ? 'bg-blue-600 border-blue-500 text-white'
-                    : 'border-gray-600 text-gray-300 hover:border-gray-500'
+                    : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                 )}
               >
                 <FileJson className="w-4 h-4" />
@@ -165,7 +165,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
                   'flex items-center gap-2 px-3 py-2 rounded border',
                   format === 'hoppscotch'
                     ? 'bg-blue-600 border-blue-500 text-white'
-                    : 'border-gray-600 text-gray-300 hover:border-gray-500'
+                    : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                 )}
               >
                 <Zap className="w-4 h-4" />
@@ -181,7 +181,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
                   'flex items-center gap-2 px-3 py-2 rounded border',
                   format === 'openapi'
                     ? 'bg-blue-600 border-blue-500 text-white'
-                    : 'border-gray-600 text-gray-300 hover:border-gray-500'
+                    : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                 )}
               >
                 <FileCode className="w-4 h-4" />
@@ -197,7 +197,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
                   'flex items-center gap-2 px-3 py-2 rounded border',
                   format === 'curl'
                     ? 'bg-blue-600 border-blue-500 text-white'
-                    : 'border-gray-600 text-gray-300 hover:border-gray-500'
+                    : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                 )}
               >
                 <Terminal className="w-4 h-4" />
@@ -209,17 +209,17 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
           {/* File upload or cURL input */}
           {format === 'curl' ? (
             <div>
-              <label className="block text-sm text-gray-400 mb-2">{t('import.curlCommand')}</label>
+              <label className="block text-sm text-gray-500 dark:text-gray-400 mb-2">{t('import.curlCommand')}</label>
               <textarea
                 value={curlCommand}
                 onChange={(e) => setCurlCommand(e.target.value)}
                 placeholder="curl -X GET https://api.example.com/users -H 'Authorization: Bearer token'"
-                className="w-full h-32 px-3 py-2 bg-gray-900 border border-gray-700 rounded text-sm font-mono resize-none focus:outline-none focus:border-blue-500"
+                className="w-full h-32 px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono resize-none focus:outline-none focus:border-blue-500"
               />
             </div>
           ) : (
             <div>
-              <label className="block text-sm text-gray-400 mb-2">
+              <label className="block text-sm text-gray-500 dark:text-gray-400 mb-2">
                 {format === 'postman'
                   ? t('import.postmanCollection')
                   : format === 'hoppscotch'
@@ -234,7 +234,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
                   'border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors',
                   file
                     ? 'border-green-500 bg-green-500/10'
-                    : 'border-gray-600 hover:border-gray-500 hover:bg-gray-700/50'
+                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                 )}
               >
                 <input
@@ -248,12 +248,12 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
                   <div className="text-green-400">
                     <FileJson className="w-8 h-8 mx-auto mb-2" />
                     <p className="font-medium">{file.name}</p>
-                    <p className="text-sm text-gray-400 mt-1">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                       {(file.size / 1024).toFixed(1)} KB
                     </p>
                   </div>
                 ) : (
-                  <div className="text-gray-400">
+                  <div className="text-gray-500 dark:text-gray-400">
                     <Upload className="w-8 h-8 mx-auto mb-2" />
                     <p>{t('import.dropFile')}</p>
                     <p className="text-sm mt-1">
@@ -284,10 +284,10 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
           )}
         </div>
 
-        <div className="flex justify-end gap-2 px-4 py-3 border-t border-gray-700">
+        <div className="flex justify-end gap-2 px-4 py-3 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={handleClose}
-            className="px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+            className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
           >
             {t('import.cancel')}
           </button>

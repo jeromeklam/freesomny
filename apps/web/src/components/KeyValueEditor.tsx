@@ -210,7 +210,7 @@ export function KeyValueEditor({
                         type="checkbox"
                         checked={item.enabled}
                         disabled
-                        className="w-4 h-4 rounded bg-gray-700 border-gray-600 cursor-not-allowed"
+                        className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600 cursor-not-allowed"
                       />
                     </td>
                     <td className="py-1 pr-2">
@@ -223,7 +223,7 @@ export function KeyValueEditor({
                           isOverridden && 'line-through',
                           isAuthGenerated
                             ? 'bg-blue-900/20 border border-blue-700/30 text-blue-400'
-                            : 'bg-gray-800/50 border border-gray-700/50 text-gray-500'
+                            : 'bg-gray-100/50 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50 text-gray-500'
                         )}
                       />
                       {variables.length > 0 && <VariablePreview text={item.key} variables={variables} />}
@@ -238,7 +238,7 @@ export function KeyValueEditor({
                           isOverridden && 'line-through',
                           isAuthGenerated
                             ? 'bg-blue-900/20 border border-blue-700/30 text-blue-400'
-                            : 'bg-gray-800/50 border border-gray-700/50 text-gray-500'
+                            : 'bg-gray-100/50 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50 text-gray-500'
                         )}
                       />
                       {variables.length > 0 && <VariablePreview text={item.value} variables={variables} />}
@@ -250,7 +250,7 @@ export function KeyValueEditor({
                             'inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded',
                             isAuthGenerated
                               ? 'bg-blue-900/40 text-blue-400 border border-blue-700/50'
-                              : 'bg-gray-700/60 text-gray-400'
+                              : 'bg-gray-200/60 dark:bg-gray-700/60 text-gray-500 dark:text-gray-400'
                           )}>
                             {displaySource}
                           </span>
@@ -278,7 +278,7 @@ export function KeyValueEditor({
               })}
               <tr>
                 <td colSpan={showDescription ? 5 : 4}>
-                  <div className="border-b border-dashed border-gray-700 my-1" />
+                  <div className="border-b border-dashed border-gray-200 dark:border-gray-700 my-1" />
                 </td>
               </tr>
             </>
@@ -298,7 +298,7 @@ export function KeyValueEditor({
                     handleChange(index, 'enabled', e.target.checked)
                     onBlur?.()
                   }}
-                  className="w-4 h-4 rounded bg-gray-700 border-gray-600"
+                  className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                 />
               </td>
               <td className="py-1 pr-2">
@@ -309,7 +309,7 @@ export function KeyValueEditor({
                   onBlur={onBlur}
                   placeholder={placeholder}
                   className={clsx(
-                    'w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm',
+                    'w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm',
                     'focus:outline-none focus:border-blue-500',
                     !item.enabled && 'opacity-50'
                   )}
@@ -324,7 +324,7 @@ export function KeyValueEditor({
                   onBlur={onBlur}
                   placeholder={t('keyValue.value')}
                   className={clsx(
-                    'w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm font-mono',
+                    'w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono',
                     'focus:outline-none focus:border-blue-500',
                     !item.enabled && 'opacity-50'
                   )}
@@ -340,7 +340,7 @@ export function KeyValueEditor({
                     onBlur={onBlur}
                     placeholder={t('keyValue.description')}
                     className={clsx(
-                      'w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm text-gray-400',
+                      'w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm text-gray-500 dark:text-gray-400',
                       'focus:outline-none focus:border-blue-500',
                       !item.enabled && 'opacity-50'
                     )}
@@ -391,7 +391,7 @@ export function KeyValueEditor({
 
       <button
         onClick={handleAdd}
-        className="flex items-center gap-1 mt-3 px-3 py-1.5 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded"
+        className="flex items-center gap-1 mt-3 px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
       >
         <Plus className="w-4 h-4" />
         {t('keyValue.add')} {placeholder}

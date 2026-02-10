@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware'
 import type { Folder, Request, Environment, HttpResponse, SendMode } from '@api-client/shared'
 import type { Language } from '../i18n'
 
+export type Theme = 'light' | 'dark' | 'auto'
+
 interface FolderWithChildren extends Folder {
   children: FolderWithChildren[]
   requests: Request[]
@@ -107,6 +109,28 @@ interface AppState {
   // Language
   language: Language
   setLanguage: (lang: Language) => void
+
+  // Theme
+  theme: Theme
+  setTheme: (theme: Theme) => void
+}
+
+// Helper to get initial theme (from localStorage, default to 'dark')
+const getInitialTheme = (): Theme => {
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem('freesomnia-settings')
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored)
+        if (parsed.state?.theme) {
+          return parsed.state.theme as Theme
+        }
+      } catch {
+        // Invalid JSON, use default
+      }
+    }
+  }
+  return 'dark'
 }
 
 // Helper to get initial language (from localStorage or browser)
@@ -283,11 +307,16 @@ export const useAppStore = create<AppState>()(
       // Language - detect browser language, default to 'en'
       language: getInitialLanguage(),
       setLanguage: (lang) => set({ language: lang }),
+
+      // Theme - default to 'dark'
+      theme: getInitialTheme(),
+      setTheme: (theme) => set({ theme }),
     }),
     {
       name: 'freesomnia-settings',
       partialize: (state) => ({
         language: state.language,
+        theme: state.theme,
         sidebarWidth: state.sidebarWidth,
         favoritesExpanded: state.favoritesExpanded,
         sendMode: state.sendMode,

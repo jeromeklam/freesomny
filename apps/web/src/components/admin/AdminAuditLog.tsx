@@ -46,7 +46,7 @@ export function AdminAuditLog() {
   }
 
   if (isLoading && entries.length === 0) {
-    return <div className="p-6 text-center text-gray-400">{t('common.loading')}</div>
+    return <div className="p-6 text-center text-gray-500 dark:text-gray-400">{t('common.loading')}</div>
   }
 
   if (entries.length === 0) {
@@ -62,13 +62,13 @@ export function AdminAuditLog() {
         return (
           <div
             key={entry.id}
-            className="flex items-start gap-3 p-3 bg-gray-900 border border-gray-700 rounded-lg"
+            className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg"
           >
             <div className="text-xs text-gray-500 w-36 shrink-0 pt-0.5">
               {formatTime(entry.createdAt)}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm text-gray-300">{formatAction(entry.action)}</div>
+              <div className="text-sm text-gray-700 dark:text-gray-300">{formatAction(entry.action)}</div>
               {Object.keys(details).length > 0 && (
                 <div className="text-xs text-gray-500 mt-0.5 truncate">
                   {Object.entries(details)
@@ -85,7 +85,7 @@ export function AdminAuditLog() {
         <button
           onClick={() => loadEntries(entries.length)}
           disabled={isLoading}
-          className="w-full py-2 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded"
+          className="w-full py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
         >
           {isLoading ? t('common.loading') : t('admin.audit.loadMore')}
         </button>

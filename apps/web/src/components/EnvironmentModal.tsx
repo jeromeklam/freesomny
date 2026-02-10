@@ -237,28 +237,28 @@ export function EnvironmentModal() {
       onClose={() => setShowEnvironmentModal(false)}
     >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div>
             <h2 className="text-lg font-semibold">{t('environment.title')}: {activeEnv?.name || t('environment.none')}</h2>
             <p className="text-sm text-gray-500">{activeEnv?.description || t('environment.manageVariables')}</p>
           </div>
           <button
             onClick={() => setShowEnvironmentModal(false)}
-            className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded"
+            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-700">
+        <div className="flex border-b border-gray-200 dark:border-gray-700">
           <button
             onClick={() => setActiveTab('variables')}
             className={clsx(
               'px-6 py-3 text-sm font-medium border-b-2 -mb-px',
               activeTab === 'variables'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             )}
           >
             {t('environment.variables')}
@@ -269,7 +269,7 @@ export function EnvironmentModal() {
               'px-6 py-3 text-sm font-medium border-b-2 -mb-px',
               activeTab === 'settings'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             )}
           >
             {t('environment.settings')}
@@ -288,14 +288,14 @@ export function EnvironmentModal() {
                       type="checkbox"
                       checked={showSecrets}
                       onChange={(e) => setShowSecrets(e.target.checked)}
-                      className="w-4 h-4 rounded bg-gray-700 border-gray-600"
+                      className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                     />
                     {t('environment.showSecrets')}
                   </label>
                 </div>
                 <button
                   onClick={handleResetAllOverrides}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-400 hover:text-white border border-gray-600 rounded hover:border-gray-500"
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-300 dark:border-gray-600 rounded hover:border-gray-400 dark:hover:border-gray-500"
                 >
                   <RotateCcw className="w-4 h-4" />
                   {t('environment.resetAllOverrides')}
@@ -324,7 +324,7 @@ export function EnvironmentModal() {
                       onDragOver={(e) => handleDragOver(e, idx)}
                       onDrop={(e) => handleDrop(e, idx)}
                       className={clsx(
-                        'border-t border-gray-700/50 transition-colors',
+                        'border-t border-gray-200/50 dark:border-gray-700/50 transition-colors',
                         dragOverIndex === idx && dragIndex !== idx && 'bg-blue-900/20 border-t-blue-500',
                         dragIndex === idx && 'opacity-40'
                       )}
@@ -335,7 +335,7 @@ export function EnvironmentModal() {
                         </div>
                       </td>
                       <td className="py-3 pr-4">
-                        <div className="flex items-center gap-2 font-mono text-gray-300">
+                        <div className="flex items-center gap-2 font-mono text-gray-700 dark:text-gray-300">
                           {v.isSecret && (
                             <span title={t('environment.protected')}>
                               <Lock className="w-3 h-3 text-yellow-500 flex-shrink-0" />
@@ -366,7 +366,7 @@ export function EnvironmentModal() {
                         <div className="space-y-1">
                           <div className={clsx(
                             'px-2 py-1 font-mono text-xs',
-                            v.status === 'overridden' ? 'text-gray-400 line-through' : 'text-gray-300'
+                            v.status === 'overridden' ? 'text-gray-500 dark:text-gray-400 line-through' : 'text-gray-700 dark:text-gray-300'
                           )}>
                             <span className="text-[10px] text-blue-400/70 mr-1">[{t('environment.team')}]</span>
                             {v.isSecret && !showSecrets ? '••••••••' : v.teamValue || '-'}
@@ -376,7 +376,7 @@ export function EnvironmentModal() {
                             value={v.localValue ?? ''}
                             onChange={(e) => handleSetOverride(v.key, e.target.value)}
                             placeholder={t('environment.overridePlaceholder')}
-                            className="w-full px-2 py-1 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
+                            className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
                           />
                         </div>
                       </td>
@@ -391,7 +391,7 @@ export function EnvironmentModal() {
                             'inline-flex items-center px-2 py-0.5 text-xs rounded cursor-pointer transition-colors',
                             v.status === 'overridden'
                               ? 'bg-blue-900/50 text-blue-400 hover:bg-blue-800/60'
-                              : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                              : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600'
                           )}
                           title={
                             v.status === 'overridden'
@@ -408,7 +408,7 @@ export function EnvironmentModal() {
                             onClick={() => handleToggleSecret(v.key, v.isSecret)}
                             className={clsx(
                               'p-1',
-                              v.isSecret ? 'text-yellow-500 hover:text-yellow-400' : 'text-gray-500 hover:text-white'
+                              v.isSecret ? 'text-yellow-500 hover:text-yellow-400' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
                             )}
                             title={v.isSecret ? t('environment.makeVisible') : t('environment.markAsProtected')}
                           >
@@ -417,7 +417,7 @@ export function EnvironmentModal() {
                           {v.status === 'overridden' && (
                             <button
                               onClick={() => handleResetOverride(v.key)}
-                              className="p-1 text-gray-500 hover:text-white"
+                              className="p-1 text-gray-500 hover:text-gray-900 dark:hover:text-white"
                               title={t('environment.resetToTeamValue')}
                             >
                               <RotateCcw className="w-4 h-4" />
@@ -442,20 +442,20 @@ export function EnvironmentModal() {
               )}
 
               {/* Add new variable */}
-              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-700">
+              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <input
                   type="text"
                   value={newKey}
                   onChange={(e) => setNewKey(e.target.value)}
                   placeholder={t('environment.key')}
-                  className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
+                  className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
                 />
                 <input
                   type={newIsSecret ? 'password' : 'text'}
                   value={newValue}
                   onChange={(e) => setNewValue(e.target.value)}
                   placeholder={t('common.value')}
-                  className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
+                  className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
                 />
                 <button
                   onClick={() => setNewCategory(newCategory === 'input' ? 'generated' : 'input')}
@@ -475,7 +475,7 @@ export function EnvironmentModal() {
                     'p-2 rounded border',
                     newIsSecret
                       ? 'bg-yellow-900/30 border-yellow-600 text-yellow-500'
-                      : 'border-gray-600 text-gray-400 hover:border-gray-500'
+                      : 'border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500'
                   )}
                   title={newIsSecret ? t('environment.protectedClickToMakeVisible') : t('environment.visibleClickToProtect')}
                 >
@@ -484,7 +484,7 @@ export function EnvironmentModal() {
                 <button
                   onClick={handleAddVariable}
                   disabled={!newKey.trim()}
-                  className="flex items-center gap-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 rounded text-sm"
+                  className="flex items-center gap-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-200 dark:disabled:bg-gray-700 rounded text-sm text-white"
                 >
                   <Plus className="w-4 h-4" />
                   {t('environment.addVariable')}
@@ -496,7 +496,7 @@ export function EnvironmentModal() {
           {activeTab === 'settings' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-1">{t('environment.name')}</label>
+                <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">{t('environment.name')}</label>
                 <input
                   type="text"
                   value={editedName}
@@ -504,11 +504,11 @@ export function EnvironmentModal() {
                     setEditedName(e.target.value)
                     setSettingsChanged(true)
                   }}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-400 mb-1">{t('environment.description')}</label>
+                <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">{t('environment.description')}</label>
                 <textarea
                   value={editedDescription}
                   onChange={(e) => {
@@ -516,7 +516,7 @@ export function EnvironmentModal() {
                     setSettingsChanged(true)
                   }}
                   rows={3}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm resize-none focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm resize-none focus:outline-none focus:border-blue-500"
                 />
               </div>
               {settingsChanged && (
@@ -533,7 +533,7 @@ export function EnvironmentModal() {
                       setEditedDescription(activeEnv?.description || '')
                       setSettingsChanged(false)
                     }}
-                    className="px-4 py-2 text-gray-400 hover:text-white rounded text-sm"
+                    className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded text-sm"
                   >
                     {t('environment.cancel')}
                   </button>
@@ -542,7 +542,7 @@ export function EnvironmentModal() {
 
               {/* Group assignment */}
               <div>
-                <label className="block text-sm text-gray-400 mb-1">
+                <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">
                   {t('group.assignment')}
                 </label>
                 {activeEnv?.group ? (
@@ -574,7 +574,7 @@ export function EnvironmentModal() {
                         }
                       }}
                       disabled={assignToGroup.isPending}
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
                     >
                       <option value="">{t('group.selectGroup')}</option>
                       {(groupsData as Array<{ id: string; name: string }> || []).map((g) => (
@@ -589,7 +589,7 @@ export function EnvironmentModal() {
               </div>
 
               {/* Delete environment */}
-              <div className="pt-6 mt-6 border-t border-gray-700">
+              <div className="pt-6 mt-6 border-t border-gray-200 dark:border-gray-700">
                 <h3 className="text-sm font-medium text-red-400 mb-2">{t('environment.dangerZone')}</h3>
                 <p className="text-xs text-gray-500 mb-3">{t('environment.deleteWarning')}</p>
                 <button
@@ -600,7 +600,7 @@ export function EnvironmentModal() {
                       setShowEnvironmentModal(false)
                     }
                   }}
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:text-white hover:bg-red-600 border border-red-700 rounded"
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:text-white hover:bg-red-600 border border-red-300 dark:border-red-700 rounded"
                 >
                   <Trash2 className="w-4 h-4" />
                   {t('environment.deleteEnvironment')}
@@ -611,10 +611,10 @@ export function EnvironmentModal() {
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-700">
+        <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={() => setShowEnvironmentModal(false)}
-            className="px-4 py-2 text-sm text-gray-400 hover:text-white"
+            className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
           >
             {t('environment.close')}
           </button>

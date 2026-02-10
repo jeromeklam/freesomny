@@ -5,7 +5,11 @@
   "header": {
     "import": "Importer",
     "history": "Historique",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "theme": "Thème",
+    "theme_dark": "Sombre",
+    "theme_light": "Clair",
+    "theme_auto": "Auto"
   },
   "sidebar": {
     "collections": "COLLECTIONS",

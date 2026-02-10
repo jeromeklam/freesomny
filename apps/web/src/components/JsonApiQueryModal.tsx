@@ -462,18 +462,18 @@ export function JsonApiQueryModal({ queryParams, onApply, onClose }: JsonApiQuer
       minWidth={500}
       minHeight={350}
       onClose={onClose}
-      className="bg-gray-800"
+      className="bg-white dark:bg-gray-800"
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-700">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-lg font-semibold">{t('jsonapi.title')}</h2>
-        <button onClick={onClose} className="p-1 hover:bg-gray-700 rounded">
+        <button onClick={onClose} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded">
           <X className="w-5 h-5" />
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center border-b border-gray-700">
+      <div className="flex items-center border-b border-gray-200 dark:border-gray-700">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -482,7 +482,7 @@ export function JsonApiQueryModal({ queryParams, onApply, onClose }: JsonApiQuer
               'px-4 py-2 text-sm font-medium border-b-2 -mb-px flex items-center gap-1.5',
               activeTab === tab.id
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             )}
           >
             {tab.label}
@@ -492,7 +492,7 @@ export function JsonApiQueryModal({ queryParams, onApply, onClose }: JsonApiQuer
                   'px-1.5 py-0.5 rounded-full text-xs font-semibold',
                   activeTab === tab.id
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-700 text-gray-400'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                 )}
               >
                 {counts[tab.id]}

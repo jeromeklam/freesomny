@@ -29,15 +29,15 @@ export function VerifyScreen() {
   }, [t])
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">FreeSomnia</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">FreeSomnia</h1>
         </div>
 
-        <div className="bg-gray-800 rounded-lg shadow-xl p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6">
           {status === 'loading' && (
-            <p className="text-center text-gray-400">{t('common.loading')}</p>
+            <p className="text-center text-gray-500 dark:text-gray-400">{t('common.loading')}</p>
           )}
 
           {status === 'success' && (

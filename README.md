@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.5.3-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-0.5.4-blue" alt="Version" />
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License" />
   <img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen" alt="Node" />
   <img src="https://img.shields.io/badge/typescript-strict-blue" alt="TypeScript" />
@@ -55,6 +55,7 @@ Can be deployed as a **shared team server** (Node.js + PostgreSQL) or run **stan
 - Audit log for tracking all actions
 
 **Developer Experience**
+- **Theme switcher**: light, dark, and auto (follows OS preference) — persisted per user
 - Code generation: cURL, PHP, Python (with inherited headers & auth)
 - JSON:API query builder (filters, sort, include, pagination, fields)
 - 3 send modes: Server, Browser (fetch), Agent (local WebSocket proxy)

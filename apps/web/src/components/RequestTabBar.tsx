@@ -57,8 +57,8 @@ function Tab({ tab, isActive }: { tab: OpenTab; isActive: boolean }) {
   return (
     <div
       className={clsx(
-        'flex items-center gap-2 px-3 py-1.5 border-r border-gray-700 cursor-pointer group min-w-0 max-w-[200px]',
-        isActive ? 'bg-gray-800' : 'bg-gray-900 hover:bg-gray-800/50'
+        'flex items-center gap-2 px-3 py-1.5 border-r border-gray-200 dark:border-gray-700 cursor-pointer group min-w-0 max-w-[200px]',
+        isActive ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
       )}
       onClick={() => setActiveRequestTab(tab.id)}
       onDoubleClick={handleDoubleClick}
@@ -74,7 +74,7 @@ function Tab({ tab, isActive }: { tab: OpenTab; isActive: boolean }) {
           onBlur={handleRenameConfirm}
           onKeyDown={handleKeyDown}
           onClick={(e) => e.stopPropagation()}
-          className="text-sm flex-1 min-w-0 bg-gray-700 border border-blue-500 rounded px-1 py-0 outline-none text-gray-200"
+          className="text-sm flex-1 min-w-0 bg-gray-100 dark:bg-gray-700 border border-blue-500 rounded px-1 py-0 outline-none text-gray-800 dark:text-gray-200"
         />
       ) : (
         <span className="text-sm truncate flex-1">{tab.name}</span>
@@ -85,11 +85,11 @@ function Tab({ tab, isActive }: { tab: OpenTab; isActive: boolean }) {
           closeRequestTab(tab.id)
         }}
         className={clsx(
-          'p-0.5 rounded hover:bg-gray-600 shrink-0',
+          'p-0.5 rounded hover:bg-gray-300 dark:hover:bg-gray-600 shrink-0',
           isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
         )}
       >
-        <X className="w-3 h-3 text-gray-400" />
+        <X className="w-3 h-3 text-gray-500 dark:text-gray-400" />
       </button>
     </div>
   )
@@ -104,7 +104,7 @@ export function RequestTabBar() {
   }
 
   return (
-    <div className="flex items-center border-b border-gray-700 bg-gray-900 overflow-x-auto">
+    <div className="flex items-center border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 overflow-x-auto">
       {openTabs.map((tab) => (
         <Tab key={tab.id} tab={tab} isActive={tab.id === activeRequestTabId} />
       ))}

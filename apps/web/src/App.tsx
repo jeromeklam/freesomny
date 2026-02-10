@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { Settings, Clock, Upload, Globe, LogOut, User, ShieldCheck } from 'lucide-react'
+import { Settings, Clock, Upload, Globe, LogOut, User, ShieldCheck, Sun, Moon, Monitor } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from './stores/app'
 import { useFolders, useEnvironments, useAuthStatus } from './hooks/useApi'
 import { useTranslation } from './hooks/useTranslation'
+import { useTheme } from './hooks/useTheme'
 import { languages, type Language } from './i18n'
 import { setAuthToken } from './lib/api'
 import { FolderTree } from './components/FolderTree'
@@ -22,6 +23,12 @@ import { VerifyScreen } from './components/VerifyScreen'
 import { AdminModal } from './components/AdminModal'
 import { ChangelogModal } from './components/ChangelogModal'
 import { APP_VERSION } from '@api-client/shared'
+
+const themeIcons = {
+  dark: Moon,
+  light: Sun,
+  auto: Monitor,
+} as const
 
 function MainApp() {
   const [isDraggingSidebar, setIsDraggingSidebar] = useState(false)
@@ -43,6 +50,9 @@ function MainApp() {
   const setShowChangelog = useAppStore((s) => s.setShowChangelog)
 
   const { t, language, setLanguage } = useTranslation()
+  const { theme, cycleTheme } = useTheme()
+
+  const ThemeIcon = themeIcons[theme]
 
   // Load initial data
   useFolders()
@@ -100,17 +110,17 @@ function MainApp() {
 
   return (
     <div className={clsx(
-      'flex flex-col h-screen bg-gray-900 text-gray-100',
+      'flex flex-col h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100',
       (isDraggingSidebar || isDraggingSplitter) && 'select-none'
     )}>
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-2 border-b border-gray-700 bg-gray-800">
+      <header className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
         <div className="flex items-center gap-4">
           <h1 className="text-lg font-semibold flex items-center gap-2">
             FreeSomnia
             <button
               onClick={() => setShowChangelog(true)}
-              className="text-xs font-normal text-gray-500 hover:text-blue-400 transition-colors"
+              className="text-xs font-normal text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
               title={t('changelog.title')}
             >
               v{APP_VERSION}
@@ -123,7 +133,7 @@ function MainApp() {
 
           <button
             onClick={() => setShowImport(true)}
-            className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
+            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
             title={t('header.import')}
           >
             <Upload className="w-5 h-5" />
@@ -131,7 +141,7 @@ function MainApp() {
 
           <button
             onClick={() => setShowHistory(true)}
-            className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
+            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
             title={t('header.history')}
           >
             <Clock className="w-5 h-5" />
@@ -139,7 +149,7 @@ function MainApp() {
 
           <button
             onClick={() => setShowSettings(true)}
-            className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
+            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
             title={t('header.settings')}
           >
             <Settings className="w-5 h-5" />
@@ -149,23 +159,32 @@ function MainApp() {
           {user?.role === 'admin' && (
             <button
               onClick={() => setShowAdmin(true)}
-              className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
+              className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
               title={t('admin.title')}
             >
               <ShieldCheck className="w-5 h-5" />
             </button>
           )}
 
+          {/* Theme toggle */}
+          <button
+            onClick={cycleTheme}
+            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+            title={t('header.theme') + ` (${t('header.theme_' + theme)})`}
+          >
+            <ThemeIcon className="w-5 h-5" />
+          </button>
+
           {/* Language selector */}
-          <div className="flex items-center gap-1 ml-2 border-l border-gray-600 pl-2">
-            <Globe className="w-4 h-4 text-gray-400" />
+          <div className="flex items-center gap-1 ml-2 border-l border-gray-300 dark:border-gray-600 pl-2">
+            <Globe className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value as Language)}
-              className="bg-transparent text-sm text-gray-400 hover:text-white cursor-pointer focus:outline-none"
+              className="bg-transparent text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer focus:outline-none"
             >
               {languages.map((lang) => (
-                <option key={lang.code} value={lang.code} className="bg-gray-800">
+                <option key={lang.code} value={lang.code} className="bg-white dark:bg-gray-800">
                   {lang.code.toUpperCase()}
                 </option>
               ))}
@@ -174,14 +193,14 @@ function MainApp() {
 
           {/* User menu */}
           {user && (
-            <div className="flex items-center gap-2 ml-2 border-l border-gray-600 pl-2">
-              <div className="flex items-center gap-1 text-sm text-gray-400">
+            <div className="flex items-center gap-2 ml-2 border-l border-gray-300 dark:border-gray-600 pl-2">
+              <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
                 <User className="w-4 h-4" />
                 <span>{user.name}</span>
               </div>
               <button
                 onClick={handleLogout}
-                className="p-1 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
+                className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
                 title={t('auth.logout')}
               >
                 <LogOut className="w-4 h-4" />
@@ -195,7 +214,7 @@ function MainApp() {
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <aside
-          className="flex flex-col border-r border-gray-700 bg-gray-900"
+          className="flex flex-col border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
           style={{ width: sidebarWidth }}
         >
           <FolderTree />
@@ -204,14 +223,14 @@ function MainApp() {
         {/* Sidebar resize handle */}
         <div
           className={clsx(
-            'w-1 cursor-col-resize hover:bg-blue-500 transition-colors bg-gray-700 flex-shrink-0 select-none relative',
+            'w-1 cursor-col-resize hover:bg-blue-500 transition-colors bg-gray-300 dark:bg-gray-700 flex-shrink-0 select-none relative',
             isDraggingSidebar && 'bg-blue-500'
           )}
           onMouseDown={handleSidebarMouseDown}
         >
           {/* Visual grip indicator */}
           <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 flex items-center">
-            <div className="w-px h-6 bg-gray-500 rounded-full" />
+            <div className="w-px h-6 bg-gray-400 dark:bg-gray-500 rounded-full" />
           </div>
         </div>
 
@@ -238,14 +257,14 @@ function MainApp() {
               {/* Horizontal splitter */}
               <div
                 className={clsx(
-                  'h-1 cursor-row-resize hover:bg-blue-500 transition-colors bg-gray-700 flex-shrink-0 select-none relative z-10',
+                  'h-1 cursor-row-resize hover:bg-blue-500 transition-colors bg-gray-300 dark:bg-gray-700 flex-shrink-0 select-none relative z-10',
                   isDraggingSplitter && 'bg-blue-500'
                 )}
                 onMouseDown={handleSplitterMouseDown}
               >
                 {/* Visual grip indicator */}
                 <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center">
-                  <div className="w-6 h-px bg-gray-500 rounded-full" />
+                  <div className="w-6 h-px bg-gray-400 dark:bg-gray-500 rounded-full" />
                 </div>
               </div>
 
@@ -280,6 +299,9 @@ function App() {
   const setAuthRequired = useAppStore((s) => s.setAuthRequired)
   const setupRequired = useAppStore((s) => s.setupRequired)
   const setSetupRequired = useAppStore((s) => s.setSetupRequired)
+
+  // Apply theme at app root level
+  useTheme()
 
   // Check auth status on load
   const { data: authStatus } = useAuthStatus()
@@ -324,8 +346,8 @@ function App() {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-gray-400">Loading...</div>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-gray-500 dark:text-gray-400">Loading...</div>
       </div>
     )
   }

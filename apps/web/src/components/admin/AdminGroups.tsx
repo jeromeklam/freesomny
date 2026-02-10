@@ -100,7 +100,7 @@ export function AdminGroups() {
   }
 
   if (isLoading) {
-    return <div className="p-6 text-center text-gray-400">{t('common.loading')}</div>
+    return <div className="p-6 text-center text-gray-500 dark:text-gray-400">{t('common.loading')}</div>
   }
 
   return (
@@ -109,19 +109,19 @@ export function AdminGroups() {
       {!showCreateForm ? (
         <button
           onClick={() => setShowCreateForm(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-800 border border-gray-700 rounded"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded"
         >
           <Plus className="w-4 h-4" />
           {t('admin.groups.create')}
         </button>
       ) : (
-        <form onSubmit={handleCreate} className="bg-gray-900 border border-gray-700 rounded-lg p-3 space-y-2">
+        <form onSubmit={handleCreate} className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 space-y-2">
           <input
             type="text"
             value={newGroupName}
             onChange={(e) => setNewGroupName(e.target.value)}
             placeholder={t('admin.groups.groupName')}
-            className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
+            className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
             autoFocus
           />
           <input
@@ -129,7 +129,7 @@ export function AdminGroups() {
             value={newGroupDesc}
             onChange={(e) => setNewGroupDesc(e.target.value)}
             placeholder={t('admin.groups.groupDescription')}
-            className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
+            className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
           />
           <div className="flex gap-2">
             <button
@@ -141,7 +141,7 @@ export function AdminGroups() {
             <button
               type="button"
               onClick={() => setShowCreateForm(false)}
-              className="px-3 py-1 text-sm text-gray-400 hover:text-gray-300"
+              className="px-3 py-1 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             >
               {t('common.cancel')}
             </button>
@@ -155,10 +155,10 @@ export function AdminGroups() {
       ) : (
         <div className="space-y-1">
           {groups.map((group) => (
-            <div key={group.id} className="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
+            <div key={group.id} className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
               {/* Group header */}
               <div
-                className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-800/50"
+                className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
                 onClick={() => toggleExpand(group.id)}
               >
                 <div className="flex items-center gap-2 min-w-0">
@@ -168,7 +168,7 @@ export function AdminGroups() {
                     <ChevronRight className="w-4 h-4 text-gray-500 shrink-0" />
                   )}
                   <div className="min-w-0">
-                    <div className="text-sm font-medium text-gray-200 truncate">{group.name}</div>
+                    <div className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{group.name}</div>
                     {group.description && (
                       <div className="text-xs text-gray-500 truncate">{group.description}</div>
                     )}
@@ -200,15 +200,15 @@ export function AdminGroups() {
 
               {/* Expanded: members */}
               {expandedGroupId === group.id && expandedGroup && (
-                <div className="border-t border-gray-700 p-3 space-y-2">
-                  <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <div className="border-t border-gray-200 dark:border-gray-700 p-3 space-y-2">
+                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     {t('admin.groups.members')}
                   </div>
 
                   {expandedGroup.members?.map((member) => (
                     <div key={member.id} className="flex items-center justify-between py-1 group/member">
                       <div className="flex items-center gap-2 min-w-0">
-                        <div className="text-sm text-gray-300 truncate">{member.user.name}</div>
+                        <div className="text-sm text-gray-700 dark:text-gray-300 truncate">{member.user.name}</div>
                         <span className="text-xs text-gray-500">{member.user.email}</span>
                         <span
                           className={clsx(
@@ -217,7 +217,7 @@ export function AdminGroups() {
                               ? 'bg-yellow-900/30 text-yellow-400'
                               : member.role === 'admin'
                                 ? 'bg-blue-900/30 text-blue-400'
-                                : 'bg-gray-700 text-gray-400'
+                                : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                           )}
                         >
                           {member.role}
@@ -234,14 +234,14 @@ export function AdminGroups() {
                   ))}
 
                   {/* Add member form */}
-                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-700/50">
+                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-200/50 dark:border-gray-700/50">
                     <UserPlus className="w-4 h-4 text-gray-500 shrink-0" />
                     <input
                       type="email"
                       value={addMemberEmail}
                       onChange={(e) => setAddMemberEmail(e.target.value)}
                       placeholder={t('admin.groups.memberEmail')}
-                      className="flex-1 px-2 py-1 bg-gray-800 border border-gray-700 rounded text-xs focus:outline-none focus:border-blue-500"
+                      className="flex-1 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs focus:outline-none focus:border-blue-500"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault()
@@ -252,7 +252,7 @@ export function AdminGroups() {
                     <select
                       value={addMemberRole}
                       onChange={(e) => setAddMemberRole(e.target.value)}
-                      className="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-xs focus:outline-none focus:border-blue-500"
+                      className="px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs focus:outline-none focus:border-blue-500"
                     >
                       <option value="member">member</option>
                       <option value="admin">admin</option>
@@ -267,8 +267,8 @@ export function AdminGroups() {
                   </div>
 
                   {/* Collections */}
-                  <div className="mt-3 pt-3 border-t border-gray-700">
-                    <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                       {t('admin.groups.folders')}
                     </div>
 
@@ -277,7 +277,7 @@ export function AdminGroups() {
                         <div key={folder.id} className="flex items-center justify-between py-1 group/folder">
                           <div className="flex items-center gap-2 min-w-0">
                             <FolderOpen className="w-3.5 h-3.5 text-gray-500 shrink-0" />
-                            <span className="text-sm text-gray-300 truncate">{folder.name}</span>
+                            <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{folder.name}</span>
                           </div>
                           <button
                             onClick={() => handleRemoveFolder(group.id, folder.id, folder.name)}
@@ -294,8 +294,8 @@ export function AdminGroups() {
                   </div>
 
                   {/* Environments */}
-                  <div className="mt-3 pt-3 border-t border-gray-700">
-                    <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                       {t('admin.groups.environments')}
                     </div>
 
@@ -304,7 +304,7 @@ export function AdminGroups() {
                         <div key={env.id} className="flex items-center justify-between py-1 group/env">
                           <div className="flex items-center gap-2 min-w-0">
                             <Globe className="w-3.5 h-3.5 text-gray-500 shrink-0" />
-                            <span className="text-sm text-gray-300 truncate">{env.name}</span>
+                            <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{env.name}</span>
                           </div>
                           <button
                             onClick={() => handleRemoveEnvironment(group.id, env.id, env.name)}

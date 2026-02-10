@@ -39,7 +39,7 @@ export function JsonApiIncludeBuilder({ relations, onChange }: JsonApiIncludeBui
         <p className="text-gray-500 text-sm mb-4">{t('jsonapi.include.noInclude')}</p>
         <button
           onClick={handleAdd}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-800 border border-gray-700 rounded"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded"
         >
           <Plus className="w-4 h-4" />
           {t('jsonapi.include.addRelation')}
@@ -56,7 +56,7 @@ export function JsonApiIncludeBuilder({ relations, onChange }: JsonApiIncludeBui
             type="checkbox"
             checked={rel.enabled}
             onChange={(e) => handleChange(rel.id, 'enabled', e.target.checked)}
-            className="w-4 h-4 rounded bg-gray-700 border-gray-600"
+            className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
           />
           <input
             type="text"
@@ -64,7 +64,7 @@ export function JsonApiIncludeBuilder({ relations, onChange }: JsonApiIncludeBui
             onChange={(e) => handleChange(rel.id, 'name', e.target.value)}
             placeholder={t('jsonapi.include.relation')}
             className={clsx(
-              'flex-1 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm font-mono',
+              'flex-1 px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono',
               'focus:outline-none focus:border-blue-500',
               !rel.enabled && 'opacity-50'
             )}
@@ -80,7 +80,7 @@ export function JsonApiIncludeBuilder({ relations, onChange }: JsonApiIncludeBui
 
       <button
         onClick={handleAdd}
-        className="flex items-center gap-1 mt-3 px-3 py-1.5 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded"
+        className="flex items-center gap-1 mt-3 px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
       >
         <Plus className="w-4 h-4" />
         {t('jsonapi.include.addRelation')}

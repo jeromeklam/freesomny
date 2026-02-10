@@ -280,9 +280,9 @@ export function FolderSettings() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-400">{t('folder.title')}:</span>
+          <span className="text-sm text-gray-500 dark:text-gray-400">{t('folder.title')}:</span>
           <span className="font-medium">{folder.name}</span>
         </div>
         {updateFolder.isPending && (
@@ -291,7 +291,7 @@ export function FolderSettings() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-700">
+      <div className="flex border-b border-gray-200 dark:border-gray-700">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -300,7 +300,7 @@ export function FolderSettings() {
               'px-4 py-2 text-sm font-medium transition-colors',
               activeTab === tab.id
                 ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-gray-400 hover:text-gray-300'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             )}
           >
             {tab.label}
@@ -313,7 +313,7 @@ export function FolderSettings() {
         {activeTab === 'general' && (
           <div className="p-4 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">
+              <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                 {t('folder.name')}
               </label>
               <input
@@ -321,12 +321,12 @@ export function FolderSettings() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onBlur={handleNameBlur}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">
+              <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                 {t('folder.description')}
               </label>
               <textarea
@@ -335,12 +335,12 @@ export function FolderSettings() {
                 onBlur={handleDescriptionBlur}
                 rows={3}
                 placeholder={t('folder.descriptionPlaceholder')}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500 resize-none"
+                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500 resize-none"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">
+              <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                 {t('folder.baseUrl')}
               </label>
               <input
@@ -349,7 +349,7 @@ export function FolderSettings() {
                 onChange={(e) => setBaseUrl(e.target.value)}
                 onBlur={handleBaseUrlBlur}
                 placeholder={t('folder.baseUrlPlaceholder')}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
               />
               <p className="mt-1 text-xs text-gray-500">
                 {t('folder.baseUrlHelp')}
@@ -358,7 +358,7 @@ export function FolderSettings() {
 
             {/* Group assignment */}
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">
+              <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                 {t('group.assignment')}
               </label>
               {folder.group ? (
@@ -385,7 +385,7 @@ export function FolderSettings() {
                     <Users className="w-3.5 h-3.5" />
                     {inheritedGroup.name}
                   </span>
-                  <span className="px-1.5 py-0.5 text-xs bg-gray-700/60 text-gray-400 rounded">
+                  <span className="px-1.5 py-0.5 text-xs bg-gray-200/60 dark:bg-gray-700/60 text-gray-500 dark:text-gray-400 rounded">
                     {t('inherited.inherited')}
                   </span>
                 </div>
@@ -400,7 +400,7 @@ export function FolderSettings() {
                       }
                     }}
                     disabled={assignToGroup.isPending}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
                   >
                     <option value="">{t('group.selectGroup')}</option>
                     {(groupsData as Array<{ id: string; name: string }> || []).map((g) => (
@@ -426,7 +426,7 @@ export function FolderSettings() {
                     'flex items-center gap-1.5 px-2 py-1 text-xs rounded border',
                     showInherited
                       ? 'text-blue-400 border-blue-500/30 bg-blue-500/10'
-                      : 'text-gray-500 border-gray-700 hover:text-gray-400'
+                      : 'text-gray-500 border-gray-200 dark:border-gray-700 hover:text-gray-500 dark:hover:text-gray-400'
                   )}
                   title={showInherited ? t('inherited.hideInherited') : t('inherited.showInherited')}
                 >
@@ -457,7 +457,7 @@ export function FolderSettings() {
                     'flex items-center gap-1.5 px-2 py-1 text-xs rounded border',
                     showInherited
                       ? 'text-blue-400 border-blue-500/30 bg-blue-500/10'
-                      : 'text-gray-500 border-gray-700 hover:text-gray-400'
+                      : 'text-gray-500 border-gray-200 dark:border-gray-700 hover:text-gray-500 dark:hover:text-gray-400'
                   )}
                   title={showInherited ? t('inherited.hideInherited') : t('inherited.showInherited')}
                 >
@@ -481,13 +481,13 @@ export function FolderSettings() {
         {activeTab === 'auth' && (
           <div className="p-4 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">
+              <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                 {t('folder.authType')}
               </label>
               <select
                 value={authType}
                 onChange={(e) => handleAuthTypeChange(e.target.value as AuthType)}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
               >
                 {AUTH_TYPES.map((type) => (
                   <option key={type.value} value={type.value}>
@@ -499,7 +499,7 @@ export function FolderSettings() {
 
             {authType === 'bearer' && (
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                   {t('auth.token')}
                 </label>
                 <input
@@ -508,7 +508,7 @@ export function FolderSettings() {
                   onChange={(e) => handleAuthConfigChange('token', e.target.value)}
                   onBlur={handleAuthConfigBlur}
                   placeholder="{{token}}"
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
                 />
               </div>
             )}
@@ -516,7 +516,7 @@ export function FolderSettings() {
             {authType === 'basic' && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     {t('auth.username')}
                   </label>
                   <input
@@ -525,11 +525,11 @@ export function FolderSettings() {
                     onChange={(e) => handleAuthConfigChange('username', e.target.value)}
                     onBlur={handleAuthConfigBlur}
                     placeholder="{{username}}"
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     {t('auth.password')}
                   </label>
                   <input
@@ -538,7 +538,7 @@ export function FolderSettings() {
                     onChange={(e) => handleAuthConfigChange('password', e.target.value)}
                     onBlur={handleAuthConfigBlur}
                     placeholder="{{password}}"
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </>
@@ -547,7 +547,7 @@ export function FolderSettings() {
             {authType === 'apikey' && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     {t('auth.keyName')}
                   </label>
                   <input
@@ -556,11 +556,11 @@ export function FolderSettings() {
                     onChange={(e) => handleAuthConfigChange('key', e.target.value)}
                     onBlur={handleAuthConfigBlur}
                     placeholder="X-API-Key"
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     {t('common.value')}
                   </label>
                   <input
@@ -569,11 +569,11 @@ export function FolderSettings() {
                     onChange={(e) => handleAuthConfigChange('value', e.target.value)}
                     onBlur={handleAuthConfigBlur}
                     placeholder="{{api_key}}"
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     {t('auth.addTo')}
                   </label>
                   <select
@@ -582,7 +582,7 @@ export function FolderSettings() {
                       handleAuthConfigChange('addTo', e.target.value)
                       handleAuthConfigBlur()
                     }}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
                   >
                     <option value="header">{t('auth.header')}</option>
                     <option value="query">{t('auth.queryParameter')}</option>
@@ -595,7 +595,7 @@ export function FolderSettings() {
             {authType === 'jwt' && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     {t('auth.algorithm')}
                   </label>
                   <select
@@ -604,7 +604,7 @@ export function FolderSettings() {
                       handleAuthConfigChange('algorithm', e.target.value)
                       handleAuthConfigBlur()
                     }}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
                   >
                     {JWT_ALGORITHMS.map(({ value, label }) => (
                       <option key={value} value={value}>
@@ -614,7 +614,7 @@ export function FolderSettings() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     {t('auth.secretKey')}
                   </label>
                   <textarea
@@ -623,11 +623,11 @@ export function FolderSettings() {
                     onBlur={handleAuthConfigBlur}
                     placeholder="{{jwt_secret}}"
                     rows={3}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500 resize-none"
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500 resize-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     {t('auth.payload')}
                   </label>
                   <textarea
@@ -636,11 +636,11 @@ export function FolderSettings() {
                     onBlur={handleAuthConfigBlur}
                     placeholder='{"sub": "{{user_id}}", "iat": {{$timestamp}}}'
                     rows={4}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500 resize-none"
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500 resize-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     {t('auth.headerPrefix')}
                   </label>
                   <input
@@ -648,7 +648,7 @@ export function FolderSettings() {
                     value={authConfig.headerPrefix || 'Bearer'}
                     onChange={(e) => handleAuthConfigChange('headerPrefix', e.target.value)}
                     onBlur={handleAuthConfigBlur}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </>
@@ -656,7 +656,7 @@ export function FolderSettings() {
 
             {authType === 'jwt_freefw' && (
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                   {t('auth.token')}
                 </label>
                 <input
@@ -665,7 +665,7 @@ export function FolderSettings() {
                   onChange={(e) => handleAuthConfigChange('token', e.target.value)}
                   onBlur={handleAuthConfigBlur}
                   placeholder="{{token}}"
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   {t('auth.jwtFreefwTokenHelp')}
@@ -679,12 +679,12 @@ export function FolderSettings() {
                   {t('folder.inheritAuthHelp')}
                 </p>
                 {inherited?.auth && inherited.auth.type !== 'none' && (
-                  <div className="mt-3 p-3 bg-gray-800/50 border border-gray-700 rounded opacity-60">
+                  <div className="mt-3 p-3 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded opacity-60">
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="text-gray-400">
+                      <span className="text-gray-500 dark:text-gray-400">
                         {SHARED_AUTH_TYPES[inherited.auth.type]?.label || inherited.auth.type}
                       </span>
-                      <span className="px-1.5 py-0.5 text-xs bg-gray-700/60 text-gray-400 rounded">
+                      <span className="px-1.5 py-0.5 text-xs bg-gray-200/60 dark:bg-gray-700/60 text-gray-500 dark:text-gray-400 rounded">
                         {inherited.auth.sourceFolderName}
                       </span>
                     </div>
@@ -721,7 +721,7 @@ export function FolderSettings() {
         {activeTab === 'scripts' && (
           <div className="p-4 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">
+              <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                 {t('folder.preScript')}
               </label>
               <textarea
@@ -730,12 +730,12 @@ export function FolderSettings() {
                 onBlur={handlePreScriptBlur}
                 rows={8}
                 placeholder={t('folder.preScriptPlaceholder')}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500 resize-none"
+                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500 resize-none"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">
+              <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                 {t('folder.postScript')}
               </label>
               <textarea
@@ -744,7 +744,7 @@ export function FolderSettings() {
                 onBlur={handlePostScriptBlur}
                 rows={8}
                 placeholder={t('folder.postScriptPlaceholder')}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500 resize-none"
+                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500 resize-none"
               />
             </div>
           </div>

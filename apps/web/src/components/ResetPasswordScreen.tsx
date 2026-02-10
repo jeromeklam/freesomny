@@ -37,14 +37,14 @@ export function ResetPasswordScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">FreeSomnia</h1>
-          <p className="text-gray-400 mt-2">{t('auth.resetPasswordTitle')}</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">FreeSomnia</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">{t('auth.resetPasswordTitle')}</p>
         </div>
 
-        <div className="bg-gray-800 rounded-lg shadow-xl p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6">
           {success ? (
             <div className="space-y-4">
               <div className="p-3 bg-green-500/20 border border-green-500/50 rounded-lg">
@@ -72,7 +72,7 @@ export function ResetPasswordScreen() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('auth.newPassword')}
                 </label>
                 <input
@@ -81,12 +81,12 @@ export function ResetPasswordScreen() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('auth.confirmPassword')}
                 </label>
                 <input
@@ -95,7 +95,7 @@ export function ResetPasswordScreen() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500"
                 />
               </div>
 

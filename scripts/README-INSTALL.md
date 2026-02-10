@@ -4,10 +4,9 @@
 
 | File/Directory | Description |
 |---|---|
-| `web-dist/` | Built frontend (static HTML/JS/CSS) |
-| `server-dist/` | Built backend (Node.js) |
-| `prisma/` | Database schema and migrations |
-| `server-package.json` | Server dependencies manifest |
+| `apps/web/dist/` | Built frontend (static HTML/JS/CSS) |
+| `apps/server/` | Built backend with node_modules (standalone) |
+| `apps/server/prisma/` | Database schema (PostgreSQL) |
 | `.env.example` | Sample configuration |
 | `freesomnia.service` | Systemd service file |
 | `install.sh` | Automated install/deploy script |
