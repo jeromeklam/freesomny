@@ -98,10 +98,12 @@ freesomnia/
 
 ### Folder inheritance
 Settings merge from root → leaf → request:
-- headers/queryParams: deep merge by key
+- headers/queryParams: deep merge by key, **deduplicated** (nearest parent wins per key, case-insensitive)
 - authType: override (inherit walks up)
 - baseUrl: concatenate segments
 - preScript/postScript: chain execution
+- **Inherited display**: only the nearest ancestor's value is shown per header/param key (no duplicates from multiple ancestors)
+- **User override**: when the user defines the same key, the inherited row shows as struck-through with "Overridden" badge, user's row gets orange border with "Overrides: [source]"
 
 ### Auth types supported
 inherit, none, bearer, basic, apikey, jwt, jwt_freefw, oauth2, openid, hawk

@@ -381,15 +381,16 @@ export async function getInheritedContext(requestId: string): Promise<InheritedC
 
   const chain = await getAncestorChain(request.folderId)
 
-  const headers: InheritedItem[] = []
-  const queryParams: InheritedItem[] = []
+  // Deduplicate by key (case-insensitive): child folder overrides parent (chain is root → leaf)
+  const headerMap = new Map<string, InheritedItem>()
+  const paramMap = new Map<string, InheritedItem>()
 
   for (const folder of chain) {
     for (const header of folder.headers) {
       if (!header.enabled) continue
       // Authorization is always managed by the Auth tab — never include in headers
       if (header.key.toLowerCase() === 'authorization') continue
-      headers.push({
+      headerMap.set(header.key.toLowerCase(), {
         key: header.key,
         value: header.value,
         description: header.description,
@@ -400,7 +401,7 @@ export async function getInheritedContext(requestId: string): Promise<InheritedC
     }
     for (const param of folder.queryParams) {
       if (!param.enabled) continue
-      queryParams.push({
+      paramMap.set(param.key.toLowerCase(), {
         key: param.key,
         value: param.value,
         description: param.description,
@@ -410,6 +411,9 @@ export async function getInheritedContext(requestId: string): Promise<InheritedC
       })
     }
   }
+
+  const headers: InheritedItem[] = [...headerMap.values()]
+  const queryParams: InheritedItem[] = [...paramMap.values()]
 
   // Resolve auth from folder chain (walk leaf → root, find first non-inherit)
   let auth: InheritedContext['auth'] = null
@@ -460,15 +464,16 @@ export async function getInheritedContextForFolder(folderId: string): Promise<In
 
   const chain = await getAncestorChain(folder.parentId)
 
-  const headers: InheritedItem[] = []
-  const queryParams: InheritedItem[] = []
+  // Deduplicate by key (case-insensitive): child folder overrides parent (chain is root → leaf)
+  const headerMap = new Map<string, InheritedItem>()
+  const paramMap = new Map<string, InheritedItem>()
 
   for (const ancestor of chain) {
     for (const header of ancestor.headers) {
       if (!header.enabled) continue
       // Authorization is always managed by the Auth tab — never include in headers
       if (header.key.toLowerCase() === 'authorization') continue
-      headers.push({
+      headerMap.set(header.key.toLowerCase(), {
         key: header.key,
         value: header.value,
         description: header.description,
@@ -479,7 +484,7 @@ export async function getInheritedContextForFolder(folderId: string): Promise<In
     }
     for (const param of ancestor.queryParams) {
       if (!param.enabled) continue
-      queryParams.push({
+      paramMap.set(param.key.toLowerCase(), {
         key: param.key,
         value: param.value,
         description: param.description,
@@ -489,6 +494,9 @@ export async function getInheritedContextForFolder(folderId: string): Promise<In
       })
     }
   }
+
+  const headers: InheritedItem[] = [...headerMap.values()]
+  const queryParams: InheritedItem[] = [...paramMap.values()]
 
   // Resolve auth from ancestor chain (walk leaf → root, find first non-inherit)
   let auth: InheritedContext['auth'] = null

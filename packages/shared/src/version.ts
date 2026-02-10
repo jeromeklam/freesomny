@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.5.4'
+export const APP_VERSION = '0.5.5'
 
 export interface ChangelogEntry {
   version: string
@@ -7,6 +7,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.5.5',
+    date: '2026-02-10',
+    changes: [
+      'Correction : texte blanc sur le bouton Envoyer en thème clair (meilleure visibilité)',
+      'Dédoublonnage des en-têtes et paramètres hérités : seule la valeur du dossier parent le plus proche est affichée',
+      'Remplacement utilisateur visible : badge « Remplacé » sur l\'en-tête hérité et bordure orange sur la valeur personnalisée',
+    ],
+  },
   {
     version: '0.5.4',
     date: '2026-02-10',

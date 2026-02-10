@@ -433,7 +433,7 @@ export function RequestBuilder() {
           <button
             onClick={handleSend}
             disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 rounded-l font-medium text-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white rounded-l font-medium text-sm"
             title={sendMode === 'browser' ? t('sendMode.browser') : sendMode === 'agent' ? t('sendMode.agent') : t('sendMode.server')}
           >
             {isLoading ? (
@@ -449,7 +449,7 @@ export function RequestBuilder() {
           </button>
           <button
             onClick={() => setShowSendModeMenu(!showSendModeMenu)}
-            className="flex items-center px-1.5 self-stretch bg-blue-600 hover:bg-blue-700 rounded-r border-l border-blue-500"
+            className="flex items-center px-1.5 self-stretch bg-blue-600 hover:bg-blue-700 text-white rounded-r border-l border-blue-500"
           >
             <ChevronDown className="w-3 h-3" />
           </button>
