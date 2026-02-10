@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { hoverTooltip, type Tooltip, EditorView, ViewPlugin, Decoration, type DecorationSet, type ViewUpdate } from '@codemirror/view'
-import { RangeSetBuilder } from '@codemirror/state'
+import { RangeSetBuilder, StateEffect } from '@codemirror/state'
 import { Send, Loader2, Code2, Filter, Eye, EyeOff, Server, Globe, Laptop, ChevronDown, FileText } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
@@ -140,7 +140,15 @@ export function RequestBuilder() {
   }, [envVarsData])
 
   const variablesRef = useRef(variablesForTooltip)
-  useEffect(() => { variablesRef.current = variablesForTooltip }, [variablesForTooltip])
+  const urlEditorRef = useRef<EditorView | null>(null)
+  const variablesChangedEffect = useMemo(() => StateEffect.define<null>(), [])
+  useEffect(() => {
+    variablesRef.current = variablesForTooltip
+    // Force CodeMirror to rebuild variable decorations
+    if (urlEditorRef.current) {
+      urlEditorRef.current.dispatch({ effects: variablesChangedEffect.of(null) })
+    }
+  }, [variablesForTooltip, variablesChangedEffect])
 
   // URL bar extensions: variable hover tooltips + single-line styling
   const urlExtensions = useMemo(() => {
@@ -218,7 +226,7 @@ export function RequestBuilder() {
           this.decorations = buildDecorations(view)
         }
         update(update: ViewUpdate) {
-          if (update.docChanged || update.viewportChanged) {
+          if (update.docChanged || update.viewportChanged || update.transactions.some(tr => tr.effects.some(e => e.is(variablesChangedEffect)))) {
             this.decorations = buildDecorations(update.view)
           }
         }
@@ -249,7 +257,7 @@ export function RequestBuilder() {
 
     return [tooltipExt, varHighlightPlugin, singleLineTheme, preventNewline]
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [variablesForTooltip])
+  }, [variablesChangedEffect])
 
   const [localRequest, setLocalRequest] = useState<RequestData | null>(null)
   const localRequestRef = useRef<RequestData | null>(null)
@@ -391,6 +399,7 @@ export function RequestBuilder() {
             value={localRequest.url}
             onChange={(val) => handleChange('url', val)}
             onBlur={handleSave}
+            onCreateEditor={(view) => { urlEditorRef.current = view }}
             placeholder={t('request.urlPlaceholder')}
             theme="dark"
             extensions={urlExtensions}
