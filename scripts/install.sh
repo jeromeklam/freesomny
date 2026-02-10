@@ -247,6 +247,35 @@ run_migrations() {
 }
 
 # ───────────────────────────────────────────────
+# Rebuild native modules (cross-platform)
+# ───────────────────────────────────────────────
+
+rebuild_native_modules() {
+    log_step "Native modules"
+
+    local server_dir="$APP_HOME/apps/server"
+
+    if ! command -v npm &>/dev/null; then
+        log_warning "npm not found — skipping native module rebuild (scripts will be skipped at runtime)"
+        return
+    fi
+
+    if [ -d "$server_dir/node_modules/isolated-vm" ]; then
+        log_info "Rebuilding isolated-vm for $(uname -m)..."
+        cd "$server_dir"
+        npm rebuild isolated-vm 2>&1 | tail -3
+        if [ $? -eq 0 ]; then
+            log_success "isolated-vm rebuilt"
+        else
+            log_warning "isolated-vm rebuild failed (scripts will be skipped at runtime)"
+        fi
+        cd - >/dev/null
+    else
+        log_info "isolated-vm not found in node_modules — skipping"
+    fi
+}
+
+# ───────────────────────────────────────────────
 # Service
 # ───────────────────────────────────────────────
 
@@ -333,6 +362,7 @@ cmd_deploy() {
     ensure_node
     stop_service
     deploy_files
+    rebuild_native_modules
     load_env
     run_migrations
     fix_ownership
@@ -352,6 +382,7 @@ cmd_install() {
     check_kit
     ensure_node
     deploy_files
+    rebuild_native_modules
     if [ ! -f "$ENV_FILE" ] || [ ! -s "$ENV_FILE" ]; then
         log_warning "Edit $ENV_FILE first!"
         echo ""
