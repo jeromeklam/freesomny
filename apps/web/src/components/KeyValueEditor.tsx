@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { Plus, Trash2, AlertTriangle, ArrowDown } from 'lucide-react'
 import { clsx } from 'clsx'
 import type { KeyValueItem } from '@api-client/shared'
@@ -6,6 +6,7 @@ import { useTranslation } from '../hooks/useTranslation'
 
 // Local-state input that prevents character dropping during fast typing.
 // Syncs from parent props only when the input is not focused.
+// Explicitly tracks and restores cursor position to prevent cursor-jump-to-end bug.
 function SyncedInput({ value, onChange, onBlur, ...props }: {
   value: string
   onChange: (value: string) => void
@@ -13,6 +14,8 @@ function SyncedInput({ value, onChange, onBlur, ...props }: {
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'onBlur'>) {
   const [localValue, setLocalValue] = useState(value)
   const isFocused = useRef(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const cursorRef = useRef<number | null>(null)
 
   useEffect(() => {
     if (!isFocused.current) {
@@ -20,17 +23,27 @@ function SyncedInput({ value, onChange, onBlur, ...props }: {
     }
   }, [value])
 
+  // Restore cursor position after React commits to DOM (before paint)
+  useLayoutEffect(() => {
+    if (isFocused.current && inputRef.current && cursorRef.current !== null) {
+      inputRef.current.setSelectionRange(cursorRef.current, cursorRef.current)
+    }
+  })
+
   return (
     <input
       {...props}
+      ref={inputRef}
       value={localValue}
       onChange={(e) => {
+        cursorRef.current = e.target.selectionStart
         setLocalValue(e.target.value)
         onChange(e.target.value)
       }}
       onFocus={() => { isFocused.current = true }}
       onBlur={() => {
         isFocused.current = false
+        cursorRef.current = null
         setLocalValue(value)
         onBlur?.()
       }}

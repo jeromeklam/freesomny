@@ -23,6 +23,7 @@
     "duplicate": "Duplicate",
     "insertBefore": "Insert Before",
     "insertAfter": "Insert After",
+    "sortAlphabetically": "Sort alphabetically",
     "delete": "Delete",
     "confirmDeleteFolder": "Delete folder \"{name}\" and all its contents?",
     "confirmDeleteRequest": "Delete request \"{name}\"?",

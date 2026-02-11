@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.5.5'
+export const APP_VERSION = '0.5.6'
 
 export interface ChangelogEntry {
   version: string
@@ -7,6 +7,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.5.6',
+    date: '2026-02-11',
+    changes: [
+      'Tri alphabétique des enfants d\'une collection (sous-dossiers + requêtes) via le menu contextuel',
+      'Correction : le curseur ne saute plus en fin de chaîne lors de la saisie dans les champs clé/valeur',
+      'Correction : les variables d\'environnement ne déclenchent plus un appel API à chaque frappe (sauvegarde au blur)',
+    ],
+  },
   {
     version: '0.5.5',
     date: '2026-02-10',

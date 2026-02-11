@@ -23,6 +23,7 @@
     "duplicate": "Dupliquer",
     "insertBefore": "Insérer avant",
     "insertAfter": "Insérer après",
+    "sortAlphabetically": "Trier par ordre alphabétique",
     "delete": "Supprimer",
     "confirmDeleteFolder": "Supprimer le dossier « {name} » et tout son contenu ?",
     "confirmDeleteRequest": "Supprimer la requête « {name} » ?",

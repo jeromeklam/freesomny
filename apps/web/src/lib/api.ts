@@ -57,6 +57,8 @@ export const foldersApi = {
     request<{ success: boolean }>(`/folders/${id}`, { method: 'DELETE' }),
   reorder: (id: string, data: { parentId: string | null; sortOrder: number }) =>
     request<unknown>(`/folders/${id}/reorder`, { method: 'PATCH', body: JSON.stringify(data) }),
+  sortChildren: (id: string) =>
+    request<{ success: boolean }>(`/folders/${id}/sort-children`, { method: 'POST' }),
   getResolvedSettings: (id: string) => request<unknown>(`/folders/${id}/resolved-settings`),
   getInherited: (id: string) => request<unknown>(`/folders/${id}/inherited`),
 }

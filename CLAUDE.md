@@ -96,6 +96,13 @@ freesomnia/
 - Clear button (X) to reset and show full tree again
 - Escape key also clears and hides the search bar
 
+### Sort children alphabetically
+- Context menu option on folders: "Sort alphabetically" (ArrowDownAZ icon)
+- Sorts both subfolders and requests alphabetically (case-insensitive via `localeCompare`)
+- Backend: `POST /api/folders/:id/sort-children` — batch update in single transaction
+- Assigns `sortOrder` values with gaps (`index * 100`) for future manual insertions
+- Only shown in context menu when folder has 2+ children/requests
+
 ### Folder inheritance
 Settings merge from root → leaf → request:
 - headers/queryParams: deep merge by key, **deduplicated** (nearest parent wins per key, case-insensitive)
@@ -237,6 +244,7 @@ DELETE /api/groups/:id/folders/:folderId, /api/groups/:id/environments/:envId
 GET/POST /api/folders
 PUT/DELETE /api/folders/:id
 POST /api/folders/:id/share
+POST /api/folders/:id/sort-children  # Sort subfolders + requests alphabetically
 
 # Requests
 GET/POST/PUT/DELETE /api/requests/:id

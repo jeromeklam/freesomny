@@ -32,6 +32,8 @@ export function EnvironmentModal() {
   const [settingsChanged, setSettingsChanged] = useState(false)
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  // Local buffer for override inputs — saves on blur, not on every keystroke
+  const [localOverrides, setLocalOverrides] = useState<Record<string, string>>({})
 
   const showEnvironmentModal = useAppStore((s) => s.showEnvironmentModal)
   const setShowEnvironmentModal = useAppStore((s) => s.setShowEnvironmentModal)
@@ -57,7 +59,13 @@ export function EnvironmentModal() {
       setEditedDescription(activeEnv.description || '')
       setSettingsChanged(false)
     }
+    setLocalOverrides({})
   }, [activeEnv?.id])
+
+  // Clear local overrides buffer when server data refreshes
+  useEffect(() => {
+    setLocalOverrides({})
+  }, [variables])
 
   const variablesList = (variables || []) as VariableView[]
 
@@ -170,8 +178,14 @@ export function EnvironmentModal() {
     }
   }
 
-  const handleSetOverride = async (key: string, value: string) => {
+  const handleOverrideChange = (key: string, value: string) => {
+    setLocalOverrides(prev => ({ ...prev, [key]: value }))
+  }
+
+  const handleOverrideBlur = async (key: string) => {
     if (!activeEnvironmentId) return
+    const value = localOverrides[key]
+    if (value === undefined) return
     await environmentsApi.setOverride(activeEnvironmentId, key, { value })
     refetch()
   }
@@ -373,8 +387,9 @@ export function EnvironmentModal() {
                           </div>
                           <input
                             type={v.isSecret && !showSecrets ? 'password' : 'text'}
-                            value={v.localValue ?? ''}
-                            onChange={(e) => handleSetOverride(v.key, e.target.value)}
+                            value={localOverrides[v.key] ?? v.localValue ?? ''}
+                            onChange={(e) => handleOverrideChange(v.key, e.target.value)}
+                            onBlur={() => handleOverrideBlur(v.key)}
                             placeholder={t('environment.overridePlaceholder')}
                             className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
                           />

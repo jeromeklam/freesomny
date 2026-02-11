@@ -168,6 +168,17 @@ export function useReorderFolder() {
   })
 }
 
+export function useSortChildren() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (folderId: string) => foldersApi.sortChildren(folderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['folders'] })
+    },
+  })
+}
+
 export function useSendRequest() {
   const setCurrentResponse = useAppStore((s) => s.setCurrentResponse)
   const setIsLoading = useAppStore((s) => s.setIsLoading)

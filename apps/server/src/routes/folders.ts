@@ -270,6 +270,34 @@ export async function folderRoutes(fastify: FastifyInstance) {
     return { data: folder }
   })
 
+  // Sort children (subfolders + requests) alphabetically
+  fastify.post<{ Params: { id: string } }>('/api/folders/:id/sort-children', async (request) => {
+    const folderId = request.params.id
+
+    const [childFolders, childRequests] = await Promise.all([
+      prisma.folder.findMany({ where: { parentId: folderId }, select: { id: true, name: true } }),
+      prisma.request.findMany({ where: { folderId }, select: { id: true, name: true } }),
+    ])
+
+    const sortedFolders = [...childFolders].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+    )
+    const sortedRequests = [...childRequests].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+    )
+
+    await prisma.$transaction([
+      ...sortedFolders.map((f, i) =>
+        prisma.folder.update({ where: { id: f.id }, data: { sortOrder: i * 100 } })
+      ),
+      ...sortedRequests.map((r, i) =>
+        prisma.request.update({ where: { id: r.id }, data: { sortOrder: i * 100 } })
+      ),
+    ])
+
+    return { data: { success: true } }
+  })
+
   // Get resolved settings for a folder (inherited)
   fastify.get<{ Params: { id: string } }>('/api/folders/:id/resolved-settings', async (request) => {
     // Build ancestor chain

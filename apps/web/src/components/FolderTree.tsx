@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
-import { ChevronRight, ChevronDown, Folder, FolderOpen, FileJson, Plus, MoreVertical, Trash2, Edit2, Pencil, GripVertical, Copy, ArrowUpFromLine, ArrowDownFromLine, Users, Search, X, Star } from 'lucide-react'
+import { ChevronRight, ChevronDown, Folder, FolderOpen, FileJson, Plus, MoreVertical, Trash2, Edit2, Pencil, GripVertical, Copy, ArrowUpFromLine, ArrowDownFromLine, ArrowDownAZ, Users, Search, X, Star } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
-import { useCreateFolder, useCreateRequest, useDeleteFolder, useDeleteRequest, useDuplicateRequest, useUpdateRequest, useReorderFolder, useReorderRequest, useFavorites, useToggleFavorite } from '../hooks/useApi'
+import { useCreateFolder, useCreateRequest, useDeleteFolder, useDeleteRequest, useDuplicateRequest, useUpdateRequest, useReorderFolder, useReorderRequest, useSortChildren, useFavorites, useToggleFavorite } from '../hooks/useApi'
 import { useTranslation } from '../hooks/useTranslation'
 
 interface FolderNode {
@@ -75,6 +75,7 @@ function FolderItem({ folder, level = 0, parentId, siblingFolders = [], inherite
   const deleteFolderReq = useDeleteRequest()
   const reorderFolder = useReorderFolder()
   const reorderRequest = useReorderRequest()
+  const sortChildren = useSortChildren()
   const { t } = useTranslation()
 
   const isExpanded = searchExpandedIds ? searchExpandedIds.has(folder.id) : expandedFolders.has(folder.id)
@@ -136,6 +137,12 @@ function FolderItem({ folder, level = 0, parentId, siblingFolders = [], inherite
     if (confirm(t('sidebar.confirmDeleteFolder').replace('{name}', folder.name))) {
       deleteFolder.mutate(folder.id)
     }
+  }
+
+  const handleSortAlphabetically = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowMenu(false)
+    sortChildren.mutate(folder.id)
   }
 
   // Drag handlers for folder
@@ -345,6 +352,14 @@ function FolderItem({ folder, level = 0, parentId, siblingFolders = [], inherite
               >
                 <ArrowDownFromLine className="w-4 h-4" /> {t('sidebar.insertAfter')}
               </button>
+              {(folder.children.length + folder.requests.length) >= 2 && (
+                <button
+                  onClick={handleSortAlphabetically}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+                >
+                  <ArrowDownAZ className="w-4 h-4" /> {t('sidebar.sortAlphabetically')}
+                </button>
+              )}
               <hr className="border-gray-200 dark:border-gray-700" />
               <button
                 onClick={(e) => {
