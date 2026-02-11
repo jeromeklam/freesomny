@@ -123,6 +123,7 @@
     "dangerZone": "Danger zone",
     "deleteWarning": "Deleting this environment is permanent and cannot be undone. All variables will be lost.",
     "deleteEnvironment": "Delete environment",
+    "editEnvironment": "Edit environment",
     "duplicateEnvironment": "Duplicate environment",
     "confirmDelete": "Delete environment \"{name}\" permanently? This action cannot be undone."
   },

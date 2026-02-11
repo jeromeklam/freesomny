@@ -103,6 +103,13 @@ freesomnia/
 - Assigns `sortOrder` values with gaps (`index * 100`) for future manual insertions
 - Only shown in context menu when folder has 2+ children/requests
 
+### URL bar variable preview
+- When **unfocused**: `{{var}}` replaced with resolved values in green; undefined vars stay as `{{var}}` in red; secrets show `••••••`
+- When **focused**: raw `{{var}}` shown with green/red highlighting (editable)
+- Uses CodeMirror `Decoration.replace()` with `WidgetType` — document content unchanged, only visual display
+- Hover tooltips still show variable name, value, and source
+- `update.focusChanged` triggers decoration rebuild on focus/blur
+
 ### Folder inheritance
 Settings merge from root → leaf → request:
 - headers/queryParams: deep merge by key, **deduplicated** (nearest parent wins per key, case-insensitive)
@@ -155,6 +162,7 @@ Key files:
 - **FolderTree**: purple badge with Users icon shows group name on group-owned folders
 - **Inherited group**: subfolders of group-owned collections show a dimmer purple badge (inherited); FolderSettings shows inherited group as read-only
 - **Admin Groups tab**: shows Members, Collections, and Environments sections (list with remove buttons)
+- **Admin Groups tab**: "Add member" email input has autocomplete — fetches all users, filters by name/email, excludes existing members, keyboard navigation (arrows/enter/escape)
 - **Backend**: `POST /api/groups/:id/folders` (assign), `DELETE /api/groups/:id/folders/:folderId` (unassign)
 - **Backend**: `POST /api/groups/:id/environments` (assign), `DELETE /api/groups/:id/environments/:envId` (unassign)
 - **Admin backend**: `DELETE /api/admin/groups/:id/folders/:folderId` (admin remove folder from group)

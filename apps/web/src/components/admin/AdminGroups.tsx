@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { Plus, Trash2, UserPlus, UserMinus, FolderOpen, Globe, X, ChevronDown, ChevronRight } from 'lucide-react'
 import { clsx } from 'clsx'
-import { adminApi, type AdminGroup } from '../../lib/api'
+import { adminApi, type AdminGroup, type AdminUser } from '../../lib/api'
 import { useTranslation } from '../../hooks/useTranslation'
 
 export function AdminGroups() {
@@ -14,6 +14,10 @@ export function AdminGroups() {
   const [newGroupDesc, setNewGroupDesc] = useState('')
   const [addMemberEmail, setAddMemberEmail] = useState('')
   const [addMemberRole, setAddMemberRole] = useState('member')
+  const [allUsers, setAllUsers] = useState<AdminUser[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [highlightIndex, setHighlightIndex] = useState(-1)
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { t } = useTranslation()
 
   const loadGroups = useCallback(() => {
@@ -27,7 +31,23 @@ export function AdminGroups() {
 
   useEffect(() => {
     loadGroups()
+    adminApi.getUsers().then(setAllUsers).catch(() => {})
   }, [loadGroups])
+
+  // Filter users for autocomplete: match email/name, exclude existing members
+  const filteredUsers = useMemo(() => {
+    const query = addMemberEmail.trim().toLowerCase()
+    if (!query) return []
+    const memberEmails = new Set(
+      (expandedGroup?.members || []).map(m => m.user.email.toLowerCase())
+    )
+    return allUsers
+      .filter(u =>
+        !memberEmails.has(u.email.toLowerCase()) &&
+        (u.email.toLowerCase().includes(query) || (u.name || '').toLowerCase().includes(query))
+      )
+      .slice(0, 8)
+  }, [addMemberEmail, allUsers, expandedGroup?.members])
 
   const loadGroupDetails = useCallback((groupId: string) => {
     adminApi
@@ -236,19 +256,68 @@ export function AdminGroups() {
                   {/* Add member form */}
                   <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-200/50 dark:border-gray-700/50">
                     <UserPlus className="w-4 h-4 text-gray-500 shrink-0" />
-                    <input
-                      type="email"
-                      value={addMemberEmail}
-                      onChange={(e) => setAddMemberEmail(e.target.value)}
-                      placeholder={t('admin.groups.memberEmail')}
-                      className="flex-1 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs focus:outline-none focus:border-blue-500"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault()
-                          handleAddMember(group.id)
-                        }
-                      }}
-                    />
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={addMemberEmail}
+                        onChange={(e) => {
+                          setAddMemberEmail(e.target.value)
+                          setShowSuggestions(true)
+                          setHighlightIndex(-1)
+                        }}
+                        onFocus={() => { if (addMemberEmail.trim()) setShowSuggestions(true) }}
+                        onBlur={() => {
+                          blurTimeoutRef.current = setTimeout(() => setShowSuggestions(false), 150)
+                        }}
+                        placeholder={t('admin.groups.memberEmail')}
+                        className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs focus:outline-none focus:border-blue-500"
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowDown') {
+                            e.preventDefault()
+                            setHighlightIndex(i => Math.min(i + 1, filteredUsers.length - 1))
+                          } else if (e.key === 'ArrowUp') {
+                            e.preventDefault()
+                            setHighlightIndex(i => Math.max(i - 1, -1))
+                          } else if (e.key === 'Enter') {
+                            e.preventDefault()
+                            if (highlightIndex >= 0 && highlightIndex < filteredUsers.length) {
+                              setAddMemberEmail(filteredUsers[highlightIndex].email)
+                              setShowSuggestions(false)
+                              setHighlightIndex(-1)
+                            } else {
+                              handleAddMember(group.id)
+                            }
+                          } else if (e.key === 'Escape') {
+                            setShowSuggestions(false)
+                          }
+                        }}
+                      />
+                      {showSuggestions && filteredUsers.length > 0 && (
+                        <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg max-h-48 overflow-y-auto">
+                          {filteredUsers.map((user, i) => (
+                            <button
+                              key={user.id}
+                              type="button"
+                              onMouseDown={() => {
+                                if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current)
+                                setAddMemberEmail(user.email)
+                                setShowSuggestions(false)
+                                setHighlightIndex(-1)
+                              }}
+                              className={clsx(
+                                'w-full flex items-center gap-2 px-3 py-1.5 text-xs text-left',
+                                i === highlightIndex
+                                  ? 'bg-blue-500/20 text-blue-300'
+                                  : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'
+                              )}
+                            >
+                              <span className="text-gray-800 dark:text-gray-200 truncate">{user.name || '—'}</span>
+                              <span className="text-gray-400 truncate">{user.email}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <select
                       value={addMemberRole}
                       onChange={(e) => setAddMemberRole(e.target.value)}

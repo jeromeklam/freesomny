@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
-import { hoverTooltip, type Tooltip, EditorView, ViewPlugin, Decoration, type DecorationSet, type ViewUpdate } from '@codemirror/view'
+import { hoverTooltip, type Tooltip, EditorView, ViewPlugin, Decoration, type DecorationSet, type ViewUpdate, WidgetType } from '@codemirror/view'
 import { RangeSetBuilder, StateEffect } from '@codemirror/state'
 import { Send, Loader2, Code2, Filter, Eye, EyeOff, Server, Globe, Laptop, ChevronDown, FileText } from 'lucide-react'
 import { clsx } from 'clsx'
@@ -198,12 +198,26 @@ export function RequestBuilder() {
     })
 
     // Inline variable highlighting: green for resolved, red for undefined
+    // When unfocused: resolved vars are replaced with their actual values (green)
+    // When focused: show raw {{var}} with green/red coloring
     const varResolved = Decoration.mark({ class: 'cm-var-resolved' })
     const varUndefined = Decoration.mark({ class: 'cm-var-undefined' })
+
+    class ResolvedVarWidget extends WidgetType {
+      constructor(readonly value: string, readonly isSecret: boolean) { super() }
+      toDOM() {
+        const span = document.createElement('span')
+        span.className = 'cm-var-resolved'
+        span.textContent = this.isSecret ? '••••••' : this.value
+        return span
+      }
+      eq(other: ResolvedVarWidget) { return this.value === other.value && this.isSecret === other.isSecret }
+    }
 
     function buildDecorations(view: EditorView): DecorationSet {
       const builder = new RangeSetBuilder<Decoration>()
       const doc = view.state.doc
+      const hasFocus = view.hasFocus
       for (let i = 1; i <= doc.lines; i++) {
         const line = doc.line(i)
         const pattern = /\{\{([^}]+)\}\}/g
@@ -212,8 +226,16 @@ export function RequestBuilder() {
           const varName = m[1].trim()
           const vars = variablesRef.current
           const found = vars.find((v) => v.key === varName)
-          const deco = found ? varResolved : varUndefined
-          builder.add(line.from + m.index, line.from + m.index + m[0].length, deco)
+          const from = line.from + m.index
+          const to = line.from + m.index + m[0].length
+          if (found && !hasFocus) {
+            // Unfocused + resolved: replace {{var}} with the actual value
+            const isSecret = found.isSecret || /secret|password|token|key/i.test(varName)
+            builder.add(from, to, Decoration.replace({ widget: new ResolvedVarWidget(found.value || varName, isSecret) }))
+          } else {
+            // Focused or undefined: mark with green/red
+            builder.add(from, to, found ? varResolved : varUndefined)
+          }
         }
       }
       return builder.finish()
@@ -226,7 +248,7 @@ export function RequestBuilder() {
           this.decorations = buildDecorations(view)
         }
         update(update: ViewUpdate) {
-          if (update.docChanged || update.viewportChanged || update.transactions.some(tr => tr.effects.some(e => e.is(variablesChangedEffect)))) {
+          if (update.docChanged || update.viewportChanged || update.focusChanged || update.transactions.some(tr => tr.effects.some(e => e.is(variablesChangedEffect)))) {
             this.decorations = buildDecorations(update.view)
           }
         }

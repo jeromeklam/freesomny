@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.5.6'
+export const APP_VERSION = '0.5.8'
 
 export interface ChangelogEntry {
   version: string
@@ -7,6 +7,25 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.5.8',
+    date: '2026-02-11',
+    changes: [
+      'Correction : le lien de vérification d\'email ne fonctionnait qu\'une fois sur deux (double appel API)',
+      'Sélecteur d\'environnement : icône de modification sur chaque environnement (ouvre directement la modale)',
+      'Barre d\'URL : les variables {{}} sont remplacées par leurs valeurs résolues hors focus (vert = résolu, rouge = indéfini)',
+      'Menus contextuels du panneau latéral : largeur auto-adaptative, plus de retour à la ligne sur les libellés longs',
+    ],
+  },
+  {
+    version: '0.5.7',
+    date: '2026-02-11',
+    changes: [
+      'Autocomplétion des utilisateurs lors de l\'ajout d\'un membre à un groupe (admin)',
+      'Correction : l\'onglet « Connexion » fonctionne après une inscription réussie',
+      'Confirmation du mot de passe lors de l\'inscription',
+    ],
+  },
   {
     version: '0.5.6',
     date: '2026-02-11',

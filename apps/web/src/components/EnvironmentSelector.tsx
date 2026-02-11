@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, Plus, Settings, Check, Trash2, Copy } from 'lucide-react'
+import { ChevronDown, Plus, Check, Trash2, Copy, Pencil } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
 import { useEnvironments, useCreateEnvironment, useActivateEnvironment, useDeleteEnvironment, useDuplicateEnvironment } from '../hooks/useApi'
@@ -79,6 +79,18 @@ export function EnvironmentSelector() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
+                        activateEnvironment.mutate(env.id)
+                        setIsOpen(false)
+                        setShowEnvironmentModal(true)
+                      }}
+                      className="p-1 text-gray-500 hover:text-yellow-400 transition-colors"
+                      title={t('environment.editEnvironment')}
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
                         duplicateEnvironment.mutate(env.id)
                       }}
                       className="p-1 text-gray-500 hover:text-blue-400 transition-colors"
@@ -136,23 +148,13 @@ export function EnvironmentSelector() {
                 </div>
               </div>
             ) : (
-              <div className="p-2 space-y-1">
+              <div className="p-2">
                 <button
                   onClick={() => setShowCreate(true)}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
                 >
                   <Plus className="w-4 h-4" />
                   New Environment
-                </button>
-                <button
-                  onClick={() => {
-                    setIsOpen(false)
-                    setShowEnvironmentModal(true)
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-                >
-                  <Settings className="w-4 h-4" />
-                  Manage Environments
                 </button>
               </div>
             )}

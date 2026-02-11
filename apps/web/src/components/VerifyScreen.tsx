@@ -26,7 +26,8 @@ export function VerifyScreen() {
         setStatus('error')
         setMessage(err instanceof Error ? err.message : t('auth.invalidVerifyLink'))
       })
-  }, [t])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">

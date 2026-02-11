@@ -326,38 +326,38 @@ function FolderItem({ folder, level = 0, parentId, siblingFolders = [], inherite
           </button>
 
           {showMenu && (
-            <div className="absolute right-0 top-full z-50 mt-1 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
+            <div className="absolute right-0 top-full z-50 mt-1 min-w-[12rem] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
               <button
                 onClick={handleAddFolder}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-700"
               >
-                <Plus className="w-4 h-4" /> {t('sidebar.addFolder')}
+                <Plus className="w-4 h-4 shrink-0" /> {t('sidebar.addFolder')}
               </button>
               <button
                 onClick={handleAddRequest}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-700"
               >
-                <FileJson className="w-4 h-4" /> {t('sidebar.addRequest')}
+                <FileJson className="w-4 h-4 shrink-0" /> {t('sidebar.addRequest')}
               </button>
               <hr className="border-gray-200 dark:border-gray-700" />
               <button
                 onClick={handleInsertFolderBefore}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-700"
               >
-                <ArrowUpFromLine className="w-4 h-4" /> {t('sidebar.insertBefore')}
+                <ArrowUpFromLine className="w-4 h-4 shrink-0" /> {t('sidebar.insertBefore')}
               </button>
               <button
                 onClick={handleInsertFolderAfter}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-700"
               >
-                <ArrowDownFromLine className="w-4 h-4" /> {t('sidebar.insertAfter')}
+                <ArrowDownFromLine className="w-4 h-4 shrink-0" /> {t('sidebar.insertAfter')}
               </button>
               {(folder.children.length + folder.requests.length) >= 2 && (
                 <button
                   onClick={handleSortAlphabetically}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-700"
                 >
-                  <ArrowDownAZ className="w-4 h-4" /> {t('sidebar.sortAlphabetically')}
+                  <ArrowDownAZ className="w-4 h-4 shrink-0" /> {t('sidebar.sortAlphabetically')}
                 </button>
               )}
               <hr className="border-gray-200 dark:border-gray-700" />
@@ -369,15 +369,15 @@ function FolderItem({ folder, level = 0, parentId, siblingFolders = [], inherite
                   setSelectedRequestId(null)
                   setCurrentRequest(null)
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-700"
               >
-                <Edit2 className="w-4 h-4" /> {t('sidebar.editSettings')}
+                <Edit2 className="w-4 h-4 shrink-0" /> {t('sidebar.editSettings')}
               </button>
               <button
                 onClick={handleDelete}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 dark:text-red-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm whitespace-nowrap text-red-500 dark:text-red-400 hover:bg-gray-200 dark:hover:bg-gray-700"
               >
-                <Trash2 className="w-4 h-4" /> {t('sidebar.delete')}
+                <Trash2 className="w-4 h-4 shrink-0" /> {t('sidebar.delete')}
               </button>
             </div>
           )}
@@ -649,18 +649,18 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
           </button>
 
           {showMenu && (
-            <div className="absolute right-0 top-full z-50 mt-1 w-44 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
+            <div className="absolute right-0 top-full z-50 mt-1 min-w-[11rem] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
               <button
                 onClick={handleInsertBefore}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-700"
               >
-                <ArrowUpFromLine className="w-4 h-4" /> {t('sidebar.insertBefore')}
+                <ArrowUpFromLine className="w-4 h-4 shrink-0" /> {t('sidebar.insertBefore')}
               </button>
               <button
                 onClick={handleInsertAfter}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-700"
               >
-                <ArrowDownFromLine className="w-4 h-4" /> {t('sidebar.insertAfter')}
+                <ArrowDownFromLine className="w-4 h-4 shrink-0" /> {t('sidebar.insertAfter')}
               </button>
               <hr className="border-gray-200 dark:border-gray-700" />
               <button
@@ -668,9 +668,9 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
                   e.stopPropagation()
                   startRename()
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-700"
               >
-                <Pencil className="w-4 h-4" /> {t('sidebar.rename')}
+                <Pencil className="w-4 h-4 shrink-0" /> {t('sidebar.rename')}
               </button>
               <button
                 onClick={(e) => {
@@ -678,9 +678,9 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
                   setShowMenu(false)
                   duplicateRequest.mutate(request.id)
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-700"
               >
-                <Copy className="w-4 h-4" /> {t('sidebar.duplicate')}
+                <Copy className="w-4 h-4 shrink-0" /> {t('sidebar.duplicate')}
               </button>
               <button
                 onClick={(e) => {
@@ -688,9 +688,9 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
                   setShowMenu(false)
                   toggleFavorite.mutate({ id: request.id, isFavorite: !request.isFavorite })
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-700"
               >
-                <Star className={clsx('w-4 h-4', request.isFavorite && 'fill-current text-yellow-400')} />
+                <Star className={clsx('w-4 h-4 shrink-0', request.isFavorite && 'fill-current text-yellow-400')} />
                 {request.isFavorite ? t('sidebar.removeFromFavorites') : t('sidebar.addToFavorites')}
               </button>
               <hr className="border-gray-200 dark:border-gray-700" />
@@ -702,9 +702,9 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
                     deleteRequest.mutate(request.id)
                   }
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 dark:text-red-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm whitespace-nowrap text-red-500 dark:text-red-400 hover:bg-gray-200 dark:hover:bg-gray-700"
               >
-                <Trash2 className="w-4 h-4" /> {t('sidebar.delete')}
+                <Trash2 className="w-4 h-4 shrink-0" /> {t('sidebar.delete')}
               </button>
             </div>
           )}

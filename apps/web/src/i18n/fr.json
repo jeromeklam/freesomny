@@ -123,6 +123,7 @@
     "dangerZone": "Zone de danger",
     "deleteWarning": "La suppression de cet environnement est définitive et irréversible. Toutes les variables seront perdues.",
     "deleteEnvironment": "Supprimer l'environnement",
+    "editEnvironment": "Modifier l'environnement",
     "duplicateEnvironment": "Dupliquer l'environnement",
     "confirmDelete": "Supprimer définitivement l'environnement « {name} » ? Cette action est irréversible."
   },

@@ -11,6 +11,7 @@ export function AuthScreen() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [forgotSuccess, setForgotSuccess] = useState(false)
@@ -30,6 +31,10 @@ export function AuthScreen() {
 
     try {
       if (effectiveMode === 'register') {
+        if (password !== confirmPassword) {
+          setError(t('auth.passwordMismatch'))
+          return
+        }
         const response = await authApi.register({ email, password, name })
         if (response.requiresVerification) {
           setRegisterSuccess(true)
@@ -85,7 +90,7 @@ export function AuthScreen() {
           {!setupRequired && effectiveMode !== 'forgot' && (
             <div className="flex mb-6 bg-gray-50 dark:bg-gray-900 rounded-lg p-1">
               <button
-                onClick={() => setMode('login')}
+                onClick={() => { setMode('login'); setRegisterSuccess(false); setError(null) }}
                 className={clsx(
                   'flex-1 py-2 text-sm font-medium rounded-md transition-colors',
                   mode === 'login'
@@ -96,7 +101,7 @@ export function AuthScreen() {
                 {t('auth.login')}
               </button>
               <button
-                onClick={() => setMode('register')}
+                onClick={() => { setMode('register'); setRegisterSuccess(false); setError(null) }}
                 className={clsx(
                   'flex-1 py-2 text-sm font-medium rounded-md transition-colors',
                   mode === 'register'
@@ -221,6 +226,23 @@ export function AuthScreen() {
                   <p className="text-xs text-gray-500 mt-1">{t('auth.passwordHint')}</p>
                 )}
               </div>
+
+              {effectiveMode === 'register' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {t('auth.confirmPassword')}
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                    placeholder={t('auth.confirmPassword')}
+                  />
+                </div>
+              )}
 
               {error && (
                 <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
