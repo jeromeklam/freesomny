@@ -1,6 +1,10 @@
 {
   "name": "FreeSomnia",
   "short_name": "FreeSomnia",
+  "description": "API client for teams — local-first, self-hostable",
+  "start_url": "/",
+  "scope": "/",
+  "id": "/",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
@@ -10,10 +14,12 @@
     {
       "src": "/android-chrome-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
   "theme_color": "#6366f1",
   "background_color": "#111827",
-  "display": "standalone"
+  "display": "standalone",
+  "orientation": "any"
 }
