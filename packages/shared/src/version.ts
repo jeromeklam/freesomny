@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.6.4'
+export const APP_VERSION = '0.6.5'
 
 export interface ChangelogEntry {
   version: string
@@ -7,6 +7,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.6.5',
+    date: '2026-02-12',
+    changes: [
+      'Logo et favicon améliorés : meilleure visibilité, contrastes renforcés, mode clair/sombre automatique',
+      'Favicon adaptatif : s\'adapte au thème système (clair ou sombre) via prefers-color-scheme',
+      'PWA : service worker pour mise en cache de l\'application (installable sur mobile et bureau)',
+    ],
+  },
   {
     version: '0.6.4',
     date: '2026-02-12',

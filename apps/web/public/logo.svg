@@ -1,44 +1,67 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" fill="none">
-  <!-- v13: thinner fishing line + { } instead of </> -->
+  <!-- Enhanced visibility: bolder strokes, stronger contrast, bigger brackets -->
   <defs>
     <linearGradient id="zm" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#a5b4fc"/>
-      <stop offset="50%" stop-color="#818cf8"/>
+      <stop offset="0%" stop-color="#c7d2fe"/>
+      <stop offset="40%" stop-color="#a5b4fc"/>
       <stop offset="100%" stop-color="#6366f1"/>
     </linearGradient>
     <linearGradient id="zg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#fde68a"/>
       <stop offset="100%" stop-color="#f59e0b"/>
     </linearGradient>
+    <!-- Subtle glow for moon -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
-  <!-- Small crescent moon -->
-  <path d="M310 30c-55 0-100 45-100 100s45 100 100 100c19 0 36-5 50-13.4C338 235 310 247 278 247c-64 0-116-52-116-116S214 15 278 15c32 0 60 10 80 28C340 30 326 30 310 30z" fill="url(#zm)"/>
-  <!-- Rod: from moon middle, going UP and RIGHT to tip -->
-  <path d="M310 155 L350 115 L400 80 L440 55" stroke="#4f46e5" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <!-- Rod tip ring -->
-  <circle cx="440" cy="55" r="3.5" fill="none" stroke="#818cf8" stroke-width="2"/>
-  <!-- Taut line: thinner, from tip arcing DOWN to the catch -->
-  <path d="M440 58 C468 118 458 228 420 308 Q410 333 395 348" stroke="#c4b5fd" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-  <!-- Hook biting — thinner -->
-  <path d="M395 348 C400 360 394 368 386 370 C378 372 374 362 378 354" stroke="url(#zg)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-  <!-- Caught { } — tilted, being yanked -->
-  <g transform="translate(330, 348) rotate(-12)">
-    <text x="0" y="42" font-family="monospace" font-weight="bold" font-size="48" fill="url(#zg)">{ }</text>
+
+  <!-- Crescent moon — brighter gradient, slight glow -->
+  <path d="M310 30c-55 0-100 45-100 100s45 100 100 100c19 0 36-5 50-13.4C338 235 310 247 278 247c-64 0-116-52-116-116S214 15 278 15c32 0 60 10 80 28C340 30 326 30 310 30z" fill="url(#zm)" filter="url(#glow)"/>
+  <!-- Moon edge highlight -->
+  <path d="M310 30c-55 0-100 45-100 100s45 100 100 100c19 0 36-5 50-13.4C338 235 310 247 278 247c-64 0-116-52-116-116S214 15 278 15c32 0 60 10 80 28C340 30 326 30 310 30z" fill="none" stroke="#c7d2fe" stroke-width="1.5" opacity="0.5"/>
+
+  <!-- Rod: thicker, brighter indigo -->
+  <path d="M310 155 L350 115 L400 80 L440 55" stroke="#6366f1" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Rod handle accent -->
+  <path d="M310 155 L330 135" stroke="#818cf8" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.4"/>
+
+  <!-- Rod tip ring — brighter -->
+  <circle cx="440" cy="55" r="4" fill="none" stroke="#a5b4fc" stroke-width="2.5"/>
+
+  <!-- Fishing line: slightly thicker for visibility, with tension feel -->
+  <path d="M440 59 C468 118 458 228 420 308 Q410 333 395 348" stroke="#c4b5fd" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+  <!-- Hook — bolder, gold -->
+  <path d="M395 348 C401 362 394 370 385 372 C376 374 372 362 377 353" stroke="url(#zg)" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Caught { } — BIGGER, bolder, with subtle stroke for definition -->
+  <g transform="translate(322, 340) rotate(-12)">
+    <text x="0" y="52" font-family="'Courier New', monospace" font-weight="900" font-size="58" fill="url(#zg)">{ }</text>
+    <text x="0" y="52" font-family="'Courier New', monospace" font-weight="900" font-size="58" fill="none" stroke="#f59e0b" stroke-width="0.5" opacity="0.6">{ }</text>
   </g>
-  <!-- Splash lines — fight! -->
-  <line x1="322" y1="358" x2="302" y2="348" stroke="#818cf8" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
-  <line x1="318" y1="378" x2="296" y2="376" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
-  <line x1="325" y1="395" x2="308" y2="400" stroke="#818cf8" stroke-width="1" stroke-linecap="round" opacity="0.3"/>
-  <line x1="440" y1="362" x2="456" y2="354" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" opacity="0.45"/>
-  <line x1="445" y1="380" x2="460" y2="378" stroke="#818cf8" stroke-width="1" stroke-linecap="round" opacity="0.3"/>
-  <!-- Water drops -->
-  <circle cx="298" cy="350" r="3" fill="#a5b4fc" opacity="0.4"/>
-  <circle cx="285" cy="368" r="2" fill="#a5b4fc" opacity="0.3"/>
-  <circle cx="458" cy="350" r="2.5" fill="#a5b4fc" opacity="0.35"/>
-  <circle cx="310" cy="340" r="1.5" fill="#a5b4fc" opacity="0.25"/>
-  <!-- Stars -->
-  <circle cx="478" cy="72" r="7" fill="url(#zg)"/>
-  <circle cx="500" cy="110" r="4.5" fill="url(#zg)" opacity="0.6"/>
-  <circle cx="468" cy="40" r="3.5" fill="url(#zg)" opacity="0.4"/>
-  <circle cx="240" cy="38" r="3" fill="url(#zg)" opacity="0.3"/>
+
+  <!-- Splash lines — bolder, higher opacity -->
+  <line x1="314" y1="354" x2="290" y2="342" stroke="#818cf8" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+  <line x1="308" y1="374" x2="282" y2="370" stroke="#818cf8" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+  <line x1="314" y1="394" x2="296" y2="400" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+  <line x1="438" y1="358" x2="458" y2="348" stroke="#818cf8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <line x1="444" y1="378" x2="462" y2="374" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+
+  <!-- Water drops — bigger, brighter -->
+  <circle cx="286" cy="346" r="4" fill="#a5b4fc" opacity="0.55"/>
+  <circle cx="274" cy="366" r="3" fill="#a5b4fc" opacity="0.4"/>
+  <circle cx="462" cy="346" r="3.5" fill="#a5b4fc" opacity="0.5"/>
+  <circle cx="300" cy="336" r="2.5" fill="#a5b4fc" opacity="0.35"/>
+
+  <!-- Stars — brighter, with glow effect -->
+  <circle cx="478" cy="72" r="8" fill="url(#zg)" filter="url(#glow)"/>
+  <circle cx="502" cy="112" r="5" fill="url(#zg)" opacity="0.7"/>
+  <circle cx="468" cy="38" r="4" fill="url(#zg)" opacity="0.55"/>
+  <circle cx="238" cy="36" r="3.5" fill="url(#zg)" opacity="0.45"/>
+  <circle cx="218" cy="60" r="2.5" fill="url(#zg)" opacity="0.3"/>
 </svg>
