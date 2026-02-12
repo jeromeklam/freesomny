@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.5.9'
+export const APP_VERSION = '0.6.2'
 
 export interface ChangelogEntry {
   version: string
@@ -7,6 +7,34 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.6.2',
+    date: '2026-02-12',
+    changes: [
+      'Correction : la coloration des variables {{}} dans la barre d\'URL (vert/rouge) fonctionne à nouveau après la mise à jour des variables protégées',
+      'Mémorisation de l\'environnement par onglet : changer d\'onglet restaure automatiquement l\'environnement sélectionné',
+      'Héritage d\'environnement : ouvrir une requête d\'une collection qui a déjà un onglet ouvert hérite de son environnement',
+      'Sélecteur d\'environnement encore plus large (300px) pour les noms longs',
+    ],
+  },
+  {
+    version: '0.6.1',
+    date: '2026-02-12',
+    changes: [
+      'Aperçu HTML dans l\'onglet Body de la réponse : bouton pour basculer entre le texte brut et le rendu HTML (utile pour les erreurs PHP, pages serveur)',
+      'Sélecteur d\'environnement élargi dans l\'en-tête pour afficher les noms longs',
+    ],
+  },
+  {
+    version: '0.6.0',
+    date: '2026-02-12',
+    changes: [
+      'Variables d\'environnement protégées : le propriétaire ou l\'admin du groupe peut verrouiller des variables',
+      'Les variables protégées sont en lecture seule pour les autres membres (valeur d\'équipe non modifiable)',
+      'Les membres peuvent créer un remplacement local sur une variable protégée (avec confirmation et badge d\'avertissement)',
+      'Icône bouclier (Shield) pour activer/désactiver la protection dans la modale d\'environnement',
+    ],
+  },
   {
     version: '0.5.9',
     date: '2026-02-12',

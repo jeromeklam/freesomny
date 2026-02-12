@@ -3,7 +3,7 @@ import CodeMirror, { type ReactCodeMirrorRef } from '@uiw/react-codemirror'
 import { json } from '@codemirror/lang-json'
 import { search, setSearchQuery, SearchQuery, findNext, findPrevious, SearchCursor } from '@codemirror/search'
 import { clsx } from 'clsx'
-import { Check, X, Copy, Download, AlertCircle, Variable, Plus, Search, ChevronUp, ChevronDown, Image, FileDown } from 'lucide-react'
+import { Check, X, Copy, Download, AlertCircle, Variable, Plus, Search, ChevronUp, ChevronDown, Image, FileDown, Code, Eye } from 'lucide-react'
 import { useAppStore } from '../stores/app'
 import { useTranslation } from '../hooks/useTranslation'
 import { useEnvironmentVariables, useSetEnvironmentVariable } from '../hooks/useApi'
@@ -178,6 +178,7 @@ function BodyTab({
   onMatchInfo: (info: MatchInfo) => void
 }) {
   const [copied, setCopied] = useState(false)
+  const [htmlPreview, setHtmlPreview] = useState(false)
   const cmRef = useRef<ReactCodeMirrorRef>(null)
   const [plainMatchIndex, setPlainMatchIndex] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -190,6 +191,12 @@ function BodyTab({
 
   const isJson = category === 'json' || (
     !isBase64 && (response.body.startsWith('{') || response.body.startsWith('['))
+  )
+
+  const isHtml = !isBase64 && !isJson && (
+    contentType.toLowerCase().includes('text/html') ||
+    response.body.trimStart().toLowerCase().startsWith('<!doctype') ||
+    response.body.trimStart().toLowerCase().startsWith('<html')
   )
 
   let formattedBody = response.body
@@ -394,6 +401,20 @@ function BodyTab({
   return (
     <div className="flex flex-col h-full">
       <div className="flex justify-end gap-2 p-2 border-b border-gray-200 dark:border-gray-700">
+        {isHtml && (
+          <button
+            onClick={() => setHtmlPreview(!htmlPreview)}
+            className={clsx(
+              'flex items-center gap-1 px-2 py-1 text-xs transition-colors',
+              htmlPreview
+                ? 'text-blue-400'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+            )}
+          >
+            {htmlPreview ? <Code className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+            {htmlPreview ? t('response.rawView') : t('response.htmlPreview')}
+          </button>
+        )}
         <button
           onClick={handleCopy}
           className="flex items-center gap-1 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
@@ -410,7 +431,14 @@ function BodyTab({
         </button>
       </div>
       <div ref={containerRef} className="flex-1 overflow-auto">
-        {isJson ? (
+        {htmlPreview && isHtml ? (
+          <iframe
+            srcDoc={response.body}
+            sandbox=""
+            className="w-full h-full bg-white border-0"
+            title="HTML Preview"
+          />
+        ) : isJson ? (
           <CodeMirror
             ref={cmRef}
             value={formattedBody}
@@ -451,7 +479,8 @@ function SaveToVariableDropdown({
   const [saved, setSaved] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  const variables = (envVarsData as Array<{ key: string; teamValue?: string; localValue?: string }>) || []
+  const rawVars = Array.isArray(envVarsData) ? envVarsData : (envVarsData as unknown as { variables?: unknown[] })?.variables
+  const variables = (rawVars as Array<{ key: string; teamValue?: string; localValue?: string }>) || []
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

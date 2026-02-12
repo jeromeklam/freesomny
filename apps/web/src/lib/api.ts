@@ -156,6 +156,8 @@ export const environmentsApi = {
       method: 'PUT',
       body: JSON.stringify({ keys }),
     }),
+  toggleProtection: (id: string, key: string) =>
+    request<unknown>(`/environments/${id}/variables/${key}/protect`, { method: 'PUT' }),
 }
 
 // History

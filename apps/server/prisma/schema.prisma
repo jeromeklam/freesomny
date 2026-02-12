@@ -223,6 +223,7 @@ model EnvironmentVariable {
   type          String      @default("string") // string | secret | dynamic
   scope         String      @default("global") // global | collection | request | local
   isSecret      Boolean     @default(false)
+  isProtected   Boolean     @default(false)
   category      String      @default("input") // input | generated
   sortOrder     Int         @default(0)
   environmentId String

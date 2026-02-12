@@ -10,6 +10,29 @@ const shareEnvironmentSchema = z.object({
   permission: z.enum(['read', 'write', 'admin']).default('read'),
 })
 
+// Check if user can edit team variables (owner or group admin/owner)
+async function canEditTeamVariables(userId: string, environmentId: string): Promise<boolean> {
+  const env = await prisma.environment.findUnique({
+    where: { id: environmentId },
+    select: { userId: true, groupId: true },
+  })
+  if (!env) return false
+  // Owner can always edit
+  if (env.userId === userId) return true
+  // Group admin/owner can edit
+  if (env.groupId) {
+    try {
+      const membership = await prisma.groupMember.findUnique({
+        where: { groupId_userId: { groupId: env.groupId, userId } },
+      })
+      return membership?.role === 'admin' || membership?.role === 'owner'
+    } catch {
+      return false
+    }
+  }
+  return false
+}
+
 export async function environmentRoutes(fastify: FastifyInstance) {
   // Get all environments
   fastify.get('/api/environments', { preHandler: [optionalAuth] }, async (request) => {
@@ -164,6 +187,7 @@ export async function environmentRoutes(fastify: FastifyInstance) {
           type: v.type,
           scope: v.scope,
           isSecret: v.isSecret,
+          isProtected: 'isProtected' in v ? (v as { isProtected?: boolean }).isProtected ?? false : false,
           category: v.category,
           sortOrder: v.sortOrder,
           environmentId: newEnv.id,
@@ -207,18 +231,37 @@ export async function environmentRoutes(fastify: FastifyInstance) {
   })
 
   // Get merged variables view
-  fastify.get<{ Params: { id: string } }>('/api/environments/:id/variables', async (request) => {
+  fastify.get<{ Params: { id: string } }>('/api/environments/:id/variables', { preHandler: [optionalAuth] }, async (request) => {
+    const userId = getCurrentUserId(request)
     const view = await getVariablesView(request.params.id)
-    return { data: view }
+    const canProtect = userId ? await canEditTeamVariables(userId, request.params.id) : false
+    return { data: { variables: view, canEditProtected: canProtect } }
   })
 
   // Set team variable
   fastify.put<{ Params: { id: string; key: string }; Body: unknown }>(
     '/api/environments/:id/variables/:key',
-    async (request) => {
+    { preHandler: [optionalAuth] },
+    async (request, reply) => {
       const parsed = createVariableSchema.safeParse({ ...(request.body as object), key: request.params.key })
       if (!parsed.success) {
         return { error: 'Validation failed', details: parsed.error.errors }
+      }
+
+      // Check if variable is protected and user has permission
+      const userId = getCurrentUserId(request)
+      try {
+        const existing = await prisma.environmentVariable.findFirst({
+          where: { environmentId: request.params.id, key: request.params.key },
+        })
+        if (existing && existing.isProtected && userId) {
+          const canEdit = await canEditTeamVariables(userId, request.params.id)
+          if (!canEdit) {
+            return reply.status(403).send({ error: 'This variable is protected. Only the owner or group admin can modify it.' })
+          }
+        }
+      } catch {
+        // isProtected column may not exist yet — allow operation
       }
 
       // Get max sortOrder for new variables
@@ -244,6 +287,7 @@ export async function environmentRoutes(fastify: FastifyInstance) {
           type: parsed.data.type,
           scope: parsed.data.scope,
           isSecret: parsed.data.isSecret,
+          isProtected: parsed.data.isProtected,
           category: parsed.data.category,
           sortOrder: nextOrder,
         },
@@ -260,10 +304,54 @@ export async function environmentRoutes(fastify: FastifyInstance) {
     }
   )
 
+  // Toggle variable protection (owner/admin only)
+  fastify.put<{ Params: { id: string; key: string } }>(
+    '/api/environments/:id/variables/:key/protect',
+    { preHandler: [requireAuth] },
+    async (request, reply) => {
+      const userId = getCurrentUserId(request)!
+      const canEdit = await canEditTeamVariables(userId, request.params.id)
+      if (!canEdit) {
+        return reply.status(403).send({ error: 'Only the owner or group admin can toggle variable protection.' })
+      }
+
+      const variable = await prisma.environmentVariable.findFirst({
+        where: { environmentId: request.params.id, key: request.params.key },
+      })
+      if (!variable) {
+        return reply.status(404).send({ error: 'Variable not found' })
+      }
+
+      const updated = await prisma.environmentVariable.update({
+        where: { id: variable.id },
+        data: { isProtected: !variable.isProtected },
+      })
+
+      return { data: updated }
+    }
+  )
+
   // Delete team variable
   fastify.delete<{ Params: { id: string; key: string } }>(
     '/api/environments/:id/variables/:key',
-    async (request) => {
+    { preHandler: [optionalAuth] },
+    async (request, reply) => {
+      // Check if variable is protected
+      const userId = getCurrentUserId(request)
+      try {
+        const existing = await prisma.environmentVariable.findFirst({
+          where: { environmentId: request.params.id, key: request.params.key },
+        })
+        if (existing && existing.isProtected && userId) {
+          const canEdit = await canEditTeamVariables(userId, request.params.id)
+          if (!canEdit) {
+            return reply.status(403).send({ error: 'This variable is protected. Only the owner or group admin can delete it.' })
+          }
+        }
+      } catch {
+        // isProtected column may not exist yet — allow operation
+      }
+
       await prisma.environmentVariable.deleteMany({
         where: {
           environmentId: request.params.id,

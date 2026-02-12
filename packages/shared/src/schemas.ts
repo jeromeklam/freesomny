@@ -198,6 +198,7 @@ export const createVariableSchema = z.object({
   type: variableTypeSchema.default('string'),
   scope: variableScopeSchema.default('global'),
   isSecret: z.boolean().default(false),
+  isProtected: z.boolean().default(false),
   category: variableCategorySchema.default('input'),
 })
 

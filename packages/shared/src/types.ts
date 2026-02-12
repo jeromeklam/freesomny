@@ -195,6 +195,7 @@ export interface EnvironmentVariable {
   type: 'string' | 'secret' | 'dynamic'
   scope: 'global' | 'collection' | 'request' | 'local'
   isSecret: boolean
+  isProtected?: boolean
   environmentId: string
 }
 

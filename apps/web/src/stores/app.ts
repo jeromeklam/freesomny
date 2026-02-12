@@ -15,6 +15,8 @@ export interface OpenTab {
   requestId: string
   name: string
   method: string
+  environmentId?: string | null
+  folderId?: string | null
 }
 
 export interface AuthUser {
@@ -50,7 +52,7 @@ interface AppState {
   // Request Tabs (multiple open requests)
   openTabs: OpenTab[]
   activeRequestTabId: string | null
-  openRequestTab: (requestId: string, name: string, method: string) => void
+  openRequestTab: (requestId: string, name: string, method: string, folderId?: string) => void
   closeRequestTab: (tabId: string) => void
   setActiveRequestTab: (tabId: string) => void
   updateRequestTabInfo: (requestId: string, name: string, method: string) => void
@@ -155,6 +157,19 @@ const getInitialLanguage = (): Language => {
   return 'en'
 }
 
+// Walk the folder tree to find the root collection a folderId belongs to
+function containsFolder(folder: FolderWithChildren, folderId: string): boolean {
+  if (folder.id === folderId) return true
+  return folder.children.some(child => containsFolder(child, folderId))
+}
+
+function findRootFolderId(folders: FolderWithChildren[], folderId: string): string | null {
+  for (const root of folders) {
+    if (containsFolder(root, folderId)) return root.id
+  }
+  return null
+}
+
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
@@ -192,13 +207,33 @@ export const useAppStore = create<AppState>()(
       // Request Tabs (multiple open requests)
       openTabs: [],
       activeRequestTabId: null,
-      openRequestTab: (requestId, name, method) =>
+      openRequestTab: (requestId, name, method, folderId?) =>
         set((state) => {
           // Check if tab already exists
           const existingTab = state.openTabs.find((t) => t.requestId === requestId)
           if (existingTab) {
-            // Just activate the existing tab
-            return { activeRequestTabId: existingTab.id, selectedRequestId: requestId }
+            // Activate existing tab and restore its environment
+            return {
+              activeRequestTabId: existingTab.id,
+              selectedRequestId: requestId,
+              activeEnvironmentId: existingTab.environmentId !== undefined
+                ? existingTab.environmentId
+                : state.activeEnvironmentId,
+            }
+          }
+          // For new tab: try to inherit env from a sibling tab in the same collection
+          let envId = state.activeEnvironmentId
+          if (folderId) {
+            const rootId = findRootFolderId(state.folders, folderId)
+            if (rootId) {
+              const siblingTab = state.openTabs.find((t) => {
+                if (!t.folderId) return false
+                return findRootFolderId(state.folders, t.folderId) === rootId
+              })
+              if (siblingTab?.environmentId !== undefined) {
+                envId = siblingTab.environmentId ?? state.activeEnvironmentId
+              }
+            }
           }
           // Create new tab
           const newTab: OpenTab = {
@@ -206,11 +241,14 @@ export const useAppStore = create<AppState>()(
             requestId,
             name,
             method,
+            environmentId: envId,
+            folderId: folderId || null,
           }
           return {
             openTabs: [...state.openTabs, newTab],
             activeRequestTabId: newTab.id,
             selectedRequestId: requestId,
+            activeEnvironmentId: envId,
           }
         }),
       closeRequestTab: (tabId) =>
@@ -221,6 +259,7 @@ export const useAppStore = create<AppState>()(
           const newTabs = state.openTabs.filter((t) => t.id !== tabId)
           let newActiveTabId = state.activeRequestTabId
           let newSelectedRequestId = state.selectedRequestId
+          let newEnvId = state.activeEnvironmentId
 
           // If closing the active tab, switch to adjacent tab
           if (state.activeRequestTabId === tabId) {
@@ -232,6 +271,10 @@ export const useAppStore = create<AppState>()(
               const newIndex = Math.min(tabIndex, newTabs.length - 1)
               newActiveTabId = newTabs[newIndex].id
               newSelectedRequestId = newTabs[newIndex].requestId
+              // Restore adjacent tab's environment
+              if (newTabs[newIndex].environmentId !== undefined) {
+                newEnvId = newTabs[newIndex].environmentId ?? state.activeEnvironmentId
+              }
             }
           }
 
@@ -239,6 +282,7 @@ export const useAppStore = create<AppState>()(
             openTabs: newTabs,
             activeRequestTabId: newActiveTabId,
             selectedRequestId: newSelectedRequestId,
+            activeEnvironmentId: newEnvId,
           }
         }),
       setActiveRequestTab: (tabId) =>
@@ -249,6 +293,9 @@ export const useAppStore = create<AppState>()(
             activeRequestTabId: tabId,
             selectedRequestId: tab.requestId,
             selectedFolderId: null,
+            activeEnvironmentId: tab.environmentId !== undefined
+              ? tab.environmentId
+              : state.activeEnvironmentId,
           }
         }),
       updateRequestTabInfo: (requestId, name, method) =>
@@ -279,7 +326,12 @@ export const useAppStore = create<AppState>()(
       environments: [],
       setEnvironments: (environments) => set({ environments }),
       activeEnvironmentId: null,
-      setActiveEnvironmentId: (id) => set({ activeEnvironmentId: id }),
+      setActiveEnvironmentId: (id) => set((state) => ({
+        activeEnvironmentId: id,
+        openTabs: state.openTabs.map((t) =>
+          t.id === state.activeRequestTabId ? { ...t, environmentId: id } : t
+        ),
+      })),
 
       // UI State
       activeTab: 'params',

@@ -79,7 +79,9 @@
     "prevMatch": "Previous match",
     "nextMatch": "Next match",
     "noResults": "No results",
-    "binaryContent": "Binary content — download to view"
+    "binaryContent": "Binary content — download to view",
+    "htmlPreview": "Preview",
+    "rawView": "Raw"
   },
   "environment": {
     "title": "Environment",
@@ -125,7 +127,13 @@
     "deleteEnvironment": "Delete environment",
     "editEnvironment": "Edit environment",
     "duplicateEnvironment": "Duplicate environment",
-    "confirmDelete": "Delete environment \"{name}\" permanently? This action cannot be undone."
+    "confirmDelete": "Delete environment \"{name}\" permanently? This action cannot be undone.",
+    "protectVariable": "Protect variable",
+    "unprotectVariable": "Unprotect variable",
+    "protectedReadonly": "Protected by owner — override locally to change",
+    "protectedOverrideConfirm": "This variable is protected by the team. Are you sure you want to override it locally?",
+    "protectedOverrideWarning": "Protected — local override",
+    "protectedBadge": "protected"
   },
   "import": {
     "title": "Import Collection",

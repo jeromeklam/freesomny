@@ -155,6 +155,7 @@ export async function getVariablesView(environmentId: string, userId = 'local') 
       description: v.description,
       type: v.type,
       isSecret: v.isSecret,
+      isProtected: 'isProtected' in v ? (v as { isProtected?: boolean }).isProtected ?? false : false,
       category: v.category,
       sortOrder: v.sortOrder,
       status: override ? 'overridden' : 'team',

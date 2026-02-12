@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { X, Plus, Trash2, RotateCcw, Lock, Unlock, GripVertical, Tag, Cog, Users } from 'lucide-react'
+import { X, Plus, Trash2, RotateCcw, Lock, Unlock, GripVertical, Tag, Cog, Users, Shield } from 'lucide-react'
 import { ResizableModal } from './ResizableModal'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
@@ -15,6 +15,7 @@ interface VariableView {
   description: string
   type: string
   isSecret: boolean
+  isProtected: boolean
   category: 'input' | 'generated'
   sortOrder: number
   status: 'team' | 'overridden'
@@ -41,7 +42,7 @@ export function EnvironmentModal() {
   const environments = useAppStore((s) => s.environments)
   const setEnvironments = useAppStore((s) => s.setEnvironments)
 
-  const { data: variables, refetch } = useEnvironmentVariables(activeEnvironmentId)
+  const { data: variablesData, refetch } = useEnvironmentVariables(activeEnvironmentId)
   const deleteEnvironment = useDeleteEnvironment()
   const { data: groupsData } = useGroups()
   const assignToGroup = useAssignEnvironmentToGroup()
@@ -51,6 +52,18 @@ export function EnvironmentModal() {
   const dragRowRef = useRef<HTMLTableRowElement | null>(null)
 
   const activeEnv = environments.find((e) => e.id === activeEnvironmentId)
+
+  // Parse response: new format { variables, canEditProtected } or legacy array
+  const rawData = variablesData as unknown
+  let variablesList: VariableView[] = []
+  let canEditProtected = false
+  if (rawData && typeof rawData === 'object' && 'variables' in (rawData as Record<string, unknown>)) {
+    const shaped = rawData as { variables: VariableView[]; canEditProtected: boolean }
+    variablesList = shaped.variables || []
+    canEditProtected = shaped.canEditProtected || false
+  } else {
+    variablesList = ((rawData || []) as VariableView[])
+  }
 
   // Sync edited values when environment changes
   useEffect(() => {
@@ -65,9 +78,7 @@ export function EnvironmentModal() {
   // Clear local overrides buffer when server data refreshes
   useEffect(() => {
     setLocalOverrides({})
-  }, [variables])
-
-  const variablesList = (variables || []) as VariableView[]
+  }, [variablesData])
 
   // Drag & drop handlers
   const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
@@ -157,6 +168,12 @@ export function EnvironmentModal() {
     refetch()
   }
 
+  const handleToggleProtection = async (key: string) => {
+    if (!activeEnvironmentId) return
+    await environmentsApi.toggleProtection(activeEnvironmentId, key)
+    refetch()
+  }
+
   const handleSaveSettings = async () => {
     if (!activeEnvironmentId) return
 
@@ -186,6 +203,20 @@ export function EnvironmentModal() {
     if (!activeEnvironmentId) return
     const value = localOverrides[key]
     if (value === undefined) return
+
+    // Confirm override on protected variables
+    const variable = variablesList.find(v => v.key === key)
+    if (variable?.isProtected && !canEditProtected && value !== '' && variable.localValue === null) {
+      if (!confirm(t('environment.protectedOverrideConfirm'))) {
+        setLocalOverrides(prev => {
+          const next = { ...prev }
+          delete next[key]
+          return next
+        })
+        return
+      }
+    }
+
     await environmentsApi.setOverride(activeEnvironmentId, key, { value })
     refetch()
   }
@@ -228,6 +259,13 @@ export function EnvironmentModal() {
     const variable = variablesList.find(v => v.key === key)
     if (!variable) return
 
+    // Confirm override on protected variables
+    if (variable.isProtected && !canEditProtected) {
+      if (!confirm(t('environment.protectedOverrideConfirm'))) {
+        return
+      }
+    }
+
     // Copy team value to local override
     await environmentsApi.setOverride(activeEnvironmentId, key, { value: variable.teamValue })
     refetch()
@@ -236,8 +274,13 @@ export function EnvironmentModal() {
   const handleDeleteVariable = async (key: string) => {
     if (!activeEnvironmentId) return
     if (confirm(`Delete variable "${key}"?`)) {
-      await environmentsApi.deleteVariable(activeEnvironmentId, key)
-      refetch()
+      try {
+        await environmentsApi.deleteVariable(activeEnvironmentId, key)
+        refetch()
+      } catch (err) {
+        // Protected variable — show error
+        alert((err as Error).message || 'Cannot delete protected variable')
+      }
     }
   }
 
@@ -325,11 +368,13 @@ export function EnvironmentModal() {
                     <th className="pb-2 font-medium w-16">{t('environment.category')}</th>
                     <th className="pb-2 font-medium">{t('common.value')}</th>
                     <th className="pb-2 font-medium">{t('environment.status')}</th>
-                    <th className="pb-2 w-28"></th>
+                    <th className="pb-2 w-32"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {variablesList.map((v, idx) => (
+                  {variablesList.map((v, idx) => {
+                    const isReadonly = v.isProtected && !canEditProtected
+                    return (
                     <tr
                       key={v.key}
                       draggable
@@ -340,7 +385,8 @@ export function EnvironmentModal() {
                       className={clsx(
                         'border-t border-gray-200/50 dark:border-gray-700/50 transition-colors',
                         dragOverIndex === idx && dragIndex !== idx && 'bg-blue-900/20 border-t-blue-500',
-                        dragIndex === idx && 'opacity-40'
+                        dragIndex === idx && 'opacity-40',
+                        v.isProtected && 'bg-amber-900/5 dark:bg-amber-900/10'
                       )}
                     >
                       <td className="py-3 pr-1">
@@ -355,13 +401,34 @@ export function EnvironmentModal() {
                               <Lock className="w-3 h-3 text-yellow-500 flex-shrink-0" />
                             </span>
                           )}
+                          {v.isProtected && (
+                            <span title={t('environment.protectedReadonly')}>
+                              <Shield className="w-3 h-3 text-amber-500 flex-shrink-0" />
+                            </span>
+                          )}
                           {v.key}
                         </div>
                         {v.description && (
                           <p className="text-xs text-gray-500 mt-0.5">{v.description}</p>
                         )}
+                        {v.isProtected && v.status === 'overridden' && !canEditProtected && (
+                          <span className="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 text-[10px] bg-amber-900/30 text-amber-400 border border-amber-700/50 rounded">
+                            {t('environment.protectedOverrideWarning')}
+                          </span>
+                        )}
                       </td>
                       <td className="py-3 pr-4">
+                        {isReadonly ? (
+                          <span className={clsx(
+                            'inline-flex items-center gap-1 px-1.5 py-0.5 text-xs rounded border opacity-60',
+                            v.category === 'input'
+                              ? 'bg-green-900/30 border-green-700/50 text-green-400'
+                              : 'bg-purple-900/30 border-purple-700/50 text-purple-400'
+                          )}>
+                            {v.category === 'input' ? <Tag className="w-3 h-3" /> : <Cog className="w-3 h-3" />}
+                            {v.category === 'input' ? t('environment.input') : t('environment.generated')}
+                          </span>
+                        ) : (
                         <button
                           onClick={() => handleToggleCategory(v.key, v.category)}
                           className={clsx(
@@ -375,6 +442,7 @@ export function EnvironmentModal() {
                           {v.category === 'input' ? <Tag className="w-3 h-3" /> : <Cog className="w-3 h-3" />}
                           {v.category === 'input' ? t('environment.input') : t('environment.generated')}
                         </button>
+                        )}
                       </td>
                       <td className="py-3 pr-4">
                         <div className="space-y-1">
@@ -390,45 +458,73 @@ export function EnvironmentModal() {
                             value={localOverrides[v.key] ?? v.localValue ?? ''}
                             onChange={(e) => handleOverrideChange(v.key, e.target.value)}
                             onBlur={() => handleOverrideBlur(v.key)}
-                            placeholder={t('environment.overridePlaceholder')}
-                            className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
+                            placeholder={isReadonly ? t('environment.protectedReadonly') : t('environment.overridePlaceholder')}
+                            className={clsx(
+                              'w-full px-2 py-1 bg-white dark:bg-gray-800 border rounded text-sm font-mono focus:outline-none focus:border-blue-500',
+                              v.isProtected && v.status === 'overridden' && !canEditProtected
+                                ? 'border-amber-600/50'
+                                : 'border-gray-200 dark:border-gray-700'
+                            )}
                           />
                         </div>
                       </td>
                       <td className="py-3 pr-4">
-                        <button
-                          onClick={() =>
-                            v.status === 'overridden'
-                              ? handlePromoteToTeam(v.key)
-                              : handleStartOverride(v.key)
-                          }
-                          className={clsx(
-                            'inline-flex items-center px-2 py-0.5 text-xs rounded cursor-pointer transition-colors',
-                            v.status === 'overridden'
-                              ? 'bg-blue-900/50 text-blue-400 hover:bg-blue-800/60'
-                              : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600'
+                        <div className="flex flex-col gap-1">
+                          <button
+                            onClick={() =>
+                              v.status === 'overridden'
+                                ? handlePromoteToTeam(v.key)
+                                : handleStartOverride(v.key)
+                            }
+                            className={clsx(
+                              'inline-flex items-center px-2 py-0.5 text-xs rounded cursor-pointer transition-colors',
+                              v.status === 'overridden'
+                                ? 'bg-blue-900/50 text-blue-400 hover:bg-blue-800/60'
+                                : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600'
+                            )}
+                            title={
+                              v.status === 'overridden'
+                                ? t('environment.clickToPromoteToTeam')
+                                : t('environment.clickToOverride')
+                            }
+                          >
+                            [{t(`environment.${v.status}`)}]
+                          </button>
+                          {v.isProtected && (
+                            <span className="inline-flex items-center px-2 py-0.5 text-[10px] bg-amber-900/30 text-amber-500 rounded">
+                              <Shield className="w-3 h-3 mr-0.5" />
+                              {t('environment.protectedBadge')}
+                            </span>
                           )}
-                          title={
-                            v.status === 'overridden'
-                              ? t('environment.clickToPromoteToTeam')
-                              : t('environment.clickToOverride')
-                          }
-                        >
-                          [{t(`environment.${v.status}`)}]
-                        </button>
+                        </div>
                       </td>
                       <td className="py-3">
                         <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => handleToggleSecret(v.key, v.isSecret)}
-                            className={clsx(
-                              'p-1',
-                              v.isSecret ? 'text-yellow-500 hover:text-yellow-400' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
-                            )}
-                            title={v.isSecret ? t('environment.makeVisible') : t('environment.markAsProtected')}
-                          >
-                            {v.isSecret ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-                          </button>
+                          {/* Protection toggle — only for owner/admin */}
+                          {canEditProtected && (
+                            <button
+                              onClick={() => handleToggleProtection(v.key)}
+                              className={clsx(
+                                'p-1',
+                                v.isProtected ? 'text-amber-500 hover:text-amber-400' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                              )}
+                              title={v.isProtected ? t('environment.unprotectVariable') : t('environment.protectVariable')}
+                            >
+                              <Shield className="w-4 h-4" />
+                            </button>
+                          )}
+                          {!isReadonly && (
+                            <button
+                              onClick={() => handleToggleSecret(v.key, v.isSecret)}
+                              className={clsx(
+                                'p-1',
+                                v.isSecret ? 'text-yellow-500 hover:text-yellow-400' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                              )}
+                              title={v.isSecret ? t('environment.makeVisible') : t('environment.markAsProtected')}
+                            >
+                              {v.isSecret ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                            </button>
+                          )}
                           {v.status === 'overridden' && (
                             <button
                               onClick={() => handleResetOverride(v.key)}
@@ -438,17 +534,20 @@ export function EnvironmentModal() {
                               <RotateCcw className="w-4 h-4" />
                             </button>
                           )}
-                          <button
-                            onClick={() => handleDeleteVariable(v.key)}
-                            className="p-1 text-gray-500 hover:text-red-400"
-                            title={t('environment.deleteVariable')}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {!isReadonly && (
+                            <button
+                              onClick={() => handleDeleteVariable(v.key)}
+                              className="p-1 text-gray-500 hover:text-red-400"
+                              title={t('environment.deleteVariable')}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    )
+                  })}
                 </tbody>
               </table>
 

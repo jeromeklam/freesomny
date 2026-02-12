@@ -91,8 +91,10 @@ export function FolderSettings() {
   const inheritedGroup = useMemo(() => findInheritedGroup(selectedFolderId), [findInheritedGroup, selectedFolderId])
 
   const variablesForTooltip = useMemo(() => {
-    if (!envVarsData || !Array.isArray(envVarsData)) return []
-    return (envVarsData as Array<{ key: string; teamValue?: string; localValue?: string; status?: string; isSecret?: boolean }>).map((v) => ({
+    if (!envVarsData) return []
+    const vars = Array.isArray(envVarsData) ? envVarsData : (envVarsData as { variables?: unknown[] }).variables
+    if (!Array.isArray(vars)) return []
+    return (vars as Array<{ key: string; teamValue?: string; localValue?: string; status?: string; isSecret?: boolean }>).map((v) => ({
       key: v.key,
       value: v.localValue ?? v.teamValue ?? '',
       source: v.status === 'overridden' ? 'local override' : 'environment',

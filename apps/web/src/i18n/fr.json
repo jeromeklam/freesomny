@@ -79,7 +79,9 @@
     "prevMatch": "Résultat précédent",
     "nextMatch": "Résultat suivant",
     "noResults": "Aucun résultat",
-    "binaryContent": "Contenu binaire — télécharger pour visualiser"
+    "binaryContent": "Contenu binaire — télécharger pour visualiser",
+    "htmlPreview": "Aperçu",
+    "rawView": "Brut"
   },
   "environment": {
     "title": "Environnement",
@@ -125,7 +127,13 @@
     "deleteEnvironment": "Supprimer l'environnement",
     "editEnvironment": "Modifier l'environnement",
     "duplicateEnvironment": "Dupliquer l'environnement",
-    "confirmDelete": "Supprimer définitivement l'environnement « {name} » ? Cette action est irréversible."
+    "confirmDelete": "Supprimer définitivement l'environnement « {name} » ? Cette action est irréversible.",
+    "protectVariable": "Protéger la variable",
+    "unprotectVariable": "Déprotéger la variable",
+    "protectedReadonly": "Protégée par le propriétaire — remplacez localement pour modifier",
+    "protectedOverrideConfirm": "Cette variable est protégée par l'équipe. Voulez-vous vraiment la remplacer localement ?",
+    "protectedOverrideWarning": "Protégée — remplacement local",
+    "protectedBadge": "protégée"
   },
   "import": {
     "title": "Importer une collection",

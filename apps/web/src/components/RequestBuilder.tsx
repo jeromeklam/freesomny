@@ -130,8 +130,11 @@ export function RequestBuilder() {
 
   // Map environment variables for tooltips
   const variablesForTooltip = useMemo(() => {
-    if (!envVarsData || !Array.isArray(envVarsData)) return []
-    return (envVarsData as Array<{ key: string; teamValue?: string; localValue?: string; status?: string; isSecret?: boolean }>).map((v) => ({
+    if (!envVarsData) return []
+    // Support both legacy array format and new { variables, canEditProtected } format
+    const vars = Array.isArray(envVarsData) ? envVarsData : (envVarsData as { variables?: unknown[] }).variables
+    if (!Array.isArray(vars)) return []
+    return (vars as Array<{ key: string; teamValue?: string; localValue?: string; status?: string; isSecret?: boolean }>).map((v) => ({
       key: v.key,
       value: v.localValue ?? v.teamValue ?? '',
       source: v.status === 'overridden' ? 'local override' : 'environment',

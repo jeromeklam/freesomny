@@ -487,7 +487,7 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
   const isDragging = dragItem?.type === 'request' && dragItem.id === request.id
 
   const handleSelect = () => {
-    openRequestTab(request.id, request.name, request.method)
+    openRequestTab(request.id, request.name, request.method, folderId)
     setSelectedFolderId(null)
     setCurrentRequest(request as unknown as ReturnType<typeof useAppStore.getState>['currentRequest'])
   }
@@ -839,7 +839,7 @@ export function FolderTree() {
                   )}
                   style={{ paddingLeft: '24px' }}
                   onClick={() => {
-                    openRequestTab(fav.id, fav.name, fav.method)
+                    openRequestTab(fav.id, fav.name, fav.method, fav.folderId)
                     setSelectedFolderId(null)
                     setCurrentRequest(null)
                   }}
