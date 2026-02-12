@@ -7,6 +7,7 @@ import { useTranslation } from './hooks/useTranslation'
 import { useTheme } from './hooks/useTheme'
 import { languages, type Language } from './i18n'
 import { setAuthToken } from './lib/api'
+import { queryClient } from './lib/queryClient'
 import { FolderTree } from './components/FolderTree'
 import { RequestBuilder } from './components/RequestBuilder'
 import { RequestTabBar } from './components/RequestTabBar'
@@ -59,8 +60,27 @@ function MainApp() {
   useEnvironments()
 
   const handleLogout = () => {
+    // Clear auth token
     setAuthToken(null)
-    setUser(null)
+
+    // Flush all cached server data (folders, requests, environments, etc.)
+    queryClient.clear()
+
+    // Reset all Zustand state to defaults (incl. persisted preferences)
+    useAppStore.getState().resetStore()
+
+    // Remove persisted preferences from localStorage
+    localStorage.removeItem('freesomnia-settings')
+
+    // Remove all persisted modal sizes
+    const keysToRemove: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith('modal-size:')) {
+        keysToRemove.push(key)
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key))
   }
 
   // Handle sidebar resize

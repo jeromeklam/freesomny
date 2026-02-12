@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.5.8'
+export const APP_VERSION = '0.5.9'
 
 export interface ChangelogEntry {
   version: string
@@ -7,6 +7,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.5.9',
+    date: '2026-02-12',
+    changes: [
+      'Correction : les sous-dossiers et requêtes des collections de groupe sont maintenant visibles par tous les membres',
+      'Nettoyage complet des préférences et du cache lors de la déconnexion (plus de persistance entre utilisateurs)',
+      'Favoris par utilisateur : chaque utilisateur a ses propres favoris (nouveau modèle UserFavorite)',
+    ],
+  },
   {
     version: '0.5.8',
     date: '2026-02-11',

@@ -87,7 +87,10 @@ freesomnia/
 - Shows flat list: method badge + name + collection name + unstar button on hover
 - `GET /api/requests/favorites` endpoint returns favorited requests with folder name
 - Collapse state persisted in localStorage via Zustand
-- Toggle via `useToggleFavorite()` hook → `PUT /api/requests/:id` with `{ isFavorite }`
+- **Per-user favorites**: `UserFavorite` join table (userId + requestId), not a global flag on Request
+- Toggle via `POST /api/requests/:id/favorite` (creates or deletes `UserFavorite` row)
+- `GET /api/folders` overlays per-user `isFavorite` from `UserFavorite` table onto each request
+- PostgreSQL migration: `scripts/migrate-postgresql-user-favorites.sql`
 
 ### Collection search
 - Search bar in sidebar header: toggleable via Search icon, filters collections and requests by name
@@ -157,7 +160,8 @@ Key files:
 ### Groups (team collaboration)
 - Users belong to groups with roles (owner/admin/member)
 - Folders and environments can be assigned to groups
-- All group members see group resources
+- All group members see group resources (root folder + all descendants)
+- **Descendant visibility**: `GET /api/folders` iteratively fetches children of group-owned and shared folders by walking `parentId` chain — children have `groupId=null` but are included via parent ancestry
 - **UI**: FolderSettings General tab and EnvironmentModal Settings tab have group assignment dropdowns
 - **FolderTree**: purple badge with Users icon shows group name on group-owned folders
 - **Inherited group**: subfolders of group-owned collections show a dimmer purple badge (inherited); FolderSettings shows inherited group as read-only
@@ -178,6 +182,13 @@ Key files:
 - CSS (index.css): scrollbar and CodeMirror themes use `.dark` parent selector
 - Color mapping: `bg-gray-900`→`bg-gray-50 dark:bg-gray-900`, `bg-gray-800`→`bg-white dark:bg-gray-800`, `border-gray-700`→`border-gray-200 dark:border-gray-700`, `text-gray-400`→`text-gray-500 dark:text-gray-400`, `text-white`→`text-gray-900 dark:text-white`
 - Accent/semantic colors (blue, green, red, yellow, purple, orange) left unchanged
+
+### Logout cleanup (per-user state isolation)
+- On logout, **full cleanup** prevents state leaking between users on the same browser
+- `queryClient.clear()` — flushes all TanStack Query cached server data
+- `resetStore()` — Zustand action resets ALL state to defaults (folders, tabs, response, environments, UI, preferences)
+- Removes `freesomnia-settings` and all `modal-size:*` keys from localStorage
+- `queryClient` exported from `apps/web/src/lib/queryClient.ts` (shared between `main.tsx` and `App.tsx`)
 
 ### Code generation
 - CodeGeneratorModal: cURL, PHP, Python code generation

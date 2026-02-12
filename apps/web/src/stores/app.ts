@@ -113,6 +113,9 @@ interface AppState {
   // Theme
   theme: Theme
   setTheme: (theme: Theme) => void
+
+  // Full reset (logout)
+  resetStore: () => void
 }
 
 // Helper to get initial theme (from localStorage, default to 'dark')
@@ -311,6 +314,39 @@ export const useAppStore = create<AppState>()(
       // Theme - default to 'dark'
       theme: getInitialTheme(),
       setTheme: (theme) => set({ theme }),
+
+      // Full reset on logout — clears all state to defaults
+      resetStore: () => set({
+        user: null,
+        folders: [],
+        selectedFolderId: null,
+        expandedFolders: new Set(),
+        selectedRequestId: null,
+        currentRequest: null,
+        openTabs: [],
+        activeRequestTabId: null,
+        currentResponse: null,
+        isLoading: false,
+        requestError: null,
+        scriptLogs: [],
+        scriptErrors: [],
+        scriptTests: [],
+        environments: [],
+        activeEnvironmentId: null,
+        activeTab: 'params',
+        responseTab: 'body',
+        sidebarWidth: 280,
+        favoritesExpanded: true,
+        showHistory: false,
+        showSettings: false,
+        showEnvironmentModal: false,
+        showAdmin: false,
+        showChangelog: false,
+        sendMode: 'server' as SendMode,
+        selectedAgentId: null,
+        language: navigator.language.startsWith('fr') ? 'fr' : 'en',
+        theme: 'dark',
+      }),
     }),
     {
       name: 'freesomnia-settings',

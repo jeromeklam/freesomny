@@ -134,8 +134,8 @@ export function useToggleFavorite() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, isFavorite }: { id: string; isFavorite: boolean }) =>
-      requestsApi.update(id, { isFavorite }),
+    mutationFn: ({ id }: { id: string }) =>
+      requestsApi.toggleFavorite(id),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['favorites'] })
       queryClient.invalidateQueries({ queryKey: ['folders'] })

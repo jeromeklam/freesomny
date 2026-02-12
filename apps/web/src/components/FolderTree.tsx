@@ -624,7 +624,7 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
         <button
           onClick={(e) => {
             e.stopPropagation()
-            toggleFavorite.mutate({ id: request.id, isFavorite: !request.isFavorite })
+            toggleFavorite.mutate({ id: request.id })
           }}
           className={clsx(
             'p-0.5 rounded transition-opacity',
@@ -686,7 +686,7 @@ function RequestItem({ request, folderId, level, siblingRequests = [], onDragSta
                 onClick={(e) => {
                   e.stopPropagation()
                   setShowMenu(false)
-                  toggleFavorite.mutate({ id: request.id, isFavorite: !request.isFavorite })
+                  toggleFavorite.mutate({ id: request.id })
                 }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-700"
               >
@@ -852,7 +852,7 @@ export function FolderTree() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      toggleFavorite.mutate({ id: fav.id, isFavorite: false })
+                      toggleFavorite.mutate({ id: fav.id })
                     }}
                     className="p-0.5 text-yellow-400 opacity-0 group-hover:opacity-100 hover:text-yellow-500 rounded transition-opacity"
                     title={t('sidebar.removeFromFavorites')}

@@ -8,6 +8,7 @@ import { extractAuthFromHeaders } from '@api-client/import-export'
 import { executeRequest, prepareRequest } from '../services/http-engine.js'
 import { resolveVariables, getActiveEnvironment } from '../services/environment.js'
 import { executeScripts } from '../scripting/sandbox.js'
+import { optionalAuth, requireAuth, getCurrentUserId } from '../lib/auth.js'
 
 /** Authorization is managed by the Auth tab — strip from raw headers unless authType is 'none' (user manages manually) */
 function stripAuthHeader(headers: KeyValueItem[], authType: string): KeyValueItem[] {
@@ -16,35 +17,75 @@ function stripAuthHeader(headers: KeyValueItem[], authType: string): KeyValueIte
 }
 
 export async function requestRoutes(fastify: FastifyInstance) {
-  // Get favorite requests (must be before :id route)
-  fastify.get('/api/requests/favorites', async () => {
+  // Get favorite requests for current user (must be before :id route)
+  fastify.get('/api/requests/favorites', { preHandler: [optionalAuth] }, async (request) => {
     try {
-      const favorites = await prisma.request.findMany({
-        where: { isFavorite: true },
-        orderBy: { updatedAt: 'desc' },
+      const userId = getCurrentUserId(request)
+      if (!userId) return { data: [] }
+
+      // Query UserFavorite join table with request + folder info
+      const userFavorites = await prisma.userFavorite.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
         include: {
-          folder: {
-            select: { id: true, name: true },
+          request: {
+            include: {
+              folder: { select: { id: true, name: true } },
+            },
           },
         },
       })
 
       return {
-        data: favorites.map(r => ({
-          id: r.id,
-          name: r.name,
-          method: r.method,
+        data: userFavorites.map(uf => ({
+          id: uf.request.id,
+          name: uf.request.name,
+          method: uf.request.method,
           isFavorite: true,
-          folderId: r.folderId,
-          folderName: r.folder?.name ?? '',
+          folderId: uf.request.folderId,
+          folderName: uf.request.folder?.name ?? '',
         })),
       }
     } catch (err) {
-      // Backwards-compat: if isFavorite column doesn't exist yet
-      fastify.log.warn({ err }, 'Failed to fetch favorites (isFavorite column may not exist)')
+      // Backwards-compat: if UserFavorite table doesn't exist yet
+      fastify.log.warn({ err }, 'Failed to fetch user favorites (UserFavorite table may not exist)')
       return { data: [] }
     }
   })
+
+  // Toggle favorite for current user
+  fastify.post<{ Params: { id: string } }>(
+    '/api/requests/:id/favorite',
+    { preHandler: [requireAuth] },
+    async (request) => {
+      const userId = getCurrentUserId(request)!
+      const requestId = request.params.id
+
+      try {
+        // Check if already favorited
+        const existing = await prisma.userFavorite.findUnique({
+          where: { userId_requestId: { userId, requestId } },
+        })
+
+        if (existing) {
+          // Remove favorite
+          await prisma.userFavorite.delete({
+            where: { id: existing.id },
+          })
+          return { data: { isFavorite: false } }
+        } else {
+          // Add favorite
+          await prisma.userFavorite.create({
+            data: { userId, requestId },
+          })
+          return { data: { isFavorite: true } }
+        }
+      } catch (err) {
+        fastify.log.warn({ err }, 'Failed to toggle favorite')
+        return { data: { isFavorite: false } }
+      }
+    }
+  )
 
   // Get single request
   fastify.get<{ Params: { id: string } }>('/api/requests/:id', async (request) => {
@@ -93,7 +134,6 @@ export async function requestRoutes(fastify: FastifyInstance) {
         followRedirects: data.followRedirects,
         verifySsl: data.verifySsl,
         proxy: data.proxy,
-        isFavorite: data.isFavorite,
         folderId: data.folderId,
         sortOrder: data.sortOrder,
       },
@@ -137,7 +177,7 @@ export async function requestRoutes(fastify: FastifyInstance) {
     if (data.verifySsl !== undefined) updateData.verifySsl = data.verifySsl
     if (data.proxy !== undefined) updateData.proxy = data.proxy
     if (data.sortOrder !== undefined) updateData.sortOrder = data.sortOrder
-    if (data.isFavorite !== undefined) updateData.isFavorite = data.isFavorite
+    // isFavorite is now per-user via UserFavorite table, ignore the deprecated field
 
     // Auto-sync Authorization header ↔ Auth config
     if (data.headers && Array.isArray(data.headers)) {

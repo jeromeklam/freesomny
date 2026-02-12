@@ -28,20 +28,23 @@ export async function folderRoutes(fastify: FastifyInstance) {
     // Build where clause: if authenticated, show owned + shared + group folders
     // If not authenticated, show all folders (backward compatibility)
     let whereClause = {}
+    let sharedFolderIds: string[] = []
+    let groupIds: string[] = []
+
     if (userId) {
       // Get folder IDs that are shared with the user
       const sharedFolders = await prisma.folderShare.findMany({
         where: { userId },
         select: { folderId: true },
       })
-      const sharedFolderIds = sharedFolders.map(sf => sf.folderId)
+      sharedFolderIds = sharedFolders.map(sf => sf.folderId)
 
       // Get groups the user is a member of
       const groupMemberships = await prisma.groupMember.findMany({
         where: { userId },
         select: { groupId: true },
       })
-      const groupIds = groupMemberships.map(gm => gm.groupId)
+      groupIds = groupMemberships.map(gm => gm.groupId)
 
       whereClause = {
         OR: [
@@ -52,18 +55,70 @@ export async function folderRoutes(fastify: FastifyInstance) {
       }
     }
 
+    const folderInclude = {
+      requests: {
+        orderBy: { sortOrder: 'asc' as const },
+      },
+      group: {
+        select: { id: true, name: true },
+      },
+    }
+
     const folders = await prisma.folder.findMany({
       where: whereClause,
-      include: {
-        requests: {
-          orderBy: { sortOrder: 'asc' },
-        },
-        group: {
-          select: { id: true, name: true },
-        },
-      },
+      include: folderInclude,
       orderBy: { sortOrder: 'asc' },
     })
+
+    // Fetch descendants of group-owned and shared folders
+    // Children of these folders have userId=null and groupId=null,
+    // linked only via parentId — not captured by the initial query
+    if (userId) {
+      const accessRootIds = folders
+        .filter(f =>
+          (f.groupId && groupIds.includes(f.groupId)) ||
+          sharedFolderIds.includes(f.id)
+        )
+        .map(f => f.id)
+
+      if (accessRootIds.length > 0) {
+        const existingIds = new Set(folders.map(f => f.id))
+        let parentIds = accessRootIds
+
+        while (parentIds.length > 0) {
+          const children = await prisma.folder.findMany({
+            where: {
+              parentId: { in: parentIds },
+              id: { notIn: Array.from(existingIds) },
+            },
+            include: folderInclude,
+            orderBy: { sortOrder: 'asc' },
+          })
+
+          if (children.length === 0) break
+
+          for (const child of children) {
+            folders.push(child)
+            existingIds.add(child.id)
+          }
+          parentIds = children.map(c => c.id)
+        }
+      }
+    }
+
+    // Get current user's favorites for isFavorite overlay
+    let userFavoriteIds = new Set<string>()
+    if (userId) {
+      try {
+        const userFavs = await prisma.userFavorite.findMany({
+          where: { userId },
+          select: { requestId: true },
+        })
+        userFavoriteIds = new Set(userFavs.map(f => f.requestId))
+      } catch {
+        // UserFavorite table may not exist yet
+      }
+    }
 
     // Parse JSON fields and strip stale Authorization headers
     const parsed = folders.map(f => ({
@@ -73,7 +128,7 @@ export async function folderRoutes(fastify: FastifyInstance) {
       authConfig: parseAuthConfig(f.authConfig),
       requests: f.requests.map(r => ({
         ...r,
-        isFavorite: 'isFavorite' in r ? r.isFavorite : false,
+        isFavorite: userFavoriteIds.has(r.id),
         headers: stripAuthHeader(parseHeaders(r.headers), r.authType),
         queryParams: parseQueryParams(r.queryParams),
         authConfig: parseAuthConfig(r.authConfig),

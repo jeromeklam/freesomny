@@ -76,6 +76,8 @@ export interface FavoriteRequest {
 export const requestsApi = {
   get: (id: string) => request<unknown>(`/requests/${id}`),
   getFavorites: () => request<FavoriteRequest[]>('/requests/favorites'),
+  toggleFavorite: (id: string) =>
+    request<{ isFavorite: boolean }>(`/requests/${id}/favorite`, { method: 'POST' }),
   create: (data: unknown) =>
     request<unknown>('/requests', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: string, data: unknown) =>
