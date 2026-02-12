@@ -75,7 +75,8 @@ freesomnia/
 - **Folder** - collections with inheritable settings (headers, auth, scripts, baseUrl)
 - **Request** - HTTP requests with method, url, headers, body, auth
 - **Environment** - variable sets (dev, staging, prod)
-- **EnvironmentVariable** - key/value with type (string/secret)
+- **EnvironmentVariable** - key/value with type (string/secret), optional `isProtected` flag
+- **UserFavorite** - per-user favorite requests (userId + requestId, unique)
 
 ## Core features
 
@@ -183,6 +184,34 @@ Key files:
 - Color mapping: `bg-gray-900`→`bg-gray-50 dark:bg-gray-900`, `bg-gray-800`→`bg-white dark:bg-gray-800`, `border-gray-700`→`border-gray-200 dark:border-gray-700`, `text-gray-400`→`text-gray-500 dark:text-gray-400`, `text-white`→`text-gray-900 dark:text-white`
 - Accent/semantic colors (blue, green, red, yellow, purple, orange) left unchanged
 
+### Protected environment variables
+- Environment owner or group admin/owner can lock variables with Shield icon (`isProtected` boolean)
+- Protected variables are **read-only** for other group members (team value cannot be edited)
+- Members can create a **local override** on a protected variable (with confirmation dialog + warning badge)
+- `isProtected` field on `EnvironmentVariable` model (backwards-compatible: `'isProtected' in v`)
+- `canEditTeamVariables()` permission helper: checks if user is env owner or group admin/owner
+- API: `GET /api/environments/:id/variables` returns `{ variables: [...], canEditProtected: bool }` (not a flat array)
+- API: `PUT /api/environments/:id/variables/:varId/protect` — toggle protection (requires permission)
+- 403 guards on team value edits for protected vars when user lacks permission
+- PostgreSQL migration: `scripts/migrate-postgresql-protected-vars.sql`
+- Frontend: Shield icon in EnvironmentModal to toggle, lock icon on read-only protected rows
+
+### HTML preview in response body
+- Toggle button (Eye/Code icons) in the response Body tab toolbar to switch between raw text and rendered HTML
+- Detects HTML content: `content-type` contains `text/html` OR body starts with `<!DOCTYPE` / `<html`
+- Renders via sandboxed `<iframe srcDoc={body} sandbox="" />` — scripts/forms blocked for security
+- Copy/Download still work on raw body when preview is active
+- i18n: `response.htmlPreview` ("Preview" / "Aperçu"), `response.rawView` ("Raw" / "Brut")
+
+### Per-tab environment and send mode memoization
+- Each open tab remembers its selected environment and send mode — switching tabs auto-restores both
+- `OpenTab` extended with `environmentId`, `folderId`, `sendMode`, and `selectedAgentId` fields in Zustand store
+- `setActiveEnvironmentId` / `setSendMode` / `setSelectedAgentId` also save on the active tab
+- `setActiveRequestTab` restores the tab's saved `environmentId`, `sendMode`, `selectedAgentId` to global state
+- **Same-collection inheritance**: opening a request from a collection that already has a tab inherits that tab's environment
+- `findRootFolderId()` + `containsFolder()` tree walkers in `apps/web/src/stores/app.ts`
+- Tab state is session-only (not persisted to localStorage)
+
 ### Logout cleanup (per-user state isolation)
 - On logout, **full cleanup** prevents state leaking between users on the same browser
 - `queryClient.clear()` — flushes all TanStack Query cached server data
@@ -286,6 +315,8 @@ POST /api/cleanup/auth-headers
 GET/POST /api/environments
 PUT/DELETE /api/environments/:id
 POST /api/environments/:id/share
+GET  /api/environments/:id/variables  # Returns { variables, canEditProtected }
+PUT  /api/environments/:id/variables/:varId/protect  # Toggle isProtected
 
 # Import
 POST /api/import/postman, /api/import/hoppscotch

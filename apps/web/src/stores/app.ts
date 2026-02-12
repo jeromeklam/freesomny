@@ -17,6 +17,8 @@ export interface OpenTab {
   method: string
   environmentId?: string | null
   folderId?: string | null
+  sendMode?: SendMode
+  selectedAgentId?: string | null
 }
 
 export interface AuthUser {
@@ -212,13 +214,17 @@ export const useAppStore = create<AppState>()(
           // Check if tab already exists
           const existingTab = state.openTabs.find((t) => t.requestId === requestId)
           if (existingTab) {
-            // Activate existing tab and restore its environment
+            // Activate existing tab and restore its environment + send mode
             return {
               activeRequestTabId: existingTab.id,
               selectedRequestId: requestId,
               activeEnvironmentId: existingTab.environmentId !== undefined
                 ? existingTab.environmentId
                 : state.activeEnvironmentId,
+              sendMode: existingTab.sendMode ?? state.sendMode,
+              selectedAgentId: existingTab.selectedAgentId !== undefined
+                ? existingTab.selectedAgentId
+                : state.selectedAgentId,
             }
           }
           // For new tab: try to inherit env from a sibling tab in the same collection
@@ -243,6 +249,8 @@ export const useAppStore = create<AppState>()(
             method,
             environmentId: envId,
             folderId: folderId || null,
+            sendMode: state.sendMode,
+            selectedAgentId: state.selectedAgentId,
           }
           return {
             openTabs: [...state.openTabs, newTab],
@@ -260,6 +268,8 @@ export const useAppStore = create<AppState>()(
           let newActiveTabId = state.activeRequestTabId
           let newSelectedRequestId = state.selectedRequestId
           let newEnvId = state.activeEnvironmentId
+          let newSendMode = state.sendMode
+          let newAgentId = state.selectedAgentId
 
           // If closing the active tab, switch to adjacent tab
           if (state.activeRequestTabId === tabId) {
@@ -271,9 +281,13 @@ export const useAppStore = create<AppState>()(
               const newIndex = Math.min(tabIndex, newTabs.length - 1)
               newActiveTabId = newTabs[newIndex].id
               newSelectedRequestId = newTabs[newIndex].requestId
-              // Restore adjacent tab's environment
+              // Restore adjacent tab's environment + send mode
               if (newTabs[newIndex].environmentId !== undefined) {
                 newEnvId = newTabs[newIndex].environmentId ?? state.activeEnvironmentId
+              }
+              newSendMode = newTabs[newIndex].sendMode ?? state.sendMode
+              if (newTabs[newIndex].selectedAgentId !== undefined) {
+                newAgentId = newTabs[newIndex].selectedAgentId ?? state.selectedAgentId
               }
             }
           }
@@ -283,6 +297,8 @@ export const useAppStore = create<AppState>()(
             activeRequestTabId: newActiveTabId,
             selectedRequestId: newSelectedRequestId,
             activeEnvironmentId: newEnvId,
+            sendMode: newSendMode,
+            selectedAgentId: newAgentId,
           }
         }),
       setActiveRequestTab: (tabId) =>
@@ -296,6 +312,10 @@ export const useAppStore = create<AppState>()(
             activeEnvironmentId: tab.environmentId !== undefined
               ? tab.environmentId
               : state.activeEnvironmentId,
+            sendMode: tab.sendMode ?? state.sendMode,
+            selectedAgentId: tab.selectedAgentId !== undefined
+              ? tab.selectedAgentId
+              : state.selectedAgentId,
           }
         }),
       updateRequestTabInfo: (requestId, name, method) =>
@@ -355,9 +375,19 @@ export const useAppStore = create<AppState>()(
 
       // Send mode
       sendMode: 'server' as SendMode,
-      setSendMode: (mode) => set({ sendMode: mode }),
+      setSendMode: (mode) => set((state) => ({
+        sendMode: mode,
+        openTabs: state.openTabs.map((t) =>
+          t.id === state.activeRequestTabId ? { ...t, sendMode: mode } : t
+        ),
+      })),
       selectedAgentId: null,
-      setSelectedAgentId: (id) => set({ selectedAgentId: id }),
+      setSelectedAgentId: (id) => set((state) => ({
+        selectedAgentId: id,
+        openTabs: state.openTabs.map((t) =>
+          t.id === state.activeRequestTabId ? { ...t, selectedAgentId: id } : t
+        ),
+      })),
 
       // Language - detect browser language, default to 'en'
       language: getInitialLanguage(),

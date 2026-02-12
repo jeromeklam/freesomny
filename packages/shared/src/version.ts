@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.6.2'
+export const APP_VERSION = '0.6.3'
 
 export interface ChangelogEntry {
   version: string
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.6.3',
+    date: '2026-02-12',
+    changes: [
+      'Mémorisation du mode d\'envoi par onglet : changer d\'onglet restaure automatiquement le mode (serveur, navigateur, agent)',
+    ],
+  },
   {
     version: '0.6.2',
     date: '2026-02-12',
