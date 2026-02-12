@@ -74,6 +74,7 @@ export function AuthScreen() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
+          <img src="/logo.svg" alt="FreeSomnia" className="h-24 mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">FreeSomnia</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-2">
             {setupRequired

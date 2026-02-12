@@ -78,6 +78,20 @@ freesomnia/
 - **EnvironmentVariable** - key/value with type (string/secret), optional `isProtected` flag
 - **UserFavorite** - per-user favorite requests (userId + requestId, unique)
 
+## Logo & Branding
+
+- **Logo**: crescent moon fishing for `{ }` brackets — rod goes UP-RIGHT (A-shape), taut line curves DOWN to hooked catch
+- **Colors**: indigo/violet gradient (moon, rod), amber/gold gradient (stars, hook, brackets)
+- **Files** in `apps/web/public/`:
+  - `logo.svg` — full wide logo (720x400) used on login screen
+  - `favicon.svg` — square icon (128x128) for modern browsers
+  - `favicon.ico` — classic multi-size (16+32+48)
+  - `favicon-{16,32,48}x{16,32,48}.png` — standard sizes
+  - `apple-touch-icon.png` (180x180), `android-chrome-{192,512}x{192,512}.png`
+  - `site.webmanifest` — PWA manifest (theme: `#6366f1`)
+- **Login screen**: `<img src="/logo.svg">` above the title in `AuthScreen.tsx`
+- **index.html**: full favicon set with SVG, ICO, PNG, apple-touch-icon, manifest, theme-color
+
 ## Core features
 
 ### Favorite requests

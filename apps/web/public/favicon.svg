@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <!-- v13 favicon/icon: simplified for small sizes -->
+  <defs>
+    <linearGradient id="im" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a5b4fc"/>
+      <stop offset="50%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <linearGradient id="ig" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <!-- Crescent moon — compact, top-left area -->
+  <path d="M48 8c-22 0-40 18-40 40s18 40 40 40c8 0 15-2 20-5.4C58 94 48 99 35 99c-26 0-47-21-47-47S9 5 35 5c13 0 24 4 32 11C60 8 54 8 48 8z" fill="url(#im)"/>
+  <!-- Rod: from moon center, UP-RIGHT to tip -->
+  <path d="M46 52 L60 40 L76 30 L88 22" stroke="#4f46e5" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Rod tip -->
+  <circle cx="88" cy="22" r="2.5" fill="none" stroke="#818cf8" stroke-width="1.5"/>
+  <!-- Taut line: thin, arcs DOWN -->
+  <path d="M88 24 C96 44 93 72 84 96 Q80 104 76 110" stroke="#c4b5fd" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  <!-- Hook -->
+  <path d="M76 110 C78 115 76 118 73 119 C70 120 69 116 70 113" stroke="url(#ig)" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- { } catch — bold, readable at small size -->
+  <g transform="translate(62, 108) rotate(-10)">
+    <text x="0" y="16" font-family="monospace" font-weight="bold" font-size="20" fill="url(#ig)">{ }</text>
+  </g>
+  <!-- One star — just the brightest -->
+  <circle cx="100" cy="28" r="4" fill="url(#ig)"/>
+</svg>

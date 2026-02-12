@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.6.3'
+export const APP_VERSION = '0.6.4'
 
 export interface ChangelogEntry {
   version: string
@@ -7,6 +7,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.6.4',
+    date: '2026-02-12',
+    changes: [
+      'Logo FreeSomnia : lune croissant pêchant des accolades { } (canne à pêche, ligne tendue, action)',
+      'Favicon SVG + ICO + PNG (16/32/48/180/192/512) + manifest PWA',
+      'Logo affiché sur l\'écran de connexion',
+    ],
+  },
   {
     version: '0.6.3',
     date: '2026-02-12',
