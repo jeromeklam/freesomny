@@ -104,6 +104,10 @@ interface AppState {
   showChangelog: boolean
   setShowChangelog: (show: boolean) => void
 
+  // Per-tab env lock
+  lockEnvPerTab: boolean
+  setLockEnvPerTab: (locked: boolean) => void
+
   // Send mode
   sendMode: SendMode
   setSendMode: (mode: SendMode) => void
@@ -214,11 +218,11 @@ export const useAppStore = create<AppState>()(
           // Check if tab already exists
           const existingTab = state.openTabs.find((t) => t.requestId === requestId)
           if (existingTab) {
-            // Activate existing tab and restore its environment + send mode
+            // Activate existing tab; restore env only if lockEnvPerTab is on
             return {
               activeRequestTabId: existingTab.id,
               selectedRequestId: requestId,
-              activeEnvironmentId: existingTab.environmentId !== undefined
+              activeEnvironmentId: state.lockEnvPerTab && existingTab.environmentId !== undefined
                 ? existingTab.environmentId
                 : state.activeEnvironmentId,
               sendMode: existingTab.sendMode ?? state.sendMode,
@@ -281,8 +285,8 @@ export const useAppStore = create<AppState>()(
               const newIndex = Math.min(tabIndex, newTabs.length - 1)
               newActiveTabId = newTabs[newIndex].id
               newSelectedRequestId = newTabs[newIndex].requestId
-              // Restore adjacent tab's environment + send mode
-              if (newTabs[newIndex].environmentId !== undefined) {
+              // Restore adjacent tab's environment (only if lockEnvPerTab) + send mode
+              if (state.lockEnvPerTab && newTabs[newIndex].environmentId !== undefined) {
                 newEnvId = newTabs[newIndex].environmentId ?? state.activeEnvironmentId
               }
               newSendMode = newTabs[newIndex].sendMode ?? state.sendMode
@@ -309,7 +313,7 @@ export const useAppStore = create<AppState>()(
             activeRequestTabId: tabId,
             selectedRequestId: tab.requestId,
             selectedFolderId: null,
-            activeEnvironmentId: tab.environmentId !== undefined
+            activeEnvironmentId: state.lockEnvPerTab && tab.environmentId !== undefined
               ? tab.environmentId
               : state.activeEnvironmentId,
             sendMode: tab.sendMode ?? state.sendMode,
@@ -372,6 +376,10 @@ export const useAppStore = create<AppState>()(
       setShowAdmin: (show) => set({ showAdmin: show }),
       showChangelog: false,
       setShowChangelog: (show) => set({ showChangelog: show }),
+
+      // Per-tab env lock (default: off — global env)
+      lockEnvPerTab: false,
+      setLockEnvPerTab: (locked) => set({ lockEnvPerTab: locked }),
 
       // Send mode
       sendMode: 'server' as SendMode,
@@ -439,6 +447,7 @@ export const useAppStore = create<AppState>()(
         favoritesExpanded: state.favoritesExpanded,
         sendMode: state.sendMode,
         selectedAgentId: state.selectedAgentId,
+        lockEnvPerTab: state.lockEnvPerTab,
       }),
     }
   )

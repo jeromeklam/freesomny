@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, Plus, Check, Trash2, Copy, Pencil } from 'lucide-react'
+import { ChevronDown, Plus, Check, Trash2, Copy, Pencil, Lock, Unlock } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../stores/app'
 import { useEnvironments, useCreateEnvironment, useActivateEnvironment, useDeleteEnvironment, useDuplicateEnvironment } from '../hooks/useApi'
@@ -13,6 +13,8 @@ export function EnvironmentSelector() {
   const environments = useAppStore((s) => s.environments)
   const activeEnvironmentId = useAppStore((s) => s.activeEnvironmentId)
   const setShowEnvironmentModal = useAppStore((s) => s.setShowEnvironmentModal)
+  const lockEnvPerTab = useAppStore((s) => s.lockEnvPerTab)
+  const setLockEnvPerTab = useAppStore((s) => s.setLockEnvPerTab)
 
   const { isLoading } = useEnvironments()
   const createEnvironment = useCreateEnvironment()
@@ -43,7 +45,19 @@ export function EnvironmentSelector() {
   }
 
   return (
-    <div className="relative">
+    <div className="relative flex items-center gap-1">
+      <button
+        onClick={() => setLockEnvPerTab(!lockEnvPerTab)}
+        className={clsx(
+          'p-1.5 rounded transition-colors',
+          lockEnvPerTab
+            ? 'text-amber-500 hover:text-amber-400 bg-amber-500/10'
+            : 'text-gray-400 hover:text-gray-300'
+        )}
+        title={lockEnvPerTab ? t('environment.unlockPerTab') : t('environment.lockPerTab')}
+      >
+        {lockEnvPerTab ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+      </button>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-700"

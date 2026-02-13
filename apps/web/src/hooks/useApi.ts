@@ -184,13 +184,12 @@ export function useSendRequest() {
   const setIsLoading = useAppStore((s) => s.setIsLoading)
   const setRequestError = useAppStore((s) => s.setRequestError)
   const setScriptOutput = useAppStore((s) => s.setScriptOutput)
-  const activeEnvironmentId = useAppStore((s) => s.activeEnvironmentId)
-  const sendMode = useAppStore((s) => s.sendMode)
-  const selectedAgentId = useAppStore((s) => s.selectedAgentId)
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // Read current state at send time (not at hook render time) to avoid stale closures
+      const { activeEnvironmentId, sendMode, selectedAgentId } = useAppStore.getState()
       const envId = activeEnvironmentId || undefined
 
       if (sendMode === 'browser') {
@@ -377,6 +376,7 @@ export function useActivateEnvironment() {
     onSuccess: (_, id) => {
       setActiveEnvironmentId(id)
       queryClient.invalidateQueries({ queryKey: ['environments'] })
+      queryClient.invalidateQueries({ queryKey: ['environment-variables', id] })
     },
   })
 }
@@ -386,6 +386,8 @@ export function useEnvironmentVariables(id: string | null) {
     queryKey: ['environment-variables', id],
     queryFn: () => (id ? environmentsApi.getVariables(id) : []),
     enabled: !!id,
+    staleTime: 1000 * 10, // 10s — refresh often to catch changes
+    refetchOnWindowFocus: true,
   })
 }
 

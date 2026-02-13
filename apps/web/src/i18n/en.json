@@ -128,6 +128,8 @@
     "editEnvironment": "Edit environment",
     "duplicateEnvironment": "Duplicate environment",
     "confirmDelete": "Delete environment \"{name}\" permanently? This action cannot be undone.",
+    "lockPerTab": "Lock environment per tab (each tab keeps its own environment)",
+    "unlockPerTab": "Unlock environment per tab (use same environment for all tabs)",
     "protectVariable": "Protect variable",
     "unprotectVariable": "Unprotect variable",
     "protectedReadonly": "Protected by owner — override locally to change",

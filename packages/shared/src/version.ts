@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.6.5'
+export const APP_VERSION = '0.6.6'
 
 export interface ChangelogEntry {
   version: string
@@ -7,6 +7,16 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.6.6',
+    date: '2026-02-13',
+    changes: [
+      'Correction : les variables d\'environnement et le mode d\'envoi sont maintenant lus au moment de l\'envoi (plus de valeurs obsolètes)',
+      'Verrouillage de l\'environnement par onglet : bouton cadenas à côté du sélecteur (désactivé par défaut = environnement global)',
+      'Rafraîchissement automatique des variables d\'environnement (10s au lieu de 60s, rechargement au focus)',
+      'Amélioration de la visibilité des noms de clé dans l\'onglet En-têtes',
+    ],
+  },
   {
     version: '0.6.5',
     date: '2026-02-12',

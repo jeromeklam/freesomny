@@ -200,7 +200,7 @@ export function KeyValueEditor({
         <thead>
           <tr className="text-left text-xs text-gray-500 uppercase">
             <th className="w-8"></th>
-            <th className="pb-2 font-medium">{t('keyValue.key')}</th>
+            <th className="pb-2 font-medium w-1/3">{t('keyValue.key')}</th>
             <th className="pb-2 font-medium">{t('keyValue.value')}</th>
             {showDescription && <th className="pb-2 font-medium">{t('keyValue.description')}</th>}
             <th className="w-8"></th>
@@ -236,7 +236,7 @@ export function KeyValueEditor({
                           isOverridden && 'line-through',
                           isAuthGenerated
                             ? 'bg-blue-900/20 border border-blue-700/30 text-blue-400'
-                            : 'bg-gray-100/50 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50 text-gray-500'
+                            : 'bg-gray-100/50 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50 text-gray-600 dark:text-gray-400'
                         )}
                       />
                       {variables.length > 0 && <VariablePreview text={item.key} variables={variables} />}
@@ -251,7 +251,7 @@ export function KeyValueEditor({
                           isOverridden && 'line-through',
                           isAuthGenerated
                             ? 'bg-blue-900/20 border border-blue-700/30 text-blue-400'
-                            : 'bg-gray-100/50 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50 text-gray-500'
+                            : 'bg-gray-100/50 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50 text-gray-600 dark:text-gray-400'
                         )}
                       />
                       {variables.length > 0 && <VariablePreview text={item.value} variables={variables} />}
@@ -322,7 +322,7 @@ export function KeyValueEditor({
                   onBlur={onBlur}
                   placeholder={placeholder}
                   className={clsx(
-                    'w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm',
+                    'w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-sm text-gray-900 dark:text-white',
                     'focus:outline-none focus:border-blue-500',
                     !item.enabled && 'opacity-50'
                   )}
