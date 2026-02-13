@@ -209,6 +209,8 @@ export function useSendRequest() {
         // Step 3: Report back (server-side post-scripts + history)
         const reportResult = await requestsApi.report(id, {
           requestMeta: prepared.requestMeta,
+          resolvedUrl: prepared.url,
+          resolvedHeaders: prepared.headers,
           response: httpResponse,
           preScriptLogs: prepared.scripts.pre.logs,
           preScriptErrors: prepared.scripts.pre.errors,
@@ -409,6 +411,14 @@ export function useHistory(params?: { limit?: number; offset?: number; search?: 
   return useQuery({
     queryKey: ['history', params],
     queryFn: () => historyApi.list(params),
+  })
+}
+
+export function useHistoryEntry(id: string | null) {
+  return useQuery({
+    queryKey: ['history-entry', id],
+    queryFn: () => historyApi.get(id!),
+    enabled: !!id,
   })
 }
 

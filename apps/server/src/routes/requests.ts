@@ -405,21 +405,22 @@ export async function requestRoutes(fastify: FastifyInstance) {
           if (mods.body !== undefined) currentRequest.body = mods.body
         }
 
+        // Prepare the request (interpolate vars, apply auth) — captures resolved URL/headers for history
+        const prepared = await prepareRequest(
+          {
+            ...resolved,
+            url: currentRequest.url,
+            method: currentRequest.method,
+            headers: currentRequest.headers,
+            body: currentRequest.body,
+          },
+          { environmentId }
+        )
+
         // Execute HTTP request (via agent or server)
         let httpResponse
         if (request.query.via === 'agent' && request.query.agentId) {
           const { agentManager } = await import('../services/agent-manager.js')
-          // Prepare the request (interpolate vars, apply auth) then send to agent
-          const prepared = await prepareRequest(
-            {
-              ...resolved,
-              url: currentRequest.url,
-              method: currentRequest.method,
-              headers: currentRequest.headers,
-              body: currentRequest.body,
-            },
-            { environmentId }
-          )
           httpResponse = await agentManager.sendRequest(request.query.agentId, {
             method: prepared.method,
             url: prepared.url,
@@ -496,6 +497,8 @@ export async function requestRoutes(fastify: FastifyInstance) {
             url: currentRequest.url,
             requestHeaders: stringifyJson(currentRequest.headers),
             requestBody: currentRequest.body,
+            resolvedUrl: prepared.url,
+            resolvedHeaders: stringifyJson(prepared.headers),
             responseStatus: httpResponse.status,
             responseHeaders: stringifyJson(httpResponse.headers),
             responseBody: httpResponse.body,
@@ -660,6 +663,8 @@ export async function requestRoutes(fastify: FastifyInstance) {
         originalUrl: string
         originalMethod: string
       }
+      resolvedUrl?: string
+      resolvedHeaders?: Record<string, string>
       response: HttpResponse
       preScriptLogs?: Array<{ source: string; message: string }>
       preScriptErrors?: Array<{ source: string; message: string }>
@@ -668,7 +673,7 @@ export async function requestRoutes(fastify: FastifyInstance) {
     '/api/requests/:id/report',
     async (request) => {
       try {
-        const { requestMeta, response: httpResponse, preScriptLogs, preScriptErrors } = request.body
+        const { requestMeta, resolvedUrl, resolvedHeaders, response: httpResponse, preScriptLogs, preScriptErrors } = request.body
 
         // Re-resolve to get post-scripts
         const resolved = await resolveRequest(request.params.id)
@@ -722,8 +727,10 @@ export async function requestRoutes(fastify: FastifyInstance) {
           data: {
             method: requestMeta.originalMethod,
             url: requestMeta.originalUrl,
-            requestHeaders: '{}',
+            requestHeaders: resolvedHeaders ? stringifyJson(resolvedHeaders) : '{}',
             requestBody: null,
+            resolvedUrl: resolvedUrl || requestMeta.originalUrl,
+            resolvedHeaders: resolvedHeaders ? stringifyJson(resolvedHeaders) : null,
             responseStatus: httpResponse.status,
             responseHeaders: stringifyJson(httpResponse.headers),
             responseBody: httpResponse.body,

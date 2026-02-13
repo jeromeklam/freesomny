@@ -177,7 +177,23 @@
     "loading": "Chargement de l'historique...",
     "entries": "entrées",
     "close": "Fermer",
-    "justNow": "À l'instant"
+    "justNow": "À l'instant",
+    "detail": {
+      "title": "Détails de la requête",
+      "general": "Général",
+      "request": "Requête",
+      "response": "Réponse",
+      "resolvedUrl": "URL (résolue)",
+      "templateUrl": "URL (modèle)",
+      "headers": "En-têtes",
+      "body": "Corps",
+      "noBody": "Pas de corps",
+      "noHeaders": "Pas d'en-têtes",
+      "status": "Statut",
+      "time": "Temps",
+      "size": "Taille",
+      "date": "Date"
+    }
   },
   "auth": {
     "type": "Type d'auth",

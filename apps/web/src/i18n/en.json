@@ -177,7 +177,23 @@
     "loading": "Loading history...",
     "entries": "entries",
     "close": "Close",
-    "justNow": "Just now"
+    "justNow": "Just now",
+    "detail": {
+      "title": "Request Details",
+      "general": "General",
+      "request": "Request",
+      "response": "Response",
+      "resolvedUrl": "URL (resolved)",
+      "templateUrl": "URL (template)",
+      "headers": "Headers",
+      "body": "Body",
+      "noBody": "No body",
+      "noHeaders": "No headers",
+      "status": "Status",
+      "time": "Time",
+      "size": "Size",
+      "date": "Date"
+    }
   },
   "auth": {
     "type": "Auth Type",

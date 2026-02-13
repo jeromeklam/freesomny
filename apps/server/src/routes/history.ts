@@ -35,6 +35,7 @@ export async function historyRoutes(fastify: FastifyInstance) {
           entries: entries.map(e => ({
             ...e,
             requestHeaders: parseJsonObject<Record<string, string>>(e.requestHeaders),
+            resolvedHeaders: e.resolvedHeaders ? parseJsonObject<Record<string, string>>(e.resolvedHeaders) : null,
             responseHeaders: parseJsonObject<Record<string, string>>(e.responseHeaders),
           })),
           total,
@@ -59,6 +60,7 @@ export async function historyRoutes(fastify: FastifyInstance) {
       data: {
         ...entry,
         requestHeaders: parseJsonObject<Record<string, string>>(entry.requestHeaders),
+        resolvedHeaders: entry.resolvedHeaders ? parseJsonObject<Record<string, string>>(entry.resolvedHeaders) : null,
         responseHeaders: parseJsonObject<Record<string, string>>(entry.responseHeaders),
       },
     }

@@ -226,6 +226,20 @@ Key files:
 - `findRootFolderId()` + `containsFolder()` tree walkers in `apps/web/src/stores/app.ts`
 - Tab state is session-only (not persisted to localStorage)
 
+### History with resolved URLs + detail popup
+- History entries now store **resolved** (interpolated) URLs and headers alongside the template versions
+- `resolvedUrl` and `resolvedHeaders` nullable fields on `HistoryEntry` model (backwards-compatible)
+- All 3 send paths (server, agent, browser) capture resolved data via `prepareRequest()` before saving to history
+- Browser-mode: resolved URL/headers passed back in `/report` body from the `/prepare` response
+- History list shows resolved URL (no `{{var}}` placeholders) when available
+- Clicking a history row opens a **detail popup** (`HistoryDetailModal`) with 3 tabs:
+  - **General**: resolved URL, template URL (if different), status, time, size, date
+  - **Request**: headers table + body viewer with JSON formatting
+  - **Response**: status, headers table + body viewer with JSON formatting
+- `useHistoryEntry(id)` hook fetches single entry via `GET /api/history/:id`
+- `HistoryEntryFull` typed interface in `apps/web/src/lib/api.ts`
+- PostgreSQL migration: `scripts/migrate-postgresql-history-resolved.sql`
+
 ### Logout cleanup (per-user state isolation)
 - On logout, **full cleanup** prevents state leaking between users on the same browser
 - `queryClient.clear()` — flushes all TanStack Query cached server data

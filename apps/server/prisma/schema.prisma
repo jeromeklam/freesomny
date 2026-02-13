@@ -251,8 +251,10 @@ model HistoryEntry {
   id              String   @id @default(cuid())
   method          String
   url             String
-  requestHeaders  String   // JSON object
+  requestHeaders  String   // JSON object (template)
   requestBody     String?
+  resolvedUrl     String?  // Actual URL sent (variables interpolated)
+  resolvedHeaders String?  // JSON — actual headers sent (auth applied, vars resolved)
   responseStatus  Int
   responseHeaders String   // JSON object
   responseBody    String?

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X, Trash2, Search, Clock } from 'lucide-react'
 import { ResizableModal } from './ResizableModal'
+import { HistoryDetailModal } from './HistoryDetailModal'
 import { clsx } from 'clsx'
 import { useHistory, useClearHistory } from '../hooks/useApi'
 import { useAppStore } from '../stores/app'
@@ -10,6 +11,7 @@ interface HistoryEntry {
   id: string
   method: string
   url: string
+  resolvedUrl?: string | null
   responseStatus: number
   responseTime: number
   createdAt: string
@@ -45,6 +47,7 @@ function StatusBadge({ status }: { status: number }) {
 
 export function History() {
   const [search, setSearch] = useState('')
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null)
   const showHistory = useAppStore((s) => s.showHistory)
   const setShowHistory = useAppStore((s) => s.setShowHistory)
   const { t } = useTranslation()
@@ -74,14 +77,15 @@ export function History() {
   }
 
   return (
-    <ResizableModal
-      storageKey="history"
-      defaultWidth={672}
-      defaultHeight={Math.min(window.innerHeight * 0.8, 600)}
-      minWidth={400}
-      minHeight={300}
-      onClose={() => setShowHistory(false)}
-    >
+    <>
+      <ResizableModal
+        storageKey="history"
+        defaultWidth={672}
+        defaultHeight={Math.min(window.innerHeight * 0.8, 600)}
+        minWidth={400}
+        minHeight={300}
+        onClose={() => setShowHistory(false)}
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2">
@@ -136,10 +140,13 @@ export function History() {
                 <div
                   key={entry.id}
                   className="flex items-center gap-3 px-6 py-3 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 cursor-pointer"
+                  onClick={() => setSelectedEntryId(entry.id)}
                 >
                   <MethodBadge method={entry.method} />
                   <StatusBadge status={entry.responseStatus} />
-                  <span className="flex-1 truncate text-sm font-mono text-gray-700 dark:text-gray-300">{entry.url}</span>
+                  <span className="flex-1 truncate text-sm font-mono text-gray-700 dark:text-gray-300">
+                    {entry.resolvedUrl || entry.url}
+                  </span>
                   <span className="text-xs text-gray-500">{entry.responseTime}ms</span>
                   <span className="text-xs text-gray-500">{formatTime(entry.createdAt)}</span>
                 </div>
@@ -158,6 +165,14 @@ export function History() {
             {t('history.close')}
           </button>
         </div>
-    </ResizableModal>
+      </ResizableModal>
+
+      {selectedEntryId && (
+        <HistoryDetailModal
+          entryId={selectedEntryId}
+          onClose={() => setSelectedEntryId(null)}
+        />
+      )}
+    </>
   )
 }

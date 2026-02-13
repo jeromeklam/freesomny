@@ -161,6 +161,22 @@ export const environmentsApi = {
 }
 
 // History
+export interface HistoryEntryFull {
+  id: string
+  method: string
+  url: string
+  requestHeaders: Record<string, string>
+  requestBody: string | null
+  resolvedUrl: string | null
+  resolvedHeaders: Record<string, string> | null
+  responseStatus: number
+  responseHeaders: Record<string, string>
+  responseBody: string | null
+  responseTime: number
+  responseSize: number
+  createdAt: string
+}
+
 export const historyApi = {
   list: (params?: { limit?: number; offset?: number; search?: string }) => {
     const searchParams = new URLSearchParams()
@@ -168,9 +184,9 @@ export const historyApi = {
     if (params?.offset) searchParams.set('offset', params.offset.toString())
     if (params?.search) searchParams.set('search', params.search)
     const query = searchParams.toString()
-    return request<{ entries: unknown[]; total: number }>(`/history${query ? `?${query}` : ''}`)
+    return request<{ entries: HistoryEntryFull[]; total: number }>(`/history${query ? `?${query}` : ''}`)
   },
-  get: (id: string) => request<unknown>(`/history/${id}`),
+  get: (id: string) => request<HistoryEntryFull>(`/history/${id}`),
   delete: (id: string) => request<{ success: boolean }>(`/history/${id}`, { method: 'DELETE' }),
   clear: () => request<{ success: boolean; count: number }>('/history', { method: 'DELETE' }),
 }
