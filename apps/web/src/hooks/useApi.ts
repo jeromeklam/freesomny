@@ -180,14 +180,12 @@ export function useSortChildren() {
 }
 
 export function useSendRequest() {
-  const setCurrentResponse = useAppStore((s) => s.setCurrentResponse)
-  const setIsLoading = useAppStore((s) => s.setIsLoading)
-  const setRequestError = useAppStore((s) => s.setRequestError)
-  const setScriptOutput = useAppStore((s) => s.setScriptOutput)
+  const setTabResponseData = useAppStore((s) => s.setTabResponseData)
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (id: string | undefined) => {
+      if (!id) throw new Error('Request ID is required')
       // Read current state at send time (not at hook render time) to avoid stale closures
       const { activeEnvironmentId, sendMode, selectedAgentId } = useAppStore.getState()
       const envId = activeEnvironmentId || undefined
@@ -226,11 +224,23 @@ export function useSendRequest() {
       }
     },
     onMutate: () => {
-      setIsLoading(true)
-      setCurrentResponse(null)
-      setRequestError(null)
+      // Capture the tab ID at send time so response goes to the correct tab
+      // even if the user switches tabs while the request is in flight
+      const tabId = useAppStore.getState().activeRequestTabId
+      if (tabId) {
+        setTabResponseData(tabId, {
+          isLoading: true,
+          response: null,
+          error: null,
+          scriptLogs: [],
+          scriptErrors: [],
+          scriptTests: [],
+        })
+      }
+      return { tabId }
     },
-    onSuccess: (data: unknown) => {
+    onSuccess: (data: unknown, _variables: string | undefined, onMutateResult: { tabId: string | null } | undefined) => {
+      const tabId = onMutateResult?.tabId
       const result = data as {
         response?: {
           status: number
@@ -252,32 +262,43 @@ export function useSendRequest() {
         error?: string
       }
 
-      // Check for error in response (e.g., network error, timeout)
-      if (result.error) {
-        setRequestError(result.error)
-        setCurrentResponse(null)
-      } else if (result.response) {
-        setCurrentResponse(result.response)
-        setRequestError(null)
-      }
-
       // Combine script outputs
       const logs = [...(result.scripts?.pre?.logs || []), ...(result.scripts?.post?.logs || [])]
       const errors = [...(result.scripts?.pre?.errors || []), ...(result.scripts?.post?.errors || [])]
       const tests = result.scripts?.post?.tests || []
-      setScriptOutput({ logs, errors, tests })
+
+      if (tabId) {
+        // Check for error in response (e.g., network error, timeout)
+        if (result.error) {
+          setTabResponseData(tabId, { response: null, error: result.error, scriptLogs: logs, scriptErrors: errors, scriptTests: tests })
+        } else if (result.response) {
+          setTabResponseData(tabId, { response: result.response, error: null, scriptLogs: logs, scriptErrors: errors, scriptTests: tests })
+        } else {
+          setTabResponseData(tabId, { scriptLogs: logs, scriptErrors: errors, scriptTests: tests })
+        }
+      }
 
       // Refresh history
       queryClient.invalidateQueries({ queryKey: ['history'] })
     },
-    onError: (error: Error) => {
-      // Handle network errors, server unreachable, etc.
-      setRequestError(error.message || 'Request failed')
-      setCurrentResponse(null)
-      setScriptOutput({ logs: [], errors: [], tests: [] })
+    onError: (error: unknown, _variables: string | undefined, onMutateResult: { tabId: string | null } | undefined) => {
+      const tabId = onMutateResult?.tabId
+      const errorMessage = error instanceof Error ? error.message : 'Request failed'
+      if (tabId) {
+        setTabResponseData(tabId, {
+          response: null,
+          error: errorMessage,
+          scriptLogs: [],
+          scriptErrors: [],
+          scriptTests: [],
+        })
+      }
     },
-    onSettled: () => {
-      setIsLoading(false)
+    onSettled: (_data: unknown, _error: unknown, _variables: string | undefined, onMutateResult: { tabId: string | null } | undefined) => {
+      const tabId = onMutateResult?.tabId
+      if (tabId) {
+        setTabResponseData(tabId, { isLoading: false })
+      }
     },
   })
 }

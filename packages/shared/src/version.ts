@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.6.7'
+export const APP_VERSION = '0.6.8'
 
 export interface ChangelogEntry {
   version: string
@@ -7,6 +7,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.6.8',
+    date: '2026-02-16',
+    changes: [
+      'Correction : la réponse est maintenant associée à chaque onglet — changer d\'onglet restaure la réponse, l\'erreur et l\'état de chargement correspondants',
+      'Les réponses en vol arrivent dans le bon onglet même si l\'utilisateur change d\'onglet pendant l\'exécution',
+      'Ouverture d\'un nouvel onglet : le panneau de réponse est vide (plus de réponse résiduelle d\'un autre onglet)',
+    ],
+  },
   {
     version: '0.6.7',
     date: '2026-02-13',

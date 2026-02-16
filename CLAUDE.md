@@ -217,13 +217,17 @@ Key files:
 - Copy/Download still work on raw body when preview is active
 - i18n: `response.htmlPreview` ("Preview" / "Aperçu"), `response.rawView` ("Raw" / "Brut")
 
-### Per-tab environment and send mode memoization
-- Each open tab remembers its selected environment and send mode — switching tabs auto-restores both
+### Per-tab environment, send mode, and response memoization
+- Each open tab remembers its selected environment, send mode, and response — switching tabs auto-restores all
 - `OpenTab` extended with `environmentId`, `folderId`, `sendMode`, and `selectedAgentId` fields in Zustand store
 - `setActiveEnvironmentId` / `setSendMode` / `setSelectedAgentId` also save on the active tab
 - `setActiveRequestTab` restores the tab's saved `environmentId`, `sendMode`, `selectedAgentId` to global state
 - **Same-collection inheritance**: opening a request from a collection that already has a tab inherits that tab's environment
 - `findRootFolderId()` + `containsFolder()` tree walkers in `apps/web/src/stores/app.ts`
+- **Per-tab responses**: `tabResponses: Record<string, TabResponseData>` stores response, error, isLoading, and script outputs per tab
+- `setTabResponseData(tabId, data)` updates the map and syncs to global fields when the tab is active
+- `useSendRequest` captures `activeRequestTabId` at send time — response goes to correct tab even if user switches during flight
+- Opening a new tab clears the response panel; closing a tab cleans up its response data
 - Tab state is session-only (not persisted to localStorage)
 
 ### History with resolved URLs + detail popup

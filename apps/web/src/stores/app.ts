@@ -21,6 +21,24 @@ export interface OpenTab {
   selectedAgentId?: string | null
 }
 
+export interface TabResponseData {
+  response: HttpResponse | null
+  error: string | null
+  isLoading: boolean
+  scriptLogs: Array<{ source: string; message: string }>
+  scriptErrors: Array<{ source: string; message: string }>
+  scriptTests: Array<{ source: string; name: string; passed: boolean }>
+}
+
+const emptyTabResponse: TabResponseData = {
+  response: null,
+  error: null,
+  isLoading: false,
+  scriptLogs: [],
+  scriptErrors: [],
+  scriptTests: [],
+}
+
 export interface AuthUser {
   id: string
   email: string
@@ -59,7 +77,10 @@ interface AppState {
   setActiveRequestTab: (tabId: string) => void
   updateRequestTabInfo: (requestId: string, name: string, method: string) => void
 
-  // Response
+  // Response (per-tab)
+  tabResponses: Record<string, TabResponseData>
+  setTabResponseData: (tabId: string, data: Partial<TabResponseData>) => void
+  // Response (global, kept in sync with active tab)
   currentResponse: HttpResponse | null
   setCurrentResponse: (response: HttpResponse | null) => void
   isLoading: boolean
@@ -219,6 +240,7 @@ export const useAppStore = create<AppState>()(
           const existingTab = state.openTabs.find((t) => t.requestId === requestId)
           if (existingTab) {
             // Activate existing tab; restore env only if lockEnvPerTab is on
+            const tabResponse = state.tabResponses[existingTab.id] || emptyTabResponse
             return {
               activeRequestTabId: existingTab.id,
               selectedRequestId: requestId,
@@ -229,6 +251,13 @@ export const useAppStore = create<AppState>()(
               selectedAgentId: existingTab.selectedAgentId !== undefined
                 ? existingTab.selectedAgentId
                 : state.selectedAgentId,
+              // Restore response state for this tab
+              currentResponse: tabResponse.response,
+              requestError: tabResponse.error,
+              isLoading: tabResponse.isLoading,
+              scriptLogs: tabResponse.scriptLogs,
+              scriptErrors: tabResponse.scriptErrors,
+              scriptTests: tabResponse.scriptTests,
             }
           }
           // For new tab: try to inherit env from a sibling tab in the same collection
@@ -261,6 +290,13 @@ export const useAppStore = create<AppState>()(
             activeRequestTabId: newTab.id,
             selectedRequestId: requestId,
             activeEnvironmentId: envId,
+            // Clear response state for new tab
+            currentResponse: null,
+            requestError: null,
+            isLoading: false,
+            scriptLogs: [],
+            scriptErrors: [],
+            scriptTests: [],
           }
         }),
       closeRequestTab: (tabId) =>
@@ -274,6 +310,7 @@ export const useAppStore = create<AppState>()(
           let newEnvId = state.activeEnvironmentId
           let newSendMode = state.sendMode
           let newAgentId = state.selectedAgentId
+          let responseState: TabResponseData = emptyTabResponse
 
           // If closing the active tab, switch to adjacent tab
           if (state.activeRequestTabId === tabId) {
@@ -293,8 +330,14 @@ export const useAppStore = create<AppState>()(
               if (newTabs[newIndex].selectedAgentId !== undefined) {
                 newAgentId = newTabs[newIndex].selectedAgentId ?? state.selectedAgentId
               }
+              // Restore adjacent tab's response
+              responseState = state.tabResponses[newTabs[newIndex].id] || emptyTabResponse
             }
           }
+
+          // Clean up closed tab's response data
+          const newTabResponses = { ...state.tabResponses }
+          delete newTabResponses[tabId]
 
           return {
             openTabs: newTabs,
@@ -303,12 +346,23 @@ export const useAppStore = create<AppState>()(
             activeEnvironmentId: newEnvId,
             sendMode: newSendMode,
             selectedAgentId: newAgentId,
+            tabResponses: newTabResponses,
+            // Restore response state from adjacent tab (or clear if no tabs left)
+            ...(state.activeRequestTabId === tabId ? {
+              currentResponse: responseState.response,
+              requestError: responseState.error,
+              isLoading: responseState.isLoading,
+              scriptLogs: responseState.scriptLogs,
+              scriptErrors: responseState.scriptErrors,
+              scriptTests: responseState.scriptTests,
+            } : {}),
           }
         }),
       setActiveRequestTab: (tabId) =>
         set((state) => {
           const tab = state.openTabs.find((t) => t.id === tabId)
           if (!tab) return state
+          const tabResponse = state.tabResponses[tabId] || emptyTabResponse
           return {
             activeRequestTabId: tabId,
             selectedRequestId: tab.requestId,
@@ -320,6 +374,13 @@ export const useAppStore = create<AppState>()(
             selectedAgentId: tab.selectedAgentId !== undefined
               ? tab.selectedAgentId
               : state.selectedAgentId,
+            // Restore response state for this tab
+            currentResponse: tabResponse.response,
+            requestError: tabResponse.error,
+            isLoading: tabResponse.isLoading,
+            scriptLogs: tabResponse.scriptLogs,
+            scriptErrors: tabResponse.scriptErrors,
+            scriptTests: tabResponse.scriptTests,
           }
         }),
       updateRequestTabInfo: (requestId, name, method) =>
@@ -329,7 +390,28 @@ export const useAppStore = create<AppState>()(
           ),
         })),
 
-      // Response
+      // Response (per-tab)
+      tabResponses: {},
+      setTabResponseData: (tabId, data) =>
+        set((state) => {
+          const existing = state.tabResponses[tabId] || emptyTabResponse
+          const updated = { ...existing, ...data }
+          const newTabResponses = { ...state.tabResponses, [tabId]: updated }
+          // If this is the active tab, also update global fields
+          if (tabId === state.activeRequestTabId) {
+            return {
+              tabResponses: newTabResponses,
+              currentResponse: updated.response,
+              requestError: updated.error,
+              isLoading: updated.isLoading,
+              scriptLogs: updated.scriptLogs,
+              scriptErrors: updated.scriptErrors,
+              scriptTests: updated.scriptTests,
+            }
+          }
+          return { tabResponses: newTabResponses }
+        }),
+      // Response (global, kept in sync with active tab)
       currentResponse: null,
       setCurrentResponse: (response) => set({ currentResponse: response }),
       isLoading: false,
@@ -415,6 +497,7 @@ export const useAppStore = create<AppState>()(
         currentRequest: null,
         openTabs: [],
         activeRequestTabId: null,
+        tabResponses: {},
         currentResponse: null,
         isLoading: false,
         requestError: null,
